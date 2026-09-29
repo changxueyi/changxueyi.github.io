@@ -13,6 +13,8 @@ redirect_from:
 ======
 全栈 AI 工程师，98 年生，本科学历。目前坐标北京，专注于 AI Agent 相关工作。
 
+> 完整版个人说明书（飞书文档）：<https://my.feishu.cn/docx/Dm3Td4KLUoBUjdxeytZcHXBDnDh>
+
 我的快速标签
 ======
 
