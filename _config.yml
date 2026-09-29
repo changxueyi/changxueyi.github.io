@@ -9,10 +9,10 @@
 # Basic Site Settings
 locale                   : "zh-CN"
 site_theme               : "default" # The available themes options are "default", "air", "sunrise", "mint", "dirt" and "contrast"
-title                    : "常学奕的学术主页"
+title                    : "常学奕的主页"
 title_separator          : "-"
 name                     : &name "常学奕"
-description              : &description "常学奕的个人学术主页与博客"   # Update this with a general description of your site, this is the default if not overridden by a page
+description              : &description "常学奕的个人主页 - 技术分享、AI 趋势、学术专利与生活随笔"   # Update this with a general description of your site, this is the default if not overridden by a page
 url                      : https://changxueyi.github.io # The base hostname & protocol for your site e.g. "https://[your GitHub username].github.io",
                                                            # or if you already have some other page hosted on Github then use "https://[your GitHub username].github.io/[Your Repo Name]"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
@@ -26,10 +26,10 @@ author:
   avatar           : "cxy.png"
   name             : "常学奕"
   pronouns         : # example: "she/her"  
-  bio              : "在这里写一句简短的自我介绍"
+  bio              : "Do it now | Driven | Keep loving！"
   location         : "中国"
-  employer         : "你的单位 / 学校"
-  uri              : # URL
+  employer         : "JD"
+  uri              : "https://www.cnblogs.com/cxy2020"
   email            : # your@email.com
 
   # Academic websites
