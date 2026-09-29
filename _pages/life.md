@@ -7,7 +7,12 @@ author_profile: true
 
 {% assign posts = site.categories['生活随笔'] %}
 {% if posts and posts.size > 0 %}
-  {% for post in posts %}
+  {% assign pinned = posts | where: "pinned", true %}
+  {% assign normal = posts | where_exp: "item", "item.pinned != true" %}
+  {% for post in pinned %}
+    📌 {% include archive-single.html %}
+  {% endfor %}
+  {% for post in normal %}
     {% include archive-single.html %}
   {% endfor %}
 {% else %}
