@@ -1,6 +1,6 @@
 ---
 permalink: /
-title: "你好，我是常学义 👋"
+title: "你好，我是常学奕 👋"
 author_profile: true
 redirect_from: 
   - /about/
