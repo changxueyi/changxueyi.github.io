@@ -2,7 +2,7 @@
 title: "我的第一篇技术分享"
 date: 2026-09-29
 categories: [技术分享]
-tags: [示例, 教程]
+tags: [示例, 教程, Markdown, 博客写作, Jekyll]
 excerpt: "这是一篇示例文章，用来演示如何写技术分享。"
 ---
 

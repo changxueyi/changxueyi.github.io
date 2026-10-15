@@ -37,3 +37,27 @@
     "layout/sidebar",
     "layout/json_cv"
 ;
+
+.post-tags { display: flex; flex-wrap: wrap; gap: .38rem; margin: .45rem 0 .2rem; }
+.post-tag { display: inline-flex; align-items: center; padding: .14rem .5rem; border: 1px solid rgba(52, 81, 178, .18); border-radius: 999px; background: rgba(52, 81, 178, .06); color: #3451b2 !important; font-size: .68rem; line-height: 1.35; text-decoration: none !important; transition: background .15s ease, border-color .15s ease, transform .15s ease; }
+.post-tag:hover, .post-tag:focus-visible { background: rgba(52, 81, 178, .13); border-color: rgba(52, 81, 178, .35); transform: translateY(-1px); }
+.page__title + .page__meta + .page__date + .post-tags, .page__title + .page__date + .post-tags { margin-top: .75rem; }
+
+.tech-hero { margin: .2rem 0 1.5rem; padding: 1.15rem 1.2rem; border: 1px solid rgba(52, 81, 178, .12); border-radius: 18px; background: linear-gradient(135deg, rgba(52, 81, 178, .08), rgba(16, 185, 129, .04)); }
+.tech-hero p { margin: 0; color: #5d6575; font-size: .88rem; }
+.tag-filter { margin: 1rem 0 1.4rem; }
+.tag-filter__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .55rem; }
+.tag-filter__title { margin: 0; font-size: .82rem; color: #51596a; font-weight: 700; }
+.tag-filter__status { color: #7a8290; font-size: .72rem; }
+.tag-filter__list { display: flex; flex-wrap: wrap; gap: .42rem; }
+.tag-filter__btn { appearance: none; border: 1px solid #e3e6ec; border-radius: 999px; background: #fff; color: #4a5263; cursor: pointer; font: inherit; font-size: .7rem; line-height: 1.3; padding: .25rem .58rem; transition: all .15s ease; }
+.tag-filter__btn:hover, .tag-filter__btn:focus-visible { border-color: #9daae0; color: #3451b2; }
+.tag-filter__btn.is-active { border-color: #3451b2; background: #3451b2; color: #fff; box-shadow: 0 6px 14px rgba(52, 81, 178, .18); }
+.tech-post { margin-bottom: 1rem; padding: 1rem 1.1rem; border: 1px solid #eceef3; border-radius: 16px; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .03); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.tech-post:hover { border-color: rgba(52, 81, 178, .22); box-shadow: 0 10px 28px rgba(15, 23, 42, .07); transform: translateY(-1px); }
+.tech-post .archive__item-title { margin-top: 0; }
+.tech-post .archive__item-excerpt { margin-bottom: .35rem; }
+.tech-post.is-hidden { display: none; }
+.tech-empty { display: none; padding: 1rem; border: 1px dashed #d7dbe4; border-radius: 14px; color: #727a88; text-align: center; font-size: .85rem; }
+.tech-empty.is-visible { display: block; }
+@media (max-width: 640px) { .tag-filter__head { align-items: flex-start; flex-direction: column; gap: .2rem; } .tech-post { padding: .9rem; } }

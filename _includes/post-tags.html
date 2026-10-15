@@ -1,0 +1,9 @@
+{% include base_path %}
+{% assign item = include.item | default: page %}
+{% if item.tags and item.tags.size > 0 %}
+<div class="post-tags" aria-label="文章标签">
+  {% for tag in item.tags %}
+    <a class="post-tag" href="{{ base_path }}/tech/?tag={{ tag | uri_escape }}" data-tag="{{ tag | escape }}">#{{ tag }}</a>
+  {% endfor %}
+</div>
+{% endif %}

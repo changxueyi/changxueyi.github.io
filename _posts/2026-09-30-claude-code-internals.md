@@ -2,7 +2,7 @@
 title: "深入 Claude Code：一个终端 AI 编码助手的技术原理拆解"
 date: 2026-09-30
 categories: [技术分享]
-tags: [Claude Code, AI Agent, CLI, 架构, 源码分析]
+tags: [Claude Code, AI Agent, CLI, 架构, 源码分析, 工具调用, 权限系统]
 excerpt: "从技术栈、五层架构、查询循环（queryLoop）、工具系统到权限决策树，系统拆解 Claude Code CLI 的内部工作原理，并谈谈它对做 AI Agent 的启发。"
 ---
 
