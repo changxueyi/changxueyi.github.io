@@ -63,3 +63,44 @@
 .tech-empty { display: none; padding: 1rem; border: 1px dashed #d7dbe4; border-radius: 14px; color: #727a88; text-align: center; font-size: .85rem; }
 .tech-empty.is-visible { display: block; }
 @media (max-width: 640px) { .tag-filter__head { align-items: flex-start; flex-direction: column; gap: .2rem; } .tech-post { padding: .9rem; } }
+
+.online-experience { margin: .25rem 0 2rem; padding: 1.25rem; border: 1px solid rgba(35, 54, 77, .12); border-radius: 18px; background: linear-gradient(135deg, rgba(52, 81, 178, .055), rgba(16, 185, 129, .035) 55%, rgba(255, 157, 82, .045)); }
+.online-experience--compact { margin: 0 0 2rem; }
+.online-experience__head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: .45rem; }
+.online-experience__eyebrow { display: block; color: #3451b2; font-size: .64rem; font-weight: 800; letter-spacing: .16em; }
+.online-experience h2 { margin: .3rem 0 0; color: #1e2b3d; font-size: 1.45rem; letter-spacing: -.02em; }
+.online-experience__intro { max-width: 52rem; margin: 0 0 1.25rem; color: #667085; font-size: .86rem; line-height: 1.7; }
+.online-experience__all { display: inline-flex; align-items: center; gap: .35rem; padding: .38rem .62rem; border: 1px solid rgba(52, 81, 178, .18); border-radius: 999px; color: #3451b2 !important; font-size: .72rem; font-weight: 700; text-decoration: none !important; transition: background .15s ease, transform .15s ease; }
+.online-experience__all:hover, .online-experience__all:focus-visible { background: rgba(52, 81, 178, .08); transform: translateY(-1px); }
+.online-experience__status { display: inline-flex; align-items: center; gap: .4rem; color: #15745d; font-size: .72rem; font-weight: 700; }
+.online-experience__status i { width: .42rem; height: .42rem; border-radius: 50%; background: #25b981; box-shadow: 0 0 0 .2rem rgba(37, 185, 129, .13); }
+.online-experience__category + .online-experience__category { margin-top: 1.3rem; }
+.online-experience__category-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .62rem; }
+.online-experience__category-head > div { display: flex; align-items: center; gap: .55rem; }
+.online-experience__category-index { color: #8993a5; font-size: .66rem; font-weight: 800; letter-spacing: .1em; }
+.online-experience__category h3 { margin: 0; color: #334155; font-size: .88rem; }
+.online-experience__category-head > span { color: #8a93a3; font-size: .68rem; }
+.online-experience__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .72rem; }
+.online-experience__grid--single { grid-template-columns: minmax(0, 1fr); }
+.online-experience__card { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: .72rem; min-height: 8rem; padding: .9rem; overflow: hidden; border: 1px solid rgba(35, 54, 77, .12); border-radius: 13px; background: rgba(255, 255, 255, .8); color: #26364b !important; text-decoration: none !important; box-shadow: 0 2px 6px rgba(15, 23, 42, .025); transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.online-experience__card::after { position: absolute; right: -.7rem; bottom: -.9rem; width: 4.5rem; height: 4.5rem; border-radius: 50%; content: ""; opacity: .13; }
+.online-experience__card--teal::after { background: #16a394; }
+.online-experience__card--rose::after { background: #d6336c; }
+.online-experience__card--orange::after { background: #f08a3c; }
+.online-experience__card:hover, .online-experience__card:focus-visible { border-color: rgba(52, 81, 178, .34); box-shadow: 0 12px 24px rgba(15, 23, 42, .08); transform: translateY(-2px); }
+.online-experience__card-mark { position: relative; z-index: 1; display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 9px; background: #e9eefc; color: #3451b2; font-size: .62rem; font-weight: 800; letter-spacing: .05em; }
+.online-experience__card--teal .online-experience__card-mark { background: rgba(22, 163, 148, .12); color: #08796f; }
+.online-experience__card--rose .online-experience__card-mark { background: rgba(214, 51, 108, .1); color: #b52c5a; }
+.online-experience__card--orange .online-experience__card-mark { background: rgba(240, 138, 60, .13); color: #b35a1b; }
+.online-experience__card-body { position: relative; z-index: 1; display: grid; gap: .3rem; }
+.online-experience__card-type { color: #7c8798; font-size: .6rem; font-weight: 800; letter-spacing: .1em; }
+.online-experience__card-body strong { color: #1f2d40; font-size: .98rem; line-height: 1.25; }
+.online-experience__card-body > span:last-child { color: #687588; font-size: .72rem; line-height: 1.55; }
+.online-experience__card-arrow { position: relative; z-index: 1; color: #778398; font-size: 1.1rem; line-height: 1; transition: color .15s ease, transform .15s ease; }
+.online-experience__card:hover .online-experience__card-arrow, .online-experience__card:focus-visible .online-experience__card-arrow { color: #3451b2; transform: translate(2px, -2px); }
+html[data-theme="dark"] .online-experience { border-color: rgba(188, 220, 226, .17); background: linear-gradient(135deg, rgba(52, 81, 178, .15), rgba(16, 185, 129, .08) 55%, rgba(255, 157, 82, .08)); }
+html[data-theme="dark"] .online-experience h2, html[data-theme="dark"] .online-experience__category h3, html[data-theme="dark"] .online-experience__card-body strong { color: #edf3f6; }
+html[data-theme="dark"] .online-experience__intro, html[data-theme="dark"] .online-experience__card-body > span:last-child { color: #adbbc3; }
+html[data-theme="dark"] .online-experience__card { border-color: rgba(188, 220, 226, .16); background: rgba(9, 24, 34, .8); }
+@media (max-width: 720px) { .online-experience__grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .online-experience { padding: 1rem; border-radius: 14px; } .online-experience__head { align-items: flex-start; } .online-experience__status { font-size: .64rem; } .online-experience__card { min-height: 7rem; padding: .78rem; } .online-experience__card-body strong { font-size: .9rem; } .online-experience__card-body > span:last-child { font-size: .68rem; } }

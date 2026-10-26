@@ -1,0 +1,67 @@
+<section class="online-experience{% if include.compact %} online-experience--compact{% endif %}" aria-labelledby="online-experience-title">
+  <div class="online-experience__head">
+    <div>
+      <span class="online-experience__eyebrow">ONLINE EXPERIENCE</span>
+      <h2 id="online-experience-title">在线体验</h2>
+    </div>
+    {% if include.compact %}
+      <a class="online-experience__all" href="{{ '/experience/' | relative_url }}">查看全部 <span aria-hidden="true">→</span></a>
+    {% else %}
+      <span class="online-experience__status"><i></i> 全部可在线打开</span>
+    {% endif %}
+  </div>
+
+  <p class="online-experience__intro">把整理过的内容和做出来的作品，放在一个入口里。可以先浏览，也可以直接打开体验。</p>
+
+  <div class="online-experience__category">
+    <div class="online-experience__category-head">
+      <div>
+        <span class="online-experience__category-index">01</span>
+        <h3>生活指南</h3>
+      </div>
+      <span>2 个在线项目</span>
+    </div>
+    <div class="online-experience__grid">
+      <a class="online-experience__card online-experience__card--teal" href="https://changxueyi.github.io/how-to-live-better/" target="_blank" rel="noopener">
+        <span class="online-experience__card-mark">01</span>
+        <span class="online-experience__card-body">
+          <span class="online-experience__card-type">LIFE GUIDE · 631 条</span>
+          <strong>高性价比人生指南</strong>
+          <span>按成本、收益与证据等级筛选，覆盖健康、财务、防骗、职业与生活选择。</span>
+        </span>
+        <span class="online-experience__card-arrow" aria-hidden="true">↗</span>
+      </a>
+
+      <a class="online-experience__card online-experience__card--rose" href="https://changxueyi.github.io/renqing-shigu/" target="_blank" rel="noopener">
+        <span class="online-experience__card-mark">02</span>
+        <span class="online-experience__card-body">
+          <span class="online-experience__card-type">SOCIAL GUIDE · 31 章</span>
+          <strong>人情世故指南</strong>
+          <span>讲清规则，也讲清人心；覆盖沟通、关系、职场与灰色套路的识别和自保。</span>
+        </span>
+        <span class="online-experience__card-arrow" aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="online-experience__category">
+    <div class="online-experience__category-head">
+      <div>
+        <span class="online-experience__category-index">02</span>
+        <h3>互动游戏</h3>
+      </div>
+      <span>1 个在线项目</span>
+    </div>
+    <div class="online-experience__grid online-experience__grid--single">
+      <a class="online-experience__card online-experience__card--orange" href="https://changxueyi.github.io/contra-game/" target="_blank" rel="noopener">
+        <span class="online-experience__card-mark">03</span>
+        <span class="online-experience__card-body">
+          <span class="online-experience__card-type">ORIGINAL RUN &amp; GUN · 3 区域</span>
+          <strong>突击战线</strong>
+          <span>原创横版跑射小游戏，支持移动、跳跃、蹲下、射击、作弊配置与手机触控。</span>
+        </span>
+        <span class="online-experience__card-arrow" aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </div>
+</section>

@@ -20,5 +20,8 @@ main:
   - title: "生活随笔"
     url: /life/
 
+  - title: "在线体验"
+    url: /experience/
+
   - title: "简历"
     url: /cv/
