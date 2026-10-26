@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f6f2">
+  <meta name="description" content="IP Disclosure Workbench 将设计文档、代码实现与验证证据整理为可追溯的候选专利点和技术交底初稿。">
+  <link rel="icon" href="data:,">
+  <title>IP Disclosure Workbench — 专利技术洞察工作台</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f7f6f2;
+      --paper-2: #efeee9;
+      --white: #fffefa;
+      --ink: #1d1d1a;
+      --muted: #6f6d67;
+      --soft: #93918a;
+      --line: #d8d6cf;
+      --line-dark: #aaa79f;
+      --orange: #d85d3f;
+      --orange-pale: #f4e4dd;
+      --blue: #557bad;
+      --blue-pale: #e3ebf3;
+      --green: #647e67;
+      --green-pale: #e3e9df;
+      --night: #20211f;
+      --night-2: #292a27;
+      --code: #d8ddd2;
+      --serif: Georgia, "Times New Roman", "Songti SC", serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+    body {
+      margin: 0;
+      overflow-x: clip;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: var(--sans);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+    a { color: inherit; }
+    button, textarea { font: inherit; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    .wrap { width: min(1200px, calc(100% - 64px)); margin-inline: auto; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.4;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      width: 18px;
+      height: 1px;
+      background: var(--orange);
+      content: "";
+    }
+    .section-title {
+      max-width: 780px;
+      margin: 14px 0 0;
+      font-family: var(--serif);
+      font-size: 44px;
+      font-weight: 400;
+      line-height: 1.14;
+    }
+    .section-lead {
+      max-width: 640px;
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .site-header {
+      position: sticky;
+      z-index: 10;
+      top: 0;
+      border-bottom: 1px solid var(--line);
+      background: rgb(247 246 242 / 96%);
+      backdrop-filter: blur(12px);
+    }
+    .nav {
+      min-height: 68px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .brand-mark {
+      width: 29px;
+      height: 29px;
+      position: relative;
+      border: 1px solid var(--ink);
+      display: grid;
+      place-items: center;
+      font-family: var(--serif);
+      font-size: 15px;
+      line-height: 1;
+    }
+    .brand-mark::after {
+      position: absolute;
+      right: -4px;
+      bottom: -4px;
+      width: 7px;
+      height: 7px;
+      border: 1px solid var(--paper);
+      background: var(--orange);
+      content: "";
+    }
+    .brand-name { font-size: 14px; font-weight: 600; }
+    .nav-links { display: flex; align-items: center; gap: 30px; }
+    .nav-links a {
+      color: var(--muted);
+      font-size: 13px;
+      text-decoration: none;
+      transition: color 160ms ease;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-links .nav-cta {
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 14px;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      transition: color 160ms ease, background 160ms ease;
+    }
+    .nav-links .nav-cta:hover { background: var(--ink); color: var(--white); }
+    .arrow { font-size: 16px; line-height: 1; }
+
+    .hero {
+      padding: 68px 0 56px;
+      text-align: center;
+    }
+    .hero .eyebrow { justify-content: center; }
+    .hero h1 {
+      max-width: 900px;
+      margin: 17px auto 0;
+      font-family: var(--serif);
+      font-size: 66px;
+      font-weight: 400;
+      line-height: 1.03;
+    }
+    .hero-copy {
+      max-width: 650px;
+      margin: 20px auto 0;
+      color: var(--muted);
+      font-size: 19px;
+      line-height: 1.65;
+    }
+    .hero-actions {
+      margin-top: 27px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+    .button {
+      min-height: 45px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 18px;
+      border: 1px solid var(--ink);
+      background: transparent;
+      color: var(--ink);
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 160ms ease, color 160ms ease, border-color 160ms ease, transform 160ms ease;
+    }
+    .button:hover { transform: translateY(-1px); }
+    .button-dark { background: var(--ink); color: var(--white); }
+    .button-dark:hover { border-color: var(--orange); background: var(--orange); }
+    .button-light:hover { background: var(--paper-2); }
+    .hero-note {
+      margin: 13px 0 0;
+      color: var(--soft);
+      font-size: 12px;
+    }
+
+    .workspace {
+      overflow: hidden;
+      margin-top: 49px;
+      border: 1px solid var(--line-dark);
+      background: var(--white);
+      text-align: left;
+    }
+    .workspace-bar {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 0 18px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .window-dots { display: flex; gap: 6px; align-items: center; }
+    .window-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #d4d2cb;
+    }
+    .window-dots span:first-child { background: var(--orange); }
+    .workspace-state { display: inline-flex; align-items: center; gap: 8px; }
+    .state-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: breathe 2.4s ease-in-out infinite;
+    }
+    .workspace-title {
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 20px;
+      border-bottom: 1px solid var(--line);
+      font-size: 13px;
+    }
+    .workspace-title strong { font-weight: 550; }
+    .workspace-title span:last-child { color: var(--soft); font-size: 12px; }
+    .workspace-grid {
+      min-height: 330px;
+      display: grid;
+      grid-template-columns: 190px minmax(0, 1fr) 330px;
+    }
+    .file-rail {
+      padding: 22px 14px;
+      border-right: 1px solid var(--line);
+      background: #fbfaf7;
+    }
+    .rail-label {
+      margin: 0 0 13px;
+      color: var(--soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+    .file-row {
+      min-height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 0 8px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .file-row.active {
+      border-left: 2px solid var(--orange);
+      background: var(--paper-2);
+      color: var(--ink);
+    }
+    .file-icon {
+      width: 10px;
+      height: 12px;
+      border: 1px solid currentColor;
+      opacity: .6;
+    }
+    .analysis-view { min-width: 0; padding: 21px 22px 18px; }
+    .analysis-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .analysis-heading small {
+      color: var(--soft);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 400;
+    }
+    .code-block {
+      overflow: hidden;
+      min-height: 158px;
+      padding: 15px 16px;
+      background: var(--night);
+      color: var(--code);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.9;
+    }
+    .code-line { display: block; white-space: nowrap; }
+    .line-no { display: inline-block; width: 28px; color: #73766e; text-align: right; margin-right: 14px; }
+    .syntax-key { color: #e9a27e; }
+    .syntax-call { color: #91b9d8; }
+    .syntax-comment { color: #8a9388; }
+    .code-focus {
+      position: relative;
+      display: block;
+      margin: 2px -16px;
+      padding: 0 16px;
+      background: rgb(216 93 63 / 14%);
+      animation: focus-in 5s ease-in-out infinite;
+    }
+    .trace-chain {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 17px;
+    }
+    .trace-step {
+      position: relative;
+      min-width: 0;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 10px;
+    }
+    .trace-step::before {
+      position: absolute;
+      top: -3px;
+      left: 0;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--orange);
+      content: "";
+    }
+    .trace-step b {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--ink);
+      font-size: 11px;
+      font-weight: 550;
+    }
+    .candidate-view {
+      padding: 22px 20px;
+      border-left: 1px solid var(--line);
+      background: #f2f1ec;
+    }
+    .candidate-overline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+    .evidence-count { color: var(--green); }
+    .candidate-view h2 {
+      margin: 17px 0 10px;
+      font-family: var(--serif);
+      font-size: 23px;
+      font-weight: 400;
+      line-height: 1.25;
+    }
+    .candidate-view p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+    .candidate-callout {
+      margin-top: 17px;
+      padding: 12px 13px;
+      border-left: 2px solid var(--orange);
+      background: var(--white);
+      color: var(--ink);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+    .candidate-foot {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      margin-top: 17px;
+      color: var(--soft);
+      font-size: 10px;
+    }
+    .candidate-foot span { padding: 3px 7px; border: 1px solid var(--line); background: var(--white); }
+
+    .principles {
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: var(--paper-2);
+    }
+    .principle-row {
+      min-height: 75px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      align-items: center;
+    }
+    .principle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .principle + .principle { border-left: 1px solid var(--line); }
+    .principle strong { color: var(--ink); font-weight: 550; }
+    .principle-mark { width: 6px; height: 6px; background: var(--orange); }
+    .principle:nth-child(2) .principle-mark { background: var(--blue); }
+    .principle:nth-child(3) .principle-mark { background: var(--green); }
+
+    .section { padding: 102px 0; }
+    .workflow {
+      margin-top: 48px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid var(--line-dark);
+      border-bottom: 1px solid var(--line-dark);
+    }
+    .workflow-step {
+      min-height: 205px;
+      padding: 24px 22px 26px 0;
+    }
+    .workflow-step + .workflow-step {
+      padding-left: 22px;
+      border-left: 1px solid var(--line);
+    }
+    .step-index {
+      color: var(--orange);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+    .workflow-step h3 { margin: 27px 0 8px; font-size: 17px; font-weight: 550; }
+    .workflow-step p { max-width: 235px; margin: 0; color: var(--muted); font-size: 13px; }
+
+    .evidence-band {
+      padding: 78px 0;
+      background: var(--night);
+      color: var(--white);
+    }
+    .evidence-band .eyebrow { color: #b8b8b0; }
+    .evidence-band .section-title { max-width: 740px; }
+    .evidence-band .section-lead { color: #b9b9b1; }
+    .evidence-grid {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      border-top: 1px solid #52534e;
+      border-bottom: 1px solid #52534e;
+    }
+    .evidence-item { min-height: 174px; padding: 22px 22px 24px 0; }
+    .evidence-item + .evidence-item { padding-left: 22px; border-left: 1px solid #52534e; }
+    .evidence-item small { color: #a9aaa2; font-family: var(--mono); font-size: 10px; }
+    .evidence-item h3 { margin: 16px 0 8px; font-family: var(--serif); font-size: 24px; font-weight: 400; }
+    .evidence-item p { max-width: 300px; margin: 0; color: #b9b9b1; font-size: 12px; }
+
+    .deliverables { padding: 102px 0; }
+    .deliverable-list { margin-top: 43px; border-top: 1px solid var(--line-dark); }
+    .deliverable {
+      display: grid;
+      grid-template-columns: 74px minmax(190px, .85fr) 1.3fr 130px;
+      align-items: center;
+      gap: 18px;
+      min-height: 76px;
+      border-bottom: 1px solid var(--line);
+    }
+    .deliverable-number { color: var(--orange); font-family: var(--mono); font-size: 11px; }
+    .deliverable h3 { margin: 0; font-size: 14px; font-weight: 550; }
+    .deliverable p { margin: 0; color: var(--muted); font-size: 12px; }
+    .deliverable-tag { justify-self: end; color: var(--soft); font-family: var(--mono); font-size: 10px; }
+
+    .experience {
+      padding: 100px 0 112px;
+      border-top: 1px solid var(--line);
+      background: #eeede7;
+    }
+    .experience-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 30px;
+    }
+    .demo-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 9px;
+      border: 1px solid var(--line-dark);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .demo-label::before { width: 6px; height: 6px; border-radius: 50%; background: var(--green); content: ""; }
+    .experience-shell {
+      margin-top: 40px;
+      border: 1px solid var(--line-dark);
+      background: var(--white);
+    }
+    .demo-toolbar {
+      min-height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 0 16px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+    .demo-toolbar strong { color: var(--ink); font-weight: 500; }
+    .demo-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .demo-inputs { padding: 22px; }
+    .demo-output {
+      min-width: 0;
+      padding: 22px;
+      border-left: 1px solid var(--line);
+      background: #fbfaf7;
+    }
+    .field-group + .field-group { margin-top: 18px; }
+    .field-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 7px;
+      font-size: 12px;
+      font-weight: 550;
+    }
+    .field-label small { color: var(--soft); font-family: var(--mono); font-size: 10px; font-weight: 400; }
+    .demo-inputs textarea {
+      width: 100%;
+      min-height: 128px;
+      resize: vertical;
+      padding: 12px 13px;
+      border: 1px solid var(--line);
+      border-radius: 0;
+      background: #fffefa;
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+    .demo-inputs textarea:focus { border-color: var(--blue); outline: none; }
+    .demo-help { margin: 7px 0 0; color: var(--soft); font-size: 11px; }
+    .demo-actions {
+      margin-top: 19px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .demo-actions .button { min-height: 40px; font-size: 12px; }
+    .privacy-note { color: var(--soft); font-size: 10px; }
+    .result-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+    .result-state { color: var(--green); }
+    .result-title {
+      margin: 18px 0 8px;
+      font-family: var(--serif);
+      font-size: 25px;
+      font-weight: 400;
+      line-height: 1.25;
+      overflow-wrap: anywhere;
+    }
+    .result-caption { margin: 0 0 19px; color: var(--muted); font-size: 11px; }
+    .result-field { padding: 12px 0; border-top: 1px solid var(--line); }
+    .result-field dt { color: var(--soft); font-family: var(--mono); font-size: 10px; }
+    .result-field dd { margin: 5px 0 0; color: var(--ink); font-size: 12px; line-height: 1.65; overflow-wrap: anywhere; white-space: pre-line; }
+    .result-foot {
+      margin-top: 15px;
+      padding: 10px 12px;
+      border-left: 2px solid var(--orange);
+      background: var(--orange-pale);
+      color: #5d4036;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+    .demo-status { min-height: 21px; margin: 8px 0 0; color: var(--muted); font-size: 11px; }
+
+    .questions { padding: 92px 0 98px; }
+    .question-list { margin-top: 35px; border-top: 1px solid var(--line-dark); }
+    details { border-bottom: 1px solid var(--line); }
+    summary {
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      cursor: pointer;
+      list-style: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { color: var(--orange); content: "+"; font-family: var(--mono); font-size: 20px; font-weight: 400; }
+    details[open] summary::after { content: "−"; }
+    details p { max-width: 820px; margin: -2px 38px 20px 0; color: var(--muted); font-size: 13px; }
+
+    .footer {
+      padding: 26px 0;
+      border-top: 1px solid var(--line);
+      background: var(--paper);
+    }
+    .footer-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { text-decoration: none; }
+    .footer-links a:hover { color: var(--ink); }
+    .js .reveal { opacity: 0; transform: translateY(12px); transition: opacity 650ms ease, transform 650ms ease; }
+    .js .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+    @keyframes focus-in { 0%, 18%, 100% { background: rgb(216 93 63 / 10%); } 45%, 72% { background: rgb(216 93 63 / 23%); } }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .js .reveal { opacity: 1; transform: none; }
+    }
+
+    @media (max-width: 980px) {
+      .workspace-grid { grid-template-columns: 155px minmax(0, 1fr); }
+      .candidate-view { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.25fr; column-gap: 20px; align-items: start; border-top: 1px solid var(--line); border-left: 0; }
+      .candidate-overline { grid-column: 1 / -1; }
+      .candidate-view h2 { margin-top: 14px; }
+      .candidate-callout { margin-top: 14px; }
+      .candidate-foot { grid-column: 1 / -1; }
+    }
+    @media (max-width: 720px) {
+      .wrap { width: min(100% - 36px, 560px); }
+      .nav { min-height: 60px; }
+      .brand-name { font-size: 12px; }
+      .nav-links { gap: 0; }
+      .nav-links a:not(.nav-cta) { display: none; }
+      .nav-links .nav-cta { min-height: 34px; padding-inline: 10px; font-size: 11px; }
+      .hero { padding: 56px 0 40px; }
+      .hero h1 { max-width: 500px; font-size: 43px; line-height: 1.08; }
+      .hero-copy { max-width: 500px; font-size: 16px; }
+      .hero-actions { flex-direction: column; align-items: stretch; max-width: 290px; margin-inline: auto; }
+      .hero-actions .button { width: 100%; }
+      .workspace { margin-top: 37px; }
+      .workspace-bar { padding-inline: 11px; font-size: 9px; }
+      .workspace-title { padding-inline: 12px; font-size: 11px; }
+      .workspace-title span:last-child { font-size: 10px; }
+      .workspace-grid { grid-template-columns: 1fr; }
+      .file-rail { display: none; }
+      .analysis-view { padding: 17px 13px; }
+      .code-block { padding: 12px 9px; font-size: 9px; }
+      .code-line { white-space: pre-wrap; overflow-wrap: anywhere; }
+      .line-no { width: 20px; margin-right: 8px; }
+      .code-focus { margin-inline: -9px; padding-inline: 9px; }
+      .trace-chain { gap: 7px; }
+      .trace-step { font-size: 9px; }
+      .trace-step b { font-size: 10px; }
+      .candidate-view { display: block; padding: 17px 14px; }
+      .candidate-view h2 { font-size: 21px; }
+      .principle-row { min-height: auto; grid-template-columns: 1fr; padding-block: 8px; }
+      .principle { min-height: 42px; justify-content: flex-start; padding-left: 20px; }
+      .principle + .principle { border-top: 1px solid var(--line); border-left: 0; }
+      .section, .deliverables { padding: 72px 0; }
+      .section-title { font-size: 35px; }
+      .section-lead { font-size: 15px; }
+      .workflow { grid-template-columns: 1fr 1fr; margin-top: 35px; }
+      .workflow-step { min-height: 174px; padding: 18px 14px 18px 0; }
+      .workflow-step + .workflow-step { padding-left: 14px; }
+      .workflow-step:nth-child(3) { border-left: 0; border-top: 1px solid var(--line); }
+      .workflow-step:nth-child(4) { border-top: 1px solid var(--line); }
+      .workflow-step h3 { margin-top: 20px; font-size: 15px; }
+      .workflow-step p { font-size: 12px; }
+      .evidence-band { padding: 70px 0; }
+      .evidence-grid { grid-template-columns: 1fr; margin-top: 30px; }
+      .evidence-item { min-height: auto; padding: 18px 0 20px; }
+      .evidence-item + .evidence-item { padding-left: 0; border-top: 1px solid #52534e; border-left: 0; }
+      .evidence-item h3 { margin-top: 10px; font-size: 22px; }
+      .deliverable { grid-template-columns: 36px minmax(0, 1fr); gap: 6px 12px; padding: 14px 0; }
+      .deliverable h3 { font-size: 13px; }
+      .deliverable p { grid-column: 2; }
+      .deliverable-tag { grid-column: 2; justify-self: start; }
+      .experience { padding: 72px 0 78px; }
+      .experience-heading { align-items: start; flex-direction: column; gap: 18px; }
+      .demo-grid { grid-template-columns: 1fr; }
+      .demo-inputs, .demo-output { padding: 17px 14px; }
+      .demo-output { border-top: 1px solid var(--line); border-left: 0; }
+      .demo-toolbar { padding-inline: 10px; font-size: 9px; }
+      .demo-toolbar span:last-child { text-align: right; }
+      .questions { padding: 72px 0; }
+      summary { min-height: 58px; font-size: 13px; }
+      details p { font-size: 12px; }
+      .footer-row { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap nav">
+      <a class="brand" href="#top" aria-label="IP Disclosure Workbench 首页">
+        <span class="brand-mark" aria-hidden="true">IP</span>
+        <span class="brand-name">IP Disclosure Workbench</span>
+      </a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="#workflow">工作流程</a>
+        <a href="#outputs">交付内容</a>
+        <a class="nav-cta" href="#experience">在线体验 <span class="arrow" aria-hidden="true">↓</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="eyebrow">研发证据 · 专利交底</div>
+      <h1>IP Disclosure Workbench</h1>
+      <p class="hero-copy">让设计文档、代码实现与验证证据，汇成可回查的专利技术线索。</p>
+      <div class="hero-actions">
+        <a class="button button-dark" href="#experience">在线体验 <span class="arrow" aria-hidden="true">↓</span></a>
+        <a class="button button-light" href="https://github.com/changxueyi/ip-disclosure-workbench" target="_blank" rel="noreferrer">查看 Skill 仓库 <span class="arrow" aria-hidden="true">↗</span></a>
+      </div>
+      <p class="hero-note">本地优先分析 · 不运行项目 · 远程传输需单独授权</p>
+
+      <div class="workspace reveal" aria-label="设计文档与代码证据工作区预览">
+        <div class="workspace-bar">
+          <div class="window-dots" aria-hidden="true"><span></span><span></span><span></span></div>
+          <span>IPDW / EVIDENCE WORKSPACE</span>
+          <span class="workspace-state"><i class="state-dot" aria-hidden="true"></i> 本地分析</span>
+        </div>
+        <div class="workspace-title">
+          <strong>项目 / event-ingest-engine</strong>
+          <span>设计说明 · 实现路径 · 验证证据</span>
+        </div>
+        <div class="workspace-grid">
+          <aside class="file-rail" aria-label="输入材料">
+            <p class="rail-label">输入材料</p>
+            <div class="file-row"><i class="file-icon" aria-hidden="true"></i> design/merge.md</div>
+            <div class="file-row active"><i class="file-icon" aria-hidden="true"></i> src/window.ts</div>
+            <div class="file-row"><i class="file-icon" aria-hidden="true"></i> test/conflict.spec.ts</div>
+            <div class="file-row"><i class="file-icon" aria-hidden="true"></i> metrics/baseline.csv</div>
+          </aside>
+          <div class="analysis-view">
+            <div class="analysis-heading">
+              <span>实现证据 / windowedMerge</span>
+              <small>src/window.ts:84–121</small>
+            </div>
+            <div class="code-block" aria-label="代码片段动画">
+              <span class="code-line"><span class="line-no">084</span><span class="syntax-key">function</span> windowedMerge(events, windowSize) {</span>
+              <span class="code-line"><span class="line-no">085</span>  <span class="syntax-key">const</span> groups = groupBySource(events);</span>
+              <span class="code-focus"><span class="code-line"><span class="line-no">086</span>  <span class="syntax-key">const</span> ranked = rankByTimestampAndStability(groups);</span></span>
+              <span class="code-line"><span class="line-no">087</span>  <span class="syntax-key">return</span> mergeWithinWindow(ranked, windowSize);</span>
+              <span class="code-line"><span class="line-no">088</span>}</span>
+              <span class="code-line"><span class="line-no">089</span><span class="syntax-comment">// 保留冲突前后的来源与状态变更记录</span></span>
+            </div>
+            <div class="trace-chain" aria-label="证据映射流程">
+              <div class="trace-step"><b>设计机制</b>冲突窗口与排序策略</div>
+              <div class="trace-step"><b>实现位置</b>核心函数及状态流</div>
+              <div class="trace-step"><b>验证材料</b>边界用例与效果记录</div>
+            </div>
+          </div>
+          <aside class="candidate-view" aria-label="候选技术点预览">
+            <div class="candidate-overline"><span>候选技术点 01</span><span class="evidence-count">证据关联 04</span></div>
+            <div>
+              <h2>面向乱序事件流的冲突窗口合并方法</h2>
+              <p>依据来源时间与稳定性对候选事件排序，在冲突窗口内执行合并，并保留变更来源。</p>
+            </div>
+            <div class="candidate-callout">设计描述、实现位置与边界测试已关联。效果数据仍需发明人确认。</div>
+            <div class="candidate-foot"><span>技术手段</span><span>实现证据</span><span>待确认 01</span></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="principles" aria-label="工作原则">
+      <div class="wrap principle-row">
+        <div class="principle"><i class="principle-mark" aria-hidden="true"></i><strong>本地优先</strong><span>材料留在当前工作区</span></div>
+        <div class="principle"><i class="principle-mark" aria-hidden="true"></i><strong>证据可追溯</strong><span>结论关联文件与代码位置</span></div>
+        <div class="principle"><i class="principle-mark" aria-hidden="true"></i><strong>发明人复核</strong><span>假设与事实清楚分开</span></div>
+      </div>
+    </section>
+
+    <section class="section wrap" id="workflow">
+      <div class="eyebrow">从材料到技术主张</div>
+      <h2 class="section-title">不是把代码改写成文案，而是找出技术手段如何带来效果。</h2>
+      <p class="section-lead">设计说明讲意图，代码与测试讲实际行为。将它们放到同一条证据链里，才能看清核心机制、替代方案和仍待确认的部分。</p>
+      <div class="workflow reveal">
+        <article class="workflow-step">
+          <span class="step-index">01 / SCOPE</span>
+          <h3>限定分析范围</h3>
+          <p>只读取指定项目与相关文件，跳过依赖、构建产物和疑似机密。</p>
+        </article>
+        <article class="workflow-step">
+          <span class="step-index">02 / TRACE</span>
+          <h3>追踪技术机制</h3>
+          <p>沿输入、处理、决策、状态变化、输出和异常路径整理实现。</p>
+        </article>
+        <article class="workflow-step">
+          <span class="step-index">03 / MAP</span>
+          <h3>映射设计与证据</h3>
+          <p>将方案特征关联到文档章节、代码符号、行号与测试结果。</p>
+        </article>
+        <article class="workflow-step">
+          <span class="step-index">04 / DRAFT</span>
+          <h3>形成评审材料</h3>
+          <p>输出候选专利点、交底初稿、实施方式和发明人问题清单。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="evidence-band" id="evidence">
+      <div class="wrap">
+        <div class="eyebrow">有据可查 · 不做法律承诺</div>
+        <h2 class="section-title">让每个候选点，都能回答三个问题。</h2>
+        <p class="section-lead">问题是否具体？技术方案如何执行？效果由哪些证据支撑？</p>
+        <div class="evidence-grid reveal">
+          <article class="evidence-item">
+            <small>QUESTION / 技术问题</small>
+            <h3>在哪种技术条件下失效？</h3>
+            <p>描述输入、设备、网络、数据或处理约束，区别于产品愿望和纯业务目标。</p>
+          </article>
+          <article class="evidence-item">
+            <small>MECHANISM / 技术手段</small>
+            <h3>系统具体做了什么？</h3>
+            <p>列出必要特征、执行顺序、组件关系和可替代的实施方式。</p>
+          </article>
+          <article class="evidence-item">
+            <small>EFFECT / 技术效果</small>
+            <h3>效果如何被验证？</h3>
+            <p>区分测量结果与预期效果；证据不足时列出待补材料，不填造数据。</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="deliverables wrap" id="outputs">
+      <div class="eyebrow">交付内容</div>
+      <h2 class="section-title">给发明人和代理师一份能继续工作的底稿。</h2>
+      <div class="deliverable-list">
+        <article class="deliverable">
+          <span class="deliverable-number">01</span>
+          <h3>候选专利点</h3>
+          <p>问题、核心手段、效果、必要特征与可选实施方式。</p>
+          <span class="deliverable-tag">CANDIDATES</span>
+        </article>
+        <article class="deliverable">
+          <span class="deliverable-number">02</span>
+          <h3>证据映射表</h3>
+          <p>设计章节、代码符号/行号、测试证据与支撑状态。</p>
+          <span class="deliverable-tag">TRACEABILITY</span>
+        </article>
+        <article class="deliverable">
+          <span class="deliverable-number">03</span>
+          <h3>发明人问题清单</h3>
+          <p>版本差异、未知参数、效果依据、替代实现与贡献确认。</p>
+          <span class="deliverable-tag">OPEN QUESTIONS</span>
+        </article>
+        <article class="deliverable">
+          <span class="deliverable-number">04</span>
+          <h3>技术交底初稿</h3>
+          <p>技术领域、背景、技术方案、效果、附图说明和实施例。</p>
+          <span class="deliverable-tag">DISCLOSURE</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="experience" id="experience">
+      <div class="wrap">
+        <div class="experience-heading">
+          <div>
+            <div class="eyebrow">在线体验 / 结构化演示</div>
+            <h2 class="section-title">把技术描述整理成候选点结构。</h2>
+            <p class="section-lead">填入设计线索与代码证据，即时预览一张可供人工复核的候选卡片。</p>
+          </div>
+          <span class="demo-label">浏览器本地运行 · 不会上传</span>
+        </div>
+
+        <div class="experience-shell">
+          <div class="demo-toolbar">
+            <strong>IPDW / QUICK PREVIEW</strong>
+            <span>演示模板 · 非模型推理</span>
+          </div>
+          <div class="demo-grid">
+            <form class="demo-inputs" id="demo-form">
+              <div class="field-group">
+                <label class="field-label" for="design-input">设计文档摘录 <small>DESIGN NOTES</small></label>
+                <textarea id="design-input" spellcheck="false" aria-describedby="design-help">技术问题：多源事件到达顺序不稳定，直接覆盖会导致状态回退。
+技术方案：按来源时间与稳定性对候选事件排序，并在冲突窗口内执行合并。
+技术效果：降低乱序引起的状态回退，同时保留冲突前后的来源记录。</textarea>
+                <p class="demo-help" id="design-help">可粘贴设计说明；演示模板读取“技术问题 / 技术方案 / 技术效果”字段。</p>
+              </div>
+              <div class="field-group">
+                <label class="field-label" for="code-input">代码与验证证据 <small>CODE / TEST</small></label>
+                <textarea id="code-input" spellcheck="false">src/window.ts:84-121 — windowedMerge()
+test/conflict.spec.ts — 覆盖乱序事件与窗口边界
+metrics/baseline.csv — 效果数据待发明人确认</textarea>
+                <p class="demo-help">输入文件路径、符号名、行号或测试名称，体验证据关联。</p>
+              </div>
+              <div class="demo-actions">
+                <button class="button button-dark" type="submit">生成候选点卡片 <span class="arrow" aria-hidden="true">→</span></button>
+                <button class="button button-light" type="button" id="reset-demo">恢复示例</button>
+                <span class="privacy-note">内容仅用于当前页面内的结构演示。</span>
+              </div>
+              <p class="demo-status" id="demo-status" role="status" aria-live="polite">示例已载入。编辑内容后可重新生成预览。</p>
+            </form>
+            <section class="demo-output" aria-label="候选专利点卡片预览">
+              <div class="result-top"><span>候选技术点 / PREVIEW</span><span class="result-state" id="result-state">材料字段 4 / 4</span></div>
+              <h3 class="result-title" id="result-title">面向乱序事件流的冲突窗口合并方法</h3>
+              <p class="result-caption">结构化讨论稿 · 不代表新颖性、创造性或授权判断</p>
+              <dl>
+                <div class="result-field"><dt>技术问题</dt><dd id="result-problem">多源事件到达顺序不稳定，直接覆盖会导致状态回退。</dd></div>
+                <div class="result-field"><dt>核心技术手段</dt><dd id="result-solution">按来源时间与稳定性对候选事件排序，并在冲突窗口内执行合并。</dd></div>
+                <div class="result-field"><dt>技术效果</dt><dd id="result-effect">降低乱序引起的状态回退，同时保留冲突前后的来源记录。</dd></div>
+                <div class="result-field"><dt>实现证据</dt><dd id="result-evidence">src/window.ts:84-121 · test/conflict.spec.ts · baseline.csv 待核验</dd></div>
+              </dl>
+              <div class="result-foot">此页面仅生成结构化预览，不会分析源码语义、不连接 AI 服务，也不构成专利性结论。</div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="questions wrap">
+      <div class="eyebrow">常见问题</div>
+      <h2 class="section-title">为材料边界留出清楚的答案。</h2>
+      <div class="question-list">
+        <details>
+          <summary>演示结果会被上传或保存吗？</summary>
+          <p>不会。页面不调用网络接口，也不使用本地存储；输入仅保留在当前浏览器页面内。刷新后会恢复内置示例。</p>
+        </details>
+        <details>
+          <summary>这个在线演示等同于完整专利分析吗？</summary>
+          <p>不是。它只是结构化输入与输出的前端演示，不执行代码分析、现有技术检索或法律判断。完整分析由安装后的 skill 在用户指定材料范围内完成。</p>
+        </details>
+        <details>
+          <summary>支持哪些输入材料？</summary>
+          <p>skill 可处理用户提供的设计文档、研发报告、源代码、接口说明和测试材料。演示页只接受粘贴的文本摘录；本地文件解析能力取决于运行 skill 的助手环境。</p>
+        </details>
+        <details>
+          <summary>候选专利点是否代表可以申请或授权？</summary>
+          <p>不代表。候选点是依据技术材料整理的讨论假设。发明人需核对事实、贡献与公开时间，并由专利专业人士评估现有技术、保护范围和申请策略。</p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <span>IP Disclosure Workbench · 专利技术洞察工作台</span>
+      <div class="footer-links">
+        <a href="#experience">在线体验</a>
+        <a href="https://github.com/changxueyi/ip-disclosure-workbench" target="_blank" rel="noreferrer">Skill 仓库 ↗</a>
+        <a href="#top">返回顶部 ↑</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.documentElement.classList.add("js");
+
+    const form = document.getElementById("demo-form");
+    const designInput = document.getElementById("design-input");
+    const codeInput = document.getElementById("code-input");
+    const status = document.getElementById("demo-status");
+
+    const exampleDesign = [
+      "技术问题：多源事件到达顺序不稳定，直接覆盖会导致状态回退。",
+      "技术方案：按来源时间与稳定性对候选事件排序，并在冲突窗口内执行合并。",
+      "技术效果：降低乱序引起的状态回退，同时保留冲突前后的来源记录。"
+    ].join("\n");
+    const exampleCode = [
+      "src/window.ts:84-121 — windowedMerge()",
+      "test/conflict.spec.ts — 覆盖乱序事件与窗口边界",
+      "metrics/baseline.csv — 效果数据待发明人确认"
+    ].join("\n");
+
+    function fieldValue(text, labels) {
+      const alternatives = labels.join("|");
+      const match = text.match(new RegExp("(?:^|\\n)\\s*(?:" + alternatives + ")\\s*[:：]\\s*([^\\n]+)", "i"));
+      return match ? match[1].trim() : "";
+    }
+
+    function shorten(value, limit) {
+      const chars = Array.from(value);
+      return chars.length > limit ? chars.slice(0, limit).join("") + "…" : value;
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const design = designInput.value.trim();
+      const evidence = codeInput.value.trim();
+      const problem = fieldValue(design, ["技术问题", "待解决问题", "问题"]);
+      const solution = fieldValue(design, ["技术方案", "核心技术手段", "处理机制"]);
+      const effect = fieldValue(design, ["技术效果", "预期效果", "效果"]);
+      const count = [problem, solution, effect, evidence].filter(Boolean).length;
+      const candidateTitle = solution ? shorten(solution.replace(/[。；;]+$/, ""), 32) : "待补充的技术方案";
+      const evidenceSummary = evidence || "尚未提供代码、测试或其他实现证据。";
+
+      document.getElementById("result-title").textContent = candidateTitle;
+      document.getElementById("result-problem").textContent = problem || "未识别到“技术问题”字段，请补充后再讨论。";
+      document.getElementById("result-solution").textContent = solution || "未识别到“技术方案”字段，请补充后再讨论。";
+      document.getElementById("result-effect").textContent = effect || "未识别到“技术效果”字段，请补充已验证效果或标记为预期。";
+      document.getElementById("result-evidence").textContent = evidenceSummary;
+      document.getElementById("result-state").textContent = "材料字段 " + count + " / 4";
+      status.textContent = count === 4
+        ? "候选卡片已更新。所有字段都有输入，仍需人工核对其真实性与证据支撑。"
+        : "候选卡片已更新。还有 " + (4 - count) + " 项材料字段需要补充或确认。";
+    });
+
+    document.getElementById("reset-demo").addEventListener("click", () => {
+      designInput.value = exampleDesign;
+      codeInput.value = exampleCode;
+      form.requestSubmit();
+      status.textContent = "示例已恢复。内容仅保留在当前页面。";
+    });
+
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+      document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+    } else {
+      document.querySelectorAll(".reveal").forEach((element) => element.classList.add("is-visible"));
+    }
+  </script>
+</body>
+</html>
