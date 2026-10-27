@@ -88,12 +88,14 @@
 .online-experience__card--rose::after { background: #d6336c; }
 .online-experience__card--orange::after { background: #f08a3c; }
 .online-experience__card--blue::after { background: #3451b2; }
+.online-experience__card--green::after { background: #2fb867; }
 .online-experience__card:hover, .online-experience__card:focus-visible { border-color: rgba(52, 81, 178, .34); box-shadow: 0 12px 24px rgba(15, 23, 42, .08); transform: translateY(-2px); }
 .online-experience__card-mark { position: relative; z-index: 1; display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 9px; background: #e9eefc; color: #3451b2; font-size: .62rem; font-weight: 800; letter-spacing: .05em; }
 .online-experience__card--teal .online-experience__card-mark { background: rgba(22, 163, 148, .12); color: #08796f; }
 .online-experience__card--rose .online-experience__card-mark { background: rgba(214, 51, 108, .1); color: #b52c5a; }
 .online-experience__card--orange .online-experience__card-mark { background: rgba(240, 138, 60, .13); color: #b35a1b; }
 .online-experience__card--blue .online-experience__card-mark { background: rgba(52, 81, 178, .12); color: #3451b2; }
+.online-experience__card--green .online-experience__card-mark { background: rgba(47, 184, 103, .14); color: #1a7a45; }
 .online-experience__card-body { position: relative; z-index: 1; display: grid; gap: .3rem; }
 .online-experience__card-type { color: #7c8798; font-size: .6rem; font-weight: 800; letter-spacing: .1em; }
 .online-experience__card-body strong { color: #1f2d40; font-size: .98rem; line-height: 1.25; }
