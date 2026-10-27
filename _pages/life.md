@@ -10,8 +10,6 @@ author_profile: true
 .pinned-badge{display:inline-block;background:#d6336c;color:#fff;font-size:.62em;font-weight:700;letter-spacing:.08em;padding:.2em .7em;border-radius:1em;vertical-align:middle;position:relative;top:-2px;margin-right:.4em;}
 </style>
 
-{% include online-experience.html compact=true %}
-
 {% assign posts = site.categories['生活随笔'] %}
 {% if posts and posts.size > 0 %}
   {% assign pinned = posts | where: "pinned", true %}
