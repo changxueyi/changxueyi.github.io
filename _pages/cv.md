@@ -15,8 +15,6 @@ redirect_from:
 
 > 完整版个人说明书（飞书文档）：<https://my.feishu.cn/docx/Dm3Td4KLUoBUjdxeytZcHXBDnDh>
 
-{% include online-experience.html compact=true %}
-
 我的快速标签
 ======
 
