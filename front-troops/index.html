@@ -6210,5 +6210,30 @@ errors ${window.__errors.length}${window.__errors.length?`
 
 </script>
 
+<!-- 背景音乐（从原曲第 12 秒起、已裁掉前 12 秒），首次交互后循环播放 -->
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+<script>
+(function () {
+  var bgm = document.getElementById('bgm');
+  if (!bgm) return;
+  bgm.volume = 0.35;
+  var started = false;
+  function start() {
+    if (started) return;
+    var p = bgm.play();
+    if (p && p.then) { p.then(function () { started = true; }).catch(function () {}); }
+    else { started = true; }
+  }
+  start(); // 尝试直接播放；多数浏览器会拦截，等待用户交互
+  ['pointerdown', 'keydown', 'touchstart', 'click'].forEach(function (ev) {
+    window.addEventListener(ev, start, { capture: true });
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) bgm.pause();
+    else if (started) bgm.play().catch(function () {});
+  });
+})();
+</script>
+
 </body>
 </html>
