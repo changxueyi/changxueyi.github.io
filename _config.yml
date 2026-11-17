@@ -190,6 +190,7 @@ exclude:
   - local
   - log
   - node_modules
+  - luoyang-tang-pagoda-source
   - package.json*
   - Rakefile
   - README
