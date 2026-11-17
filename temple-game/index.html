@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>禅 · 古寺修行 — First-Person Temple</title>
+<style>
+  :root{
+    --ink:#f3ead6; --gold:#d9b26a; --gold2:#f0d69a; --red:#8a2b1c;
+    --panel:rgba(18,14,10,0.72); --panel2:rgba(28,20,12,0.86);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;height:100%;overflow:hidden;background:#0a0806;color:var(--ink);
+    font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;}
+  #app{position:fixed;inset:0;}
+  canvas{display:block;}
+  #loader{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:18px;
+    background:radial-gradient(ellipse at 50% 40%,#2a1d12 0%,#120c08 60%,#080504 100%);}
+  #loader h1{font-size:30px;letter-spacing:.5em;margin:0 0 4px;font-weight:600;
+    text-shadow:0 0 24px rgba(217,178,106,.5);padding-left:.5em;}
+  #loader .sub{opacity:.6;letter-spacing:.3em;font-size:12px;}
+  .barwrap{width:min(420px,70vw);height:6px;border-radius:6px;overflow:hidden;
+    background:rgba(255,255,255,.08);box-shadow:inset 0 0 4px rgba(0,0,0,.6);}
+  #bar{height:100%;width:0%;background:linear-gradient(90deg,#8a5a1a,#f0d69a);
+    border-radius:6px;transition:width .25s ease;}
+  #loadtxt{font-size:13px;opacity:.75;min-height:1em;letter-spacing:.1em;}
+  .spin{width:22px;height:22px;border:2px solid rgba(217,178,106,.25);
+    border-top-color:var(--gold2);border-radius:50%;animation:sp 1s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  #hud{position:fixed;inset:0;z-index:30;pointer-events:none;opacity:0;transition:opacity .6s;}
+  #hud.show{opacity:1;}
+  #crosshair{position:absolute;left:50%;top:50%;width:22px;height:22px;transform:translate(-50%,-50%);}
+  #crosshair::before,#crosshair::after{content:"";position:absolute;background:rgba(243,234,214,.75);
+    box-shadow:0 0 4px rgba(0,0,0,.8);}
+  #crosshair::before{left:50%;top:0;width:2px;height:100%;transform:translateX(-50%);}
+  #crosshair::after{top:50%;left:0;height:2px;width:100%;transform:translateY(-50%);}
+  #crosshair.hit::before,#crosshair.hit::after{background:var(--gold2);}
+  #stats{position:absolute;left:18px;top:16px;padding:12px 16px;border-radius:12px;
+    background:var(--panel);backdrop-filter:blur(6px);min-width:220px;
+    box-shadow:0 6px 30px rgba(0,0,0,.5);border:1px solid rgba(217,178,106,.18);}
+  .statrow{display:flex;justify-content:space-between;gap:18px;font-size:13px;margin:3px 0;}
+  .statrow b{color:var(--gold2);font-variant-numeric:tabular-nums;}
+  .meter{height:7px;border-radius:5px;background:rgba(255,255,255,.09);margin:3px 0 8px;overflow:hidden;}
+  .meter>i{display:block;height:100%;width:0%;border-radius:5px;transition:width .25s;}
+  #mHp>i{background:linear-gradient(90deg,#7a1d12,#e05a3a);}
+  #mQi>i{background:linear-gradient(90deg,#1c5a7a,#5ad0e0);}
+  #mSati>i{background:linear-gradient(90deg,#8a5a1a,#f0d69a);}
+  #quest{position:absolute;right:18px;top:16px;max-width:300px;padding:12px 16px;border-radius:12px;
+    background:var(--panel);backdrop-filter:blur(6px);border:1px solid rgba(217,178,106,.18);
+    box-shadow:0 6px 30px rgba(0,0,0,.5);}
+  #quest h3{margin:0 0 6px;font-size:13px;letter-spacing:.2em;color:var(--gold);}
+  #quest p{margin:3px 0;font-size:12.5px;opacity:.9;line-height:1.5;}
+  #quest p.done{color:#7fd18a;text-decoration:line-through;opacity:.65;}
+  #prompt{position:absolute;left:50%;bottom:24%;transform:translateX(-50%);
+    padding:9px 18px;border-radius:30px;background:var(--panel2);border:1px solid rgba(217,178,106,.4);
+    font-size:14px;letter-spacing:.06em;opacity:0;transition:opacity .18s;white-space:nowrap;
+    box-shadow:0 4px 20px rgba(0,0,0,.6);}
+  #prompt.show{opacity:1;}
+  #prompt kbd{background:var(--gold);color:#20140a;border-radius:5px;padding:1px 7px;margin-right:8px;
+    font-weight:700;font-family:inherit;}
+  #subtitle{position:absolute;left:50%;bottom:12%;transform:translateX(-50%);text-align:center;
+    font-size:20px;letter-spacing:.12em;opacity:0;transition:opacity .5s;
+    text-shadow:0 2px 12px #000,0 0 24px rgba(217,178,106,.4);pointer-events:none;}
+  #subtitle.show{opacity:1;}
+  #skills{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);display:flex;gap:10px;pointer-events:auto;}
+  .skill{width:58px;height:58px;border-radius:14px;position:relative;cursor:pointer;
+    background:linear-gradient(160deg,rgba(40,28,16,.9),rgba(20,14,9,.92));
+    border:1px solid rgba(217,178,106,.35);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:1px;transition:.15s;user-select:none;}
+  .skill:hover{border-color:var(--gold2);transform:translateY(-3px);box-shadow:0 8px 22px rgba(217,178,106,.25);}
+  .skill .ic{font-size:22px;line-height:1;}
+  .skill .nm{font-size:10px;opacity:.85;letter-spacing:.02em;}
+  .skill .key{position:absolute;top:-7px;right:-5px;background:var(--gold);color:#20140a;
+    font-size:10px;font-weight:700;border-radius:6px;padding:1px 6px;}
+  .skill .cd{position:absolute;inset:0;border-radius:14px;background:rgba(0,0,0,.65);
+    display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--gold2);
+    opacity:0;pointer-events:none;}
+  .skill.cooling .cd{opacity:1;}
+  .skill.ult{border-color:rgba(240,140,60,.6);background:linear-gradient(160deg,rgba(80,30,10,.92),rgba(30,12,6,.94));}
+  .skill.ult.rdy{animation:ultglow 1.4s ease-in-out infinite;}
+  @keyframes ultglow{0%,100%{box-shadow:0 0 8px rgba(240,140,60,.3);}50%{box-shadow:0 0 26px rgba(240,150,60,.8);}}
+  #vig{position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 240px 40px rgba(0,0,0,.7);}
+  #flash{position:absolute;inset:0;pointer-events:none;opacity:0;
+    background:radial-gradient(circle at 50% 60%,rgba(255,230,170,.9),rgba(255,180,80,0) 60%);
+    transition:opacity .12s;}
+  #dmg{position:absolute;inset:0;pointer-events:none;opacity:0;
+    box-shadow:inset 0 0 160px 30px rgba(180,20,10,.7);transition:opacity .25s;}
+  #fps{position:absolute;right:16px;bottom:14px;font-size:11px;opacity:.5;font-variant-numeric:tabular-nums;}
+  #start{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(ellipse at 50% 35%,rgba(30,20,12,.7),rgba(6,4,2,.92));backdrop-filter:blur(2px);}
+  #start .card{text-align:center;max-width:560px;padding:40px 44px;}
+  #start h1{font-size:40px;letter-spacing:.35em;margin:0 0 6px;font-weight:600;padding-left:.35em;
+    text-shadow:0 0 40px rgba(217,178,106,.6);}
+  #start .poem{font-size:14px;opacity:.7;line-height:2;margin:14px 0 26px;letter-spacing:.15em;}
+  #start .keys{display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;font-size:12.5px;
+    opacity:.82;margin-bottom:28px;text-align:left;}
+  #start .keys span{display:flex;justify-content:space-between;}
+  #start .keys kbd{background:rgba(217,178,106,.18);border:1px solid rgba(217,178,106,.4);
+    border-radius:5px;padding:1px 8px;color:var(--gold2);font-family:inherit;}
+  .btn{pointer-events:auto;cursor:pointer;border:none;border-radius:40px;padding:14px 44px;
+    font-size:16px;letter-spacing:.3em;color:#241608;font-weight:700;
+    background:linear-gradient(180deg,#f0d69a,#d9b26a);box-shadow:0 8px 30px rgba(217,178,106,.4);
+    transition:.15s;}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 12px 38px rgba(217,178,106,.6);}
+  .btn:active{transform:translateY(0);}
+  #start .hint{margin-top:18px;font-size:11.5px;opacity:.45;}
+  #overlay{position:fixed;inset:0;z-index:55;display:none;align-items:center;justify-content:center;
+    background:rgba(6,4,2,.82);backdrop-filter:blur(3px);text-align:center;}
+  #overlay.show{display:flex;}
+  #overlay .inner{max-width:480px;padding:36px;}
+  #overlay h2{font-size:30px;letter-spacing:.3em;margin:0 0 14px;padding-left:.3em;color:var(--gold2);}
+  #overlay p{font-size:14px;line-height:1.9;opacity:.85;margin:8px 0 22px;}
+  @media(max-width:640px){
+    #start .keys{grid-template-columns:1fr;}
+    .skill{width:50px;height:50px;}
+    #quest{max-width:200px;font-size:11px;}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="loader">
+  <div class="spin"></div>
+  <h1>禅</h1>
+  <div class="sub">古 寺 修 行</div>
+  <div class="barwrap"><div id="bar"></div></div>
+  <div id="loadtxt">正在入寺…</div>
+</div>
+<div id="start">
+  <div class="card">
+    <h1>禅</h1>
+    <div class="poem">曲径通幽处，禅房花木深。<br/>万法皆空，唯道是修。</div>
+    <div class="keys">
+      <span><kbd>W A S D</kbd>行走</span><span><kbd>Shift</kbd>奔跑</span>
+      <span><kbd>Space</kbd>跳跃</span><span><kbd>鼠标</kbd>环顾</span>
+      <span><kbd>E</kbd>互动 / 修行</span><span><kbd>左键</kbd>拳 / 棍</span>
+      <span><kbd>Q</kbd>扫地</span><span><kbd>F</kbd>上香</span>
+      <span><kbd>1</kbd>打坐</span><span><kbd>2</kbd>诵经</span>
+      <span><kbd>R</kbd>拜佛</span><span><kbd>V</kbd>伏魔</span>
+      <span><kbd>C</kbd>金钟罩</span><span><kbd>Tab</kbd>切换视角</span>
+      <span><kbd>Esc</kbd>暂停</span><span></span>
+    </div>
+    <button class="btn" id="startBtn">入 寺</button>
+    <div class="hint">建议佩戴耳机 · 点击后进入第一人称 · 移动鼠标环顾</div>
+  </div>
+</div>
+<div id="hud">
+  <div id="vig"></div>
+  <div id="flash"></div>
+  <div id="dmg"></div>
+  <div id="crosshair"></div>
+  <div id="stats">
+    <div class="statrow"><span>气血</span><b id="vHp">100</b></div>
+    <div class="meter" id="mHp"><i></i></div>
+    <div class="statrow"><span>真气</span><b id="vQi">100</b></div>
+    <div class="meter" id="mQi"><i></i></div>
+    <div class="statrow"><span>禅定</span><b id="vSati">0</b></div>
+    <div class="meter" id="mSati"><i></i></div>
+    <div class="statrow" style="margin-top:6px;font-size:12px;opacity:.8"><span>功德</span><b id="vGong">0</b></div>
+  </div>
+  <div id="quest">
+    <h3>修 行 课 业</h3>
+    <p data-q="sweep">扫地 · 拂去尘埃 <span id="q_sweep">0/3</span></p>
+    <p data-q="incense">上香 · 敬奉三宝 <span id="q_incense">0/3</span></p>
+    <p data-q="meditate">打坐 · 入定参禅 <span id="q_meditate">0/30s</span></p>
+    <p data-q="chant">诵经 · 口诵真言 <span id="q_chant">0/20s</span></p>
+    <p data-q="worship">拜佛 · 顶礼膜拜 <span id="q_worship">0/3</span></p>
+  </div>
+  <div id="prompt"></div>
+  <div id="subtitle"></div>
+  <div id="skills">
+    <div class="skill" data-act="sweep"><span class="key">Q</span><span class="ic">🧹</span><span class="nm">扫地</span><div class="cd"></div></div>
+    <div class="skill" data-act="incense"><span class="key">F</span><span class="ic">🕯️</span><span class="nm">上香</span><div class="cd"></div></div>
+    <div class="skill" data-act="meditate"><span class="key">1</span><span class="ic">🧘</span><span class="nm">打坐</span><div class="cd"></div></div>
+    <div class="skill" data-act="chant"><span class="key">2</span><span class="ic">📿</span><span class="nm">诵经</span><div class="cd"></div></div>
+    <div class="skill" data-act="worship"><span class="key">R</span><span class="ic">🙏</span><span class="nm">拜佛</span><div class="cd"></div></div>
+    <div class="skill" data-act="punch"><span class="key">L</span><span class="ic">👊</span><span class="nm">罗汉拳</span><div class="cd"></div></div>
+    <div class="skill ult" data-act="ultimate"><span class="key">V</span><span class="ic">☄️</span><span class="nm">伏魔</span><div class="cd"></div></div>
+    <div class="skill ult" data-act="shield"><span class="key">C</span><span class="ic">🛡️</span><span class="nm">金钟罩</span><div class="cd"></div></div>
+    <div class="skill" data-act="view"><span class="key">Tab</span><span class="ic">🎥</span><span class="nm" id="viewBtnLabel">视角</span><div class="cd"></div></div>
+  </div>
+  <div id="fps"></div>
+</div>
+<div id="overlay">
+  <div class="inner">
+    <h2 id="ovTitle">暂 停</h2>
+    <p id="ovText"></p>
+    <button class="btn" id="ovBtn">继 续</button>
+  </div>
+</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three/three.module.js",
+    "three/addons/": "./vendor/jsm/"
+  }
+}
+</script>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
