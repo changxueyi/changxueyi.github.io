@@ -1,0 +1,380 @@
+<!doctype html>
+  <html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A programmable micro-voxel scene editor for a Tang-dynasty Luoyang sky pagoda."
+    />
+    <title>Luoyang · Tang Sky Pagoda</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Cpath fill=%22%23d8b26c%22 d=%22M32 4l5 12h12l-9 9 3 13-11-7-11 7 3-13-9-9h12z%22/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="scene-shell" class="scene-shell">
+      <canvas
+        id="scene-canvas"
+        class="scene-canvas"
+        aria-label="Interactive 3D voxel scene of a Tang dynasty pagoda on a floating island"
+      ></canvas>
+
+      <div class="vignette" aria-hidden="true"></div>
+
+      <header class="masthead">
+        <div class="brand-lockup">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>
+            <span class="brand-kicker">LUOYANG · TANG SKY PAGODA</span>
+            <span class="brand-title">洛阳盛唐 · 浮空古塔</span>
+          </span>
+        </div>
+        <div class="masthead-meta" aria-label="Scene information">
+          <span class="meta-chip"><i class="meta-dot"></i> 实时体素世界</span>
+          <span class="meta-chip meta-chip-muted" id="scene-time-readout">16:12</span>
+          <span class="meta-chip meta-chip-muted" id="fps-readout">— FPS</span>
+        </div>
+      </header>
+
+      <main class="editor-layout">
+        <aside
+          class="glass-panel control-panel"
+          aria-label="环境与程序化参数"
+          data-panel="environment"
+        >
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">ENVIRONMENT</p>
+              <h1 class="panel-title">天工参数</h1>
+            </div>
+            <button
+              class="icon-button panel-collapse"
+              id="environment-collapse"
+              type="button"
+              aria-expanded="true"
+              aria-controls="environment-content"
+              aria-label="收起环境参数面板"
+            >
+              <span aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <div class="panel-content" id="environment-content">
+            <section class="control-section" aria-labelledby="sky-light-heading">
+              <div class="section-title-row">
+                <h2 class="section-title" id="sky-light-heading">天象与光照</h2>
+                <span class="section-note">SKY / LIGHT</span>
+              </div>
+
+              <div class="field-group">
+                <div class="field-heading">
+                  <label class="field-label" for="day-time">一日时辰</label>
+                  <output class="field-output" id="day-time-value" for="day-time">16:12</output>
+                </div>
+                <input
+                  class="range-input"
+                  id="day-time"
+                  type="range"
+                  min="0"
+                  max="24"
+                  value="16.2"
+                  step="0.01"
+                  aria-describedby="day-time-hint"
+                />
+                <div class="range-ticks" aria-hidden="true">
+                  <span>子</span><span>卯</span><span>午</span><span>酉</span><span>子</span>
+                </div>
+                <p class="field-hint" id="day-time-hint">联动太阳高度角、天空渐变与塔内灯火。</p>
+              </div>
+
+              <div class="field-group">
+                <div class="field-heading">
+                  <span class="field-label" id="weather-label">天象预设</span>
+                  <span class="field-output" id="weather-value">盛唐落日</span>
+                </div>
+                <div
+                  class="segmented-control weather-control"
+                  role="group"
+                  aria-labelledby="weather-label"
+                >
+                  <button class="segment" type="button" data-weather="clear" aria-pressed="false">晴空</button>
+                  <button class="segment" type="button" data-weather="cloud-sea" aria-pressed="false">云海</button>
+                  <button class="segment" type="button" data-weather="mist" aria-pressed="false">烟雨</button>
+                  <button class="segment is-active" type="button" data-weather="sunset" aria-pressed="true">落日</button>
+                  <button class="segment" type="button" data-weather="moon" aria-pressed="false">月夜</button>
+                </div>
+              </div>
+
+              <div class="toggle-row">
+                <label class="toggle-label" for="tower-lights">
+                  <span>
+                    <span class="toggle-title">塔身灯火</span>
+                    <span class="toggle-subtitle">Tower lanterns</span>
+                  </span>
+                </label>
+                <label class="switch">
+                  <input id="tower-lights" type="checkbox" checked />
+                  <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+                  <span class="sr-only">切换塔身灯火</span>
+                </label>
+              </div>
+            </section>
+
+            <div class="panel-divider"></div>
+
+            <section class="control-section" aria-labelledby="motion-heading">
+              <div class="section-title-row">
+                <h2 class="section-title" id="motion-heading">动态物理</h2>
+                <span class="section-note">MOTION</span>
+              </div>
+
+              <div class="field-group compact-field">
+                <div class="field-heading">
+                  <label class="field-label" for="wind-strength">风力</label>
+                  <output class="field-output" id="wind-strength-value" for="wind-strength">0.56</output>
+                </div>
+                <input class="range-input" id="wind-strength" type="range" min="0" max="1" value="0.56" step="0.01" />
+              </div>
+
+              <div class="field-group compact-field">
+                <div class="field-heading">
+                  <label class="field-label" for="cloud-speed">云层流速</label>
+                  <output class="field-output" id="cloud-speed-value" for="cloud-speed">0.42</output>
+                </div>
+                <input class="range-input" id="cloud-speed" type="range" min="0" max="1" value="0.42" step="0.01" />
+              </div>
+
+              <div class="field-group compact-field">
+                <div class="field-heading">
+                  <label class="field-label" for="waterfall-flow">瀑布流量</label>
+                  <output class="field-output" id="waterfall-flow-value" for="waterfall-flow">1.30</output>
+                </div>
+                <input class="range-input" id="waterfall-flow" type="range" min="0.2" max="2.4" value="1.3" step="0.01" />
+              </div>
+            </section>
+
+            <div class="panel-divider"></div>
+
+            <section class="control-section" aria-labelledby="post-heading">
+              <div class="section-title-row">
+                <h2 class="section-title" id="post-heading">后期氛围</h2>
+                <span class="section-note">ATMOSPHERE</span>
+              </div>
+
+              <div class="field-group compact-field">
+                <div class="field-heading">
+                  <label class="field-label" for="bloom-strength">辉光强度</label>
+                  <output class="field-output" id="bloom-strength-value" for="bloom-strength">0.82</output>
+                </div>
+                <input class="range-input" id="bloom-strength" type="range" min="0" max="2" value="0.82" step="0.01" />
+              </div>
+
+              <div class="field-group compact-field">
+                <div class="field-heading">
+                  <label class="field-label" for="fog-density">雾霭浓度</label>
+                  <output class="field-output" id="fog-density-value" for="fog-density">0.007</output>
+                </div>
+                <input class="range-input" id="fog-density" type="range" min="0" max="0.08" value="0.0072" step="0.001" />
+              </div>
+
+              <div class="toggle-row">
+                <label class="toggle-label" for="shadow-toggle">
+                  <span>
+                    <span class="toggle-title">实时软阴影</span>
+                    <span class="toggle-subtitle">PCF soft shadows</span>
+                  </span>
+                </label>
+                <label class="switch">
+                  <input id="shadow-toggle" type="checkbox" checked />
+                  <span class="switch-track" aria-hidden="true"><span class="switch-thumb"></span></span>
+                  <span class="sr-only">切换实时阴影</span>
+                </label>
+              </div>
+            </section>
+          </div>
+        </aside>
+
+        <aside class="glass-panel outliner-panel" aria-label="场景大纲">
+          <div class="panel-heading outliner-heading">
+            <div>
+              <p class="eyebrow">SCENE OUTLINER</p>
+              <h2 class="panel-title">场景谱系</h2>
+            </div>
+            <span class="object-count" id="object-count">08</span>
+          </div>
+
+          <div class="tree" id="scene-tree" role="tree" aria-label="场景对象层级">
+            <div class="tree-row tree-row-root is-selected" role="treeitem" aria-selected="true" data-target="pagoda">
+              <button class="tree-caret" type="button" aria-label="展开洛阳古塔" aria-expanded="true">
+                <span aria-hidden="true"></span>
+              </button>
+              <span class="tree-glyph pagoda-glyph" aria-hidden="true"></span>
+              <span class="tree-label">洛阳古塔 <small>Tang pagoda</small></span>
+              <span class="tree-badge">07F</span>
+              <button class="visibility-button" type="button" data-visibility="pagoda" aria-pressed="true" aria-label="隐藏洛阳古塔">
+                <span class="eye-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <div class="tree-children" role="group">
+              <div class="tree-row" role="treeitem" aria-selected="false" data-target="pagodaFinial">
+                <span class="tree-branch" aria-hidden="true"></span>
+                <span class="tree-glyph finial-glyph" aria-hidden="true"></span>
+                <span class="tree-label">鎏金塔刹 <small>Finial</small></span>
+                <button class="visibility-button" type="button" data-visibility="pagodaFinial" aria-pressed="true" aria-label="隐藏鎏金塔刹">
+                  <span class="eye-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="tree-row" role="treeitem" aria-selected="false" data-target="pagodaBody">
+                <span class="tree-branch" aria-hidden="true"></span>
+                <span class="tree-glyph body-glyph" aria-hidden="true"></span>
+                <span class="tree-label">七层塔身 <small>Seven storeys</small></span>
+                <button class="visibility-button" type="button" data-visibility="pagodaBody" aria-pressed="true" aria-label="隐藏七层塔身">
+                  <span class="eye-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+              <div class="tree-row" role="treeitem" aria-selected="false" data-target="pagodaBase">
+                <span class="tree-branch" aria-hidden="true"></span>
+                <span class="tree-glyph base-glyph" aria-hidden="true"></span>
+                <span class="tree-label">须弥座台基 <small>Stone terrace</small></span>
+                <button class="visibility-button" type="button" data-visibility="pagodaBase" aria-pressed="true" aria-label="隐藏须弥座台基">
+                  <span class="eye-icon" aria-hidden="true"></span>
+                </button>
+              </div>
+            </div>
+
+            <div class="tree-row tree-row-root" role="treeitem" aria-selected="false" data-target="island">
+              <button class="tree-caret" type="button" aria-label="展开浮空主岛" aria-expanded="true">
+                <span aria-hidden="true"></span>
+              </button>
+              <span class="tree-glyph island-glyph" aria-hidden="true"></span>
+              <span class="tree-label">浮空主岛 <small>Sky island</small></span>
+              <button class="visibility-button" type="button" data-visibility="island" aria-pressed="true" aria-label="隐藏浮空主岛">
+                <span class="eye-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <div class="tree-row tree-row-root" role="treeitem" aria-selected="false" data-target="vegetation">
+              <span class="tree-spacer" aria-hidden="true"></span>
+              <span class="tree-glyph vegetation-glyph" aria-hidden="true"></span>
+              <span class="tree-label">牡丹与植被 <small>Peony garden</small></span>
+              <button class="visibility-button" type="button" data-visibility="vegetation" aria-pressed="true" aria-label="隐藏牡丹与植被">
+                <span class="eye-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <div class="tree-row tree-row-root" role="treeitem" aria-selected="false" data-target="dragon">
+              <span class="tree-spacer" aria-hidden="true"></span>
+              <span class="tree-glyph dragon-glyph" aria-hidden="true"></span>
+              <span class="tree-label">东方青龙 <small>Azure dragon</small></span>
+              <span class="live-tag">LIVE</span>
+              <button class="visibility-button" type="button" data-visibility="dragon" aria-pressed="true" aria-label="隐藏东方青龙">
+                <span class="eye-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <div class="tree-row tree-row-root" role="treeitem" aria-selected="false" data-target="phoenix">
+              <span class="tree-spacer" aria-hidden="true"></span>
+              <span class="tree-glyph phoenix-glyph" aria-hidden="true"></span>
+              <span class="tree-label">丹穴朱雀 <small>Vermilion phoenix</small></span>
+              <span class="live-tag">LIVE</span>
+              <button class="visibility-button" type="button" data-visibility="phoenix" aria-pressed="true" aria-label="隐藏丹穴朱雀">
+                <span class="eye-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+
+            <div class="tree-row tree-row-root" role="treeitem" aria-selected="false" data-target="cloudsWaterfalls">
+              <span class="tree-spacer" aria-hidden="true"></span>
+              <span class="tree-glyph cloud-glyph" aria-hidden="true"></span>
+              <span class="tree-label">云海与瀑布 <small>Cloud sea</small></span>
+              <button class="visibility-button" type="button" data-visibility="cloudsWaterfalls" aria-pressed="true" aria-label="隐藏云海与瀑布">
+                <span class="eye-icon" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+
+          <div class="panel-divider outliner-divider"></div>
+
+          <section class="transform-section" aria-labelledby="transform-heading">
+            <div class="section-title-row">
+              <h2 class="section-title" id="transform-heading">对象微调</h2>
+              <span class="selection-readout" id="selection-name">洛阳古塔</span>
+            </div>
+
+            <div class="transform-row" aria-label="旋转微调">
+              <span class="transform-label">旋转</span>
+              <label class="axis-field axis-x" for="rotate-x">
+                <span>X</span>
+                <input id="rotate-x" type="range" min="-180" max="180" value="0" step="1" />
+                <output id="rotate-x-value" for="rotate-x">0°</output>
+              </label>
+              <label class="axis-field axis-y" for="rotate-y">
+                <span>Y</span>
+                <input id="rotate-y" type="range" min="-180" max="180" value="0" step="1" />
+                <output id="rotate-y-value" for="rotate-y">0°</output>
+              </label>
+              <label class="axis-field axis-z" for="rotate-z">
+                <span>Z</span>
+                <input id="rotate-z" type="range" min="-180" max="180" value="0" step="1" />
+                <output id="rotate-z-value" for="rotate-z">0°</output>
+              </label>
+            </div>
+
+            <div class="transform-row scale-row" aria-label="缩放微调">
+              <span class="transform-label">缩放</span>
+              <label class="scale-field" for="scale-uniform">
+                <input id="scale-uniform" type="range" min="0.35" max="2.4" value="1" step="0.01" />
+                <output id="scale-uniform-value" for="scale-uniform">1.00×</output>
+              </label>
+            </div>
+          </section>
+        </aside>
+      </main>
+
+      <div class="selection-callout" id="selection-callout" aria-live="polite">
+        <span class="callout-kicker">ACTIVE OBJECT</span>
+        <strong id="callout-name">洛阳古塔</strong>
+        <span class="callout-hint">拖拽旋转 · 滚轮缩放 · 双击复位</span>
+      </div>
+
+      <footer class="bottom-toolbar" aria-label="场景工具">
+        <div class="toolbar-group toolbar-group-primary">
+          <button class="tool-button" id="reset-view" type="button" data-tooltip="双击场景亦可复位视角">
+            <span class="tool-icon reset-icon" aria-hidden="true"></span>
+            <span>复位视角</span>
+            <kbd>R</kbd>
+          </button>
+          <button class="tool-button" id="reset-all" type="button">
+            <span class="tool-icon reset-all-icon" aria-hidden="true"></span>
+            <span>参数复位</span>
+          </button>
+        </div>
+        <span class="toolbar-separator" aria-hidden="true"></span>
+        <div class="toolbar-group">
+          <button class="tool-button" id="grid-toggle" type="button" aria-pressed="false">
+            <span class="tool-icon grid-icon" aria-hidden="true"></span>
+            <span>参考网格</span>
+          </button>
+          <button class="tool-button" id="wireframe-toggle" type="button" aria-pressed="false">
+            <span class="tool-icon wireframe-icon" aria-hidden="true"></span>
+            <span>线框</span>
+            <kbd>W</kbd>
+          </button>
+        </div>
+        <span class="toolbar-separator toolbar-separator-wide" aria-hidden="true"></span>
+        <div class="toolbar-group toolbar-group-end">
+          <span class="build-stamp">MICRO-VOXEL · <b id="build-fps">— FPS</b></span>
+          <button class="tool-button tool-button-capture" id="screenshot" type="button">
+            <span class="tool-icon capture-icon" aria-hidden="true"></span>
+            <span>高清截图</span>
+          </button>
+        </div>
+      </footer>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    </div>
+
+    <script type="module" src="./scene-editor.js"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
