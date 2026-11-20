@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="theme-color" content="#0a0a0f" />
+<title>一闪 · ONE-TAP PARRY</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: #07070b; color: #fff;
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+    -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #wrap {
+    position: fixed; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    touch-action: none;
+  }
+  canvas { display: block; touch-action: none; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game"></canvas></div>
+<script>
+"use strict";
+/* ====== 画布与自适应 ====== */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+let W = 0, H = 0, DPR = 1, S = 1, CX = 0, CY = 0;
+
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+  W = window.innerWidth; H = window.innerHeight;
+  canvas.width = Math.round(W * DPR);
+  canvas.height = Math.round(H * DPR);
+  canvas.style.width = W + "px";
+  canvas.style.height = H + "px";
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  S = Math.min(W, H);          // 基准尺度
+  CX = W / 2; CY = H / 2;      // 中心（玩家位置）
+}
+window.addEventListener("resize", resize);
+resize();
+
+/* ====== 工具 ====== */
+const TAU = Math.PI * 2;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+const now = () => performance.now();
+
+/* ====== 关键半径（随屏幕缩放） ====== */
+function radii() {
+  return {
+    core: 0.052 * S,          // 玩家核心，碎片进入即命中
+    parryIn: 0.070 * S,       // 弹反内沿
+    parryOut: 0.230 * S,      // 弹反外沿（可弹反波段）
+    perfect: 0.112 * S,       // 小于此距离视为完美弹反
+    spawn: Math.hypot(W, H) / 2 + 0.05 * S, // 出生距离（屏外）
+  };
+}
+/* ====== 音频（WebAudio 合成，无需素材） ====== */
+const Audio2 = (() => {
+  let ac = null, master = null, muted = false;
+  function ensure() {
+    if (ac) return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    ac = new AC();
+    master = ac.createGain();
+    master.gain.value = 0.9;
+    master.connect(ac.destination);
+  }
+  function resume() { ensure(); if (ac && ac.state === "suspended") ac.resume(); }
+  function blip(freq, dur, type, vol, slideTo) {
+    if (muted || !ac) return;
+    const t = ac.currentTime;
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = type || "triangle";
+    o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.3, t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(master);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  return {
+    resume,
+    toggle() { muted = !muted; return muted; },
+    isMuted() { return muted; },
+    parry(combo) {
+      const base = 520 + Math.min(combo, 40) * 26;
+      blip(base, 0.12, "triangle", 0.26, base * 1.5);
+    },
+    perfect(combo) {
+      const base = 680 + Math.min(combo, 40) * 24;
+      blip(base, 0.18, "square", 0.2, base * 2);
+      blip(base * 1.5, 0.22, "triangle", 0.14);
+    },
+    hit() { blip(180, 0.3, "sawtooth", 0.3, 60); },
+    over() { blip(300, 0.5, "triangle", 0.28, 90); },
+    start() { blip(440, 0.12, "triangle", 0.22, 660); },
+  };
+})();
+/* ====== 游戏状态 ====== */
+const BEST_KEY = "issen-best-v1";
+let best = +(localStorage.getItem(BEST_KEY) || 0);
+
+const state = {
+  mode: "menu",          // menu | playing | over
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  lives: 3,
+  elapsed: 0,            // 游戏内秒
+  shards: [],
+  particles: [],
+  floaters: [],
+  shake: 0,
+  hitStop: 0,            // 命中定格剩余秒
+  timeScale: 1,          // 子弹时间
+  slowmo: 0,             // 子弹时间剩余秒
+  flash: 0,              // 白闪
+  damageFlash: 0,        // 受击红闪
+  invuln: 0,             // 受击无敌剩余秒
+  cooldown: 0,           // 弹反冷却剩余秒
+  spawnTimer: 0,
+  slashAng: 0,           // 最近一次弹反方向（画斩击）
+  slashLife: 0,
+  discSpin: 0,
+};
+
+const TYPES = {
+  normal: { color: "#7fd6ff", glow: "#2aa8ff", size: 0.030, speed: 0.200, hits: 1, score: 10 },
+  fast:   { color: "#ff6b8b", glow: "#ff2d55", size: 0.024, speed: 0.300, hits: 1, score: 18 },
+  heavy:  { color: "#ffd27f", glow: "#ffab2d", size: 0.052, speed: 0.135, hits: 2, score: 26 },
+};
+
+function resetGame() {
+  state.mode = "playing";
+  state.score = 0; state.combo = 0; state.maxCombo = 0; state.lives = 3;
+  state.elapsed = 0;
+  state.shards.length = 0; state.particles.length = 0; state.floaters.length = 0;
+  state.shake = 0; state.hitStop = 0; state.timeScale = 1; state.slowmo = 0;
+  state.flash = 0; state.damageFlash = 0; state.invuln = 0;
+  state.cooldown = 0; state.spawnTimer = 0.9; state.slashLife = 0;
+  // 预置第一片：开局就有目标，但给足反应时间
+  spawnShard(rand(0, TAU), "normal");
+  state.shards[0].dist *= 0.62;
+}
+/* ====== 难度与生成 ====== */
+function difficulty() { return clamp(state.elapsed / 90, 0, 1); }
+
+function chooseType() {
+  const t = state.elapsed;
+  const bag = ["normal", "normal", "normal"];
+  if (t > 14) bag.push("fast", "fast");
+  if (t > 30) bag.push("heavy");
+  if (t > 45) bag.push("fast", "heavy");
+  return pick(bag);
+}
+
+function spawnShard(ang, typeName) {
+  const R = radii();
+  const def = TYPES[typeName];
+  const speedMul = lerp(1, 1.55, difficulty());
+  state.shards.push({
+    ang,
+    dist: R.spawn,
+    speed: def.speed * S * speedMul,
+    type: typeName,
+    def,
+    hitsLeft: def.hits,
+    size: def.size * S,
+    spin: rand(0, TAU),
+    spinV: rand(-3, 3),
+    staggered: 0,     // 重型被震退动画
+  });
+}
+
+function maybeSpawn(dt) {
+  state.spawnTimer -= dt;
+  if (state.spawnTimer > 0) return;
+  const d = difficulty();
+  state.spawnTimer = lerp(1.0, 0.34, d);
+  // 齐射：难度越高越容易一次多发
+  let count = 1;
+  const r = Math.random();
+  if (r < 0.10 + 0.35 * d) count = 2;
+  if (r < 0.04 + 0.18 * d) count = 3;
+  const baseAng = rand(0, TAU);
+  for (let i = 0; i < count; i++) {
+    const ang = baseAng + (count > 1 ? i * (TAU / count) + rand(-0.3, 0.3) : rand(0, TAU));
+    spawnShard(ang, chooseType());
+  }
+}
+/* ====== 粒子与飞字 ====== */
+function burst(x, y, color, n, power) {
+  for (let i = 0; i < n; i++) {
+    const a = rand(0, TAU), sp = rand(0.3, 1) * power;
+    state.particles.push({
+      x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+      life: rand(0.3, 0.6), max: 0.6, color,
+      size: rand(2, 5), rot: rand(0, TAU), rotV: rand(-8, 8),
+    });
+  }
+}
+function ring(x, y, color) {
+  state.particles.push({ x, y, vx: 0, vy: 0, life: 0.35, max: 0.35, color, ringR: 0, isRing: true });
+}
+function floater(x, y, text, color, big) {
+  state.floaters.push({ x, y, text, color, life: 0.9, max: 0.9, big: !!big });
+}
+
+function updateParticles(dt) {
+  for (let i = state.particles.length - 1; i >= 0; i--) {
+    const p = state.particles[i];
+    p.life -= dt;
+    if (p.isRing) { p.ringR += dt * 0.5 * S; }
+    else {
+      p.x += p.vx * dt * S; p.y += p.vy * dt * S;
+      p.vx *= 0.92; p.vy *= 0.92; p.rot += p.rotV * dt;
+    }
+    if (p.life <= 0) state.particles.splice(i, 1);
+  }
+  for (let i = state.floaters.length - 1; i >= 0; i--) {
+    const f = state.floaters[i];
+    f.life -= dt; f.y -= dt * 40;
+    if (f.life <= 0) state.floaters.splice(i, 1);
+  }
+}
+/* ====== 弹反动作 ====== */
+function shardPos(s) { return [CX + Math.cos(s.ang) * s.dist, CY + Math.sin(s.ang) * s.dist]; }
+
+function doParry() {
+  if (state.mode !== "playing" || state.cooldown > 0) return;
+  const R = radii();
+  let target = null, best = Infinity;
+  for (const s of state.shards) {
+    if (s.dist <= R.parryOut && s.dist < best) { best = s.dist; target = s; }
+  }
+  if (!target) {            // 空挥：进入较长恢复，惩罚瞎点
+    state.cooldown = 0.22;
+    state.slashAng = rand(0, TAU); state.slashLife = 0.1;
+    return;
+  }
+  const [sx, sy] = shardPos(target);
+  const perfect = target.dist <= R.perfect;
+  state.slashAng = target.ang; state.slashLife = 0.22;
+  state.cooldown = 0.09;
+  state.combo++;
+  state.maxCombo = Math.max(state.maxCombo, state.combo);
+  state.discSpin += 0.9;
+
+  // 重型：首次击中只震退
+  if (target.hitsLeft > 1) {
+    target.hitsLeft--;
+    target.dist = Math.min(R.spawn, target.dist + 0.16 * S);
+    target.staggered = 0.18;
+    state.score += 5;
+    state.shake = Math.max(state.shake, 6);
+    burst(sx, sy, target.def.color, 10, 2.2);
+    Audio2.parry(state.combo);
+    return;
+  }
+  // 摧毁
+  const idx = state.shards.indexOf(target);
+  if (idx >= 0) state.shards.splice(idx, 1);
+  let pts = target.def.score + Math.min(state.combo, 60);
+  if (perfect) pts *= 2;
+  state.score += pts;
+  burst(sx, sy, target.def.color, perfect ? 24 : 14, perfect ? 3.2 : 2.2);
+  ring(sx, sy, perfect ? "#fff" : target.def.glow);
+  floater(sx, sy, (perfect ? "完美 +" : "+") + pts, perfect ? "#fff" : target.def.color, perfect);
+  state.flash = Math.max(state.flash, perfect ? 0.5 : 0.28);
+  state.hitStop = Math.max(state.hitStop, perfect ? 0.075 : 0.04);
+  state.shake = Math.max(state.shake, perfect ? 11 : 7 + state.combo * 0.05);
+  if (perfect) { state.slowmo = 0.26; Audio2.perfect(state.combo); }
+  else Audio2.parry(state.combo);
+}
+/* ====== 受击 / 结束 ====== */
+function takeHit(s) {
+  const idx = state.shards.indexOf(s);
+  if (idx >= 0) state.shards.splice(idx, 1);
+  if (state.invuln > 0) return;      // 无敵帧内忽略
+  state.lives--;
+  state.combo = 0;
+  state.invuln = 0.7;
+  state.damageFlash = 0.6;
+  state.shake = 18;
+  burst(CX, CY, "#ff3b4e", 26, 3);
+  Audio2.hit();
+  if (state.lives <= 0) gameOver();
+}
+
+function gameOver() {
+  state.mode = "over";
+  state.overAt = now();
+  state.shake = 20;
+  if (state.score > best) { best = state.score; localStorage.setItem(BEST_KEY, best); }
+  Audio2.over();
+}
+
+function updateShards(dt) {
+  const R = radii();
+  for (let i = state.shards.length - 1; i >= 0; i--) {
+    const s = state.shards[i];
+    s.dist -= s.speed * dt;
+    s.spin += s.spinV * dt;
+    if (s.staggered > 0) s.staggered -= dt;
+    if (s.dist <= R.core) takeHit(s);
+  }
+}
+/* ====== 更新与主循环 ====== */
+function decay(v, dt, rate) { return Math.max(0, v - dt * rate); }
+
+function update(dt) {
+  // UI 类计时用真实时间
+  state.flash = decay(state.flash, dt, 2.2);
+  state.damageFlash = decay(state.damageFlash, dt, 1.6);
+  state.slashLife = decay(state.slashLife, dt, 4);
+  state.shake *= Math.exp(-dt * 9);
+  state.discSpin += dt * 0.5;
+
+  // 子弹时间 / 命中定格
+  state.slowmo = decay(state.slowmo, dt, 1);
+  state.timeScale = state.slowmo > 0 ? 0.32 : 1;
+  let gdt = dt * state.timeScale;
+  if (state.hitStop > 0) { state.hitStop = decay(state.hitStop, dt, 1); gdt = 0; }
+
+  if (state.mode === "playing") {
+    state.cooldown = decay(state.cooldown, gdt, 1);
+    state.invuln = decay(state.invuln, gdt, 1);
+    state.elapsed += gdt;
+    maybeSpawn(gdt);
+    updateShards(gdt);
+  }
+  updateParticles(gdt || dt * 0.0001);
+}
+
+let last = now();
+function loop() {
+  const t = now();
+  let dt = (t - last) / 1000;
+  last = t;
+  if (dt > 0.05) dt = 0.05;     // 防卡顿跳帧
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+/* ====== 渲染 ====== */
+function intensity() { return clamp(state.combo / 45 + difficulty() * 0.5, 0, 1); }
+
+function drawBackground() {
+  const inten = state.mode === "playing" ? intensity() : 0;
+  const g = ctx.createRadialGradient(CX, CY, 0, CX, CY, S * 0.85);
+  g.addColorStop(0, `rgb(${18 + inten * 40}, ${12 + inten * 6}, ${20 + inten * 10})`);
+  g.addColorStop(1, "#06060a");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+}
+
+function drawRings() {
+  const R = radii();
+  ctx.save();
+  ctx.globalAlpha = 0.6;
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = "rgba(170,210,255,0.22)";
+  ctx.beginPath(); ctx.arc(CX, CY, R.parryOut, 0, TAU); ctx.stroke();
+  // 完美弹反带（内圈，淡金色呼吸）
+  ctx.globalAlpha = 0.18 + 0.12 * Math.sin(now() / 400);
+  ctx.strokeStyle = "rgba(255,210,120,0.9)";
+  ctx.beginPath(); ctx.arc(CX, CY, R.perfect, 0, TAU); ctx.stroke();
+  ctx.restore();
+}
+
+function drawShards() {
+  const R = radii();
+  for (const s of state.shards) {
+    const [x, y] = shardPos(s);
+    const inBand = s.dist <= R.parryOut;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(s.spin + (s.staggered > 0 ? Math.sin(now() / 20) * 0.3 : 0));
+    ctx.shadowColor = s.def.glow;
+    ctx.shadowBlur = inBand ? 22 : 10;
+    ctx.fillStyle = s.def.color;
+    const r = s.size * (s.staggered > 0 ? 1.15 : 1);
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {           // 棱形碎片
+      const a = i / 4 * TAU, rr = i % 2 ? r * 0.5 : r;
+      const px = Math.cos(a) * rr, py = Math.sin(a) * rr;
+      i ? ctx.lineTo(px, py) : ctx.moveTo(px, py);
+    }
+    ctx.closePath(); ctx.fill();
+    if (s.hitsLeft > 1) {                    // 重型外环提示
+      ctx.shadowBlur = 0; ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.7)";
+      ctx.beginPath(); ctx.arc(0, 0, r * 1.5, 0, TAU); ctx.stroke();
+    }
+    ctx.restore();
+  }
+}
+function drawDisc() {
+  const R = radii();
+  const blink = state.invuln > 0 && (Math.sin(now() / 45) > 0);
+  ctx.save();
+  ctx.translate(CX, CY);
+  // 外旋环
+  ctx.rotate(state.discSpin);
+  ctx.strokeStyle = blink ? "rgba(255,80,100,0.9)" : "rgba(255,255,255,0.75)";
+  ctx.lineWidth = 2;
+  ctx.shadowColor = blink ? "#ff3b4e" : "#fff";
+  ctx.shadowBlur = 16;
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.arc(0, 0, R.core * 0.92, i / 3 * TAU, i / 3 * TAU + 1.1);
+    ctx.stroke();
+  }
+  ctx.rotate(-state.discSpin);
+  // 核心
+  const cg = ctx.createRadialGradient(0, 0, 0, 0, 0, R.core);
+  cg.addColorStop(0, "#fff");
+  cg.addColorStop(1, blink ? "#ff3b4e" : "#ff5a7a");
+  ctx.fillStyle = cg; ctx.shadowBlur = 24;
+  ctx.beginPath(); ctx.arc(0, 0, R.core * 0.6, 0, TAU); ctx.fill();
+  // 斩击
+  if (state.slashLife > 0) {
+    const a = state.slashAng, k = state.slashLife / 0.22;
+    ctx.rotate(a);
+    ctx.globalAlpha = k;
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 3 + 4 * k; ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(0, 0, R.parryOut * (0.5 + 0.5 * (1 - k)), -0.6, 0.6);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawParticles() {
+  for (const p of state.particles) {
+    const a = clamp(p.life / p.max, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = a;
+    if (p.isRing) {
+      ctx.strokeStyle = p.color; ctx.lineWidth = 3 * a;
+      ctx.shadowColor = p.color; ctx.shadowBlur = 16;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.ringR, 0, TAU); ctx.stroke();
+    } else {
+      ctx.translate(p.x, p.y); ctx.rotate(p.rot);
+      ctx.fillStyle = p.color; ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+      ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    }
+    ctx.restore();
+  }
+  for (const f of state.floaters) {
+    const a = clamp(f.life / f.max, 0, 1);
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.fillStyle = f.color;
+    ctx.font = `700 ${(f.big ? 26 : 18)}px system-ui, sans-serif`;
+    ctx.textAlign = "center";
+    ctx.shadowColor = f.color; ctx.shadowBlur = 10;
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.restore();
+  }
+}
+function drawHUD() {
+  ctx.save();
+  ctx.textAlign = "center";
+  // 分数
+  ctx.fillStyle = "#fff";
+  ctx.font = "800 " + Math.round(clamp(S * 0.09, 28, 52)) + "px system-ui, sans-serif";
+  ctx.shadowColor = "rgba(255,120,150,0.5)"; ctx.shadowBlur = 12;
+  ctx.fillText(state.score, CX, Math.max(44, H * 0.1));
+  // 连击
+  if (state.combo >= 2) {
+    const pulse = 1 + clamp((0.09 - state.cooldown) * 2, 0, 0.25);
+    ctx.save();
+    ctx.translate(CX, Math.max(76, H * 0.1 + 34));
+    ctx.scale(pulse, pulse);
+    ctx.fillStyle = state.combo >= 20 ? "#ffd27f" : "#7fd6ff";
+    ctx.font = "700 " + Math.round(clamp(S * 0.045, 16, 24)) + "px system-ui, sans-serif";
+    ctx.shadowColor = ctx.fillStyle; ctx.shadowBlur = 10;
+    ctx.fillText("连击 ×" + state.combo, 0, 0);
+    ctx.restore();
+  }
+  // 生命
+  ctx.shadowBlur = 0; ctx.textAlign = "left";
+  for (let i = 0; i < 3; i++) {
+    ctx.fillStyle = i < state.lives ? "#ff5a7a" : "rgba(255,255,255,0.18)";
+    ctx.font = Math.round(clamp(S * 0.05, 18, 26)) + "px system-ui";
+    ctx.fillText("❤", 18 + i * 28, 36);
+  }
+  ctx.restore();
+  drawMute();
+}
+
+function muteRect() { const s = clamp(S * 0.05, 22, 30); return { x: W - s - 16, y: 14, s }; }
+function drawMute() {
+  const m = muteRect();
+  ctx.save();
+  ctx.fillStyle = "rgba(255,255,255,0.75)";
+  ctx.font = m.s + "px system-ui";
+  ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(Audio2.isMuted() ? "🔇" : "🔊", m.x + m.s / 2, m.y + m.s / 2);
+  ctx.restore();
+}
+function drawFxOverlays() {
+  if (state.slowmo > 0) {                 // 子弹时间暗角
+    const v = ctx.createRadialGradient(CX, CY, S * 0.25, CX, CY, S * 0.7);
+    v.addColorStop(0, "rgba(0,0,0,0)");
+    v.addColorStop(1, "rgba(10,0,20,0.55)");
+    ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+  }
+  if (state.flash > 0) {
+    ctx.fillStyle = "rgba(255,255,255," + (state.flash * 0.5) + ")";
+    ctx.fillRect(0, 0, W, H);
+  }
+  if (state.damageFlash > 0) {
+    ctx.fillStyle = "rgba(255,30,60," + (state.damageFlash * 0.45) + ")";
+    ctx.fillRect(0, 0, W, H);
+  }
+}
+
+function render() {
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.save();
+  if (state.shake > 0.2) ctx.translate(rand(-1, 1) * state.shake, rand(-1, 1) * state.shake);
+  drawBackground();
+  drawRings();
+  drawShards();
+  drawDisc();
+  drawParticles();
+  if (state.mode === "playing") drawHUD();
+  ctx.restore();
+  drawFxOverlays();
+  if (state.mode === "menu") drawMenu();
+  else if (state.mode === "over") drawOver();
+}
+function text(str, y, size, color, weight) {
+  ctx.fillStyle = color || "#fff";
+  ctx.font = (weight || 700) + " " + Math.round(size) + "px system-ui, 'PingFang SC', sans-serif";
+  ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
+  ctx.fillText(str, CX, y);
+}
+
+function drawMenu() {
+  ctx.fillStyle = "rgba(6,6,12,0.55)"; ctx.fillRect(0, 0, W, H);
+  const u = clamp(S * 0.01, 2.6, 5);
+  ctx.shadowColor = "#ff5a7a"; ctx.shadowBlur = 24;
+  text("一 闪", CY - 22 * u, 22 * u, "#fff", 900);
+  ctx.shadowBlur = 0;
+  text("ONE-TAP PARRY", CY - 14 * u, 4.4 * u, "rgba(255,210,120,0.9)", 700);
+  text("碎片四面飞来 · 临身一瞬按键弹反", CY - 2 * u, 4 * u, "rgba(255,255,255,0.8)", 500);
+  text("连击越高分越多 · 贴身弹反触发完美慢镜", CY + 4 * u, 3.6 * u, "rgba(255,255,255,0.55)", 500);
+  text("一次只能弹一片 · 齐射才是考验", CY + 9 * u, 3.6 * u, "rgba(255,255,255,0.55)", 500);
+  if (best > 0) text("最高分 " + best, CY + 18 * u, 4.2 * u, "#7fd6ff", 700);
+  const blink = 0.5 + 0.5 * Math.sin(now() / 350);
+  ctx.globalAlpha = blink;
+  text("点击 / 空格 开始", CY + 28 * u, 4.6 * u, "#fff", 800);
+  ctx.globalAlpha = 1;
+  drawMute();
+}
+
+function drawOver() {
+  ctx.fillStyle = "rgba(6,6,12,0.68)"; ctx.fillRect(0, 0, W, H);
+  const u = clamp(S * 0.01, 2.6, 5);
+  const isNew = state.score >= best && state.score > 0;
+  text("本局结束", CY - 21 * u, 4.6 * u, "rgba(255,255,255,0.75)", 700);
+  ctx.shadowColor = "#ff5a7a"; ctx.shadowBlur = 20;
+  text(String(state.score), CY - 2 * u, 16 * u, "#fff", 900);
+  ctx.shadowBlur = 0;
+  text(isNew ? "🎉 新纪录！" : "最高分 " + best, CY + 10 * u, 4.4 * u, isNew ? "#ffd27f" : "#7fd6ff", 700);
+  text("最高连击 ×" + state.maxCombo, CY + 17 * u, 3.8 * u, "rgba(255,255,255,0.6)", 500);
+  const blink = 0.5 + 0.5 * Math.sin(now() / 350);
+  ctx.globalAlpha = blink;
+  text("点击 / 空格 再来一局", CY + 29 * u, 4.6 * u, "#fff", 800);
+  ctx.globalAlpha = 1;
+  drawMute();
+}
+/* ====== 输入 ====== */
+function hitMute(x, y) {
+  const m = muteRect();
+  return x >= m.x - 10 && x <= m.x + m.s + 10 && y >= m.y - 10 && y <= m.y + m.s + 10;
+}
+
+function action(x, y) {
+  Audio2.resume();
+  if (state.mode !== "playing" && x != null && hitMute(x, y)) { Audio2.toggle(); return; }
+  if (state.mode === "menu") { resetGame(); Audio2.start(); return; }
+  if (state.mode === "over") {
+    if (now() - (state.overAt || 0) < 500) return;   // 防结算瞬间误触重开
+    resetGame(); Audio2.start(); return;
+  }
+  doParry();
+}
+
+window.addEventListener("pointerdown", (e) => {
+  action(e.clientX, e.clientY);
+}, { passive: true });
+
+// 阻止触摸带来的滚动 / 双击缩放
+document.getElementById("wrap").addEventListener("touchstart", (e) => {
+  e.preventDefault();
+}, { passive: false });
+document.addEventListener("gesturestart", (e) => e.preventDefault());
+
+window.addEventListener("keydown", (e) => {
+  if (e.repeat) return;
+  const k = e.key.toLowerCase();
+  if (k === "m") { Audio2.resume(); Audio2.toggle(); return; }
+  if (e.key === " " || e.key === "Enter" || e.key === "ArrowUp" || k === "j" || k === "f") {
+    e.preventDefault();
+    action(null, null);
+  }
+}, { passive: false });
+
+
+</script>
+</body>
+</html>
