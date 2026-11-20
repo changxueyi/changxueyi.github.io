@@ -20,9 +20,6 @@ main:
   - title: "生活随笔"
     url: /life/
 
-  - title: "宝藏书库"
-    url: /books/
-
   - title: "在线体验"
     url: /experience/
 
