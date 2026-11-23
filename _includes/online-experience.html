@@ -7,7 +7,10 @@
     {% if include.compact %}
       <a class="online-experience__all" href="{{ '/experience/' | relative_url }}">查看全部 <span aria-hidden="true">→</span></a>
     {% else %}
-      <span class="online-experience__status"><i></i> 全部可在线打开</span>
+      <span class="online-experience__right">
+        <a class="online-experience__aigc" href="{{ '/aigc/' | relative_url }}" aria-label="前往 AIGC 作品板块">AIGC 作品 <span aria-hidden="true">→</span></a>
+        <span class="online-experience__status"><i></i> 全部可在线打开</span>
+      </span>
     {% endif %}
   </div>
 
@@ -169,9 +172,9 @@
     <div class="online-experience__category-head">
       <div>
         <span class="online-experience__category-index">05</span>
-        <h3>专利工具</h3>
+        <h3>Skill 中心</h3>
       </div>
-      <span>3 个在线项目</span>
+      <span>2 个 Skill</span>
     </div>
     <div class="online-experience__grid">
       <a class="online-experience__card online-experience__card--blue" href="https://changxueyi.github.io/ip-disclosure-workbench/" target="_blank" rel="noopener">
@@ -180,6 +183,15 @@
           <span class="online-experience__card-type">PATENT SKILL · 本地优先</span>
           <strong>专利技术洞察工作台</strong>
           <span>把设计文档、代码实现与验证证据整理成可追溯的候选专利点和技术交底初稿。</span>
+        </span>
+        <span class="online-experience__card-arrow" aria-hidden="true">↗</span>
+      </a>
+      <a class="online-experience__card online-experience__card--violet" href="https://changxueyi.github.io/textbook-reading-video/" target="_blank" rel="noopener">
+        <span class="online-experience__card-mark">08</span>
+        <span class="online-experience__card-body">
+          <span class="online-experience__card-type">AIGC VIDEO SKILL · Blender</span>
+          <strong>课本朗读 3D 视频</strong>
+          <span>给几张课本封面与文章页，自动做成 3D 立体书逐句朗读短视频：男声播音腔配音、红色高亮跟读、Songti 字幕。</span>
         </span>
         <span class="online-experience__card-arrow" aria-hidden="true">↗</span>
       </a>

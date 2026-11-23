@@ -1,0 +1,4 @@
+interface:
+  display_name: "课本朗读 3D 视频"
+  short_description: "Textbook photos to a 3D book reading video with MiMo voice"
+  default_prompt: "Use $textbook-reading-video to turn these textbook photos (cover + article page) into a 3D reading video with a male broadcast voice."
