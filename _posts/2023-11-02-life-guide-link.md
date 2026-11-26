@@ -2,8 +2,7 @@
 title: "高性价比人生指南 · 631 条建议（点击进入）"
 date: 2023-11-02
 categories: [生活随笔]
-tags: [置顶, 生活指南]
-pinned: true
+tags: [生活指南]
 link: https://changxueyi.github.io/how-to-live-better/
 excerpt: "按性价比排序的人生指南：631 条建议，覆盖长寿防病、意外急救、省钱理财、防骗与法律红线、失业兜底、创业风险、恋爱婚育、出国与技能。点击标题直接进入完整站点。"
 ---
