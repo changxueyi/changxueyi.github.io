@@ -1,0 +1,110 @@
+---
+title: "redis分布式锁原理与实现"
+date: 2020-07-04 17:08:00 +0800
+tags: ["【微服务】-- 解决方案", "【缓存】-- Redis"]
+excerpt: "分布式锁原理分布式锁，是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。 使用setnx、gets"
+read_minutes: 7
+cnblogs_id: 13235712
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13235712.html"
+tags_inferred: true
+---
+{% raw %}
+<p>分布式锁原理<br/>分布式锁，是控制分布式系统之间同步访问共享资源的一种方式。在分布式系统中，常常需要协调他们的动作。如果不同的系统或是同一个系统的不同主机之间共享了一个或一组资源，那么访问这些资源的时候，往往需要互斥来防止彼此干扰来保证一致性，在这种情况下，便需要使用到分布式锁。</p>
+<p>使用setnx、getset、expire、del这4个redis命令实现</p>
+<p>setnx 是『SET if Not eXists』(如果不存在，则 SET)的简写。 命令格式：SETNX key value；使用：只在键 key 不存在的情况下，将键 key 的值设置为 value 。若键 key 已经存在， 则 SETNX 命令不做任何动作。返回值：命令在设置成功时返回 1 ，设置失败时返回 0 。<br/>getset 命令格式：GETSET key value，将键 key 的值设为 value ，并返回键 key 在被设置之前的旧的value。返回值：如果键 key 没有旧值， 也即是说， 键 key 在被设置之前并不存在， 那么命令返回 nil 。当键 key 存在但不是字符串类型时，命令返回一个错误。<br/>expire 命令格式：EXPIRE key seconds，使用：为给定 key 设置生存时间，当 key 过期时(生存时间为 0 )，它会被自动删除。返回值：设置成功返回 1 。 当 key 不存在或者不能为 key 设置生存时间时(比如在低于 2.1.3 版本的 Redis 中你尝试更新 key 的生存时间)，返回 0 。<br/>del 命令格式：DEL key [key …]，使用：删除给定的一个或多个 key ，不存在的 key 会被忽略。返回值：被删除 key 的数量。<br/>redis 分布式锁原理一<br/>原理图如下<br/><img alt="" loading="lazy" src="/images/cnblogs/d7b02b318aa1ec59.png"/></p>
+<p> </p>
+<p> </p>
+<p>过程分析：</p>
+<p>A尝试去获取锁lockkey，通过setnx(lockkey,currenttime+timeout)命令，对lockkey进行setnx,将value值设置为当前时间+锁超时时间；<br/>如果返回值为1，说明redis服务器中还没有lockkey，也就是没有其他用户拥有这个锁，A就能获取锁成功；<br/>在进行相关业务执行之前，先执行expire(lockkey)，对lockkey设置有效期，防止死锁。因为如果不设置有效期的话，lockkey将一直存在于redis中，其他用户尝试获取锁时，执行到setnx(lockkey,currenttime+timeout)时，将不能成功获取到该锁；<br/>执行相关业务；<br/>释放锁，A完成相关业务之后，要释放拥有的锁，也就是删除redis中该锁的内容，del(lockkey)，接下来的用户才能进行重新设置锁新值。<br/>代码实现：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> redis1() {
+        log.info(</span>"关闭订单定时任务启动"<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">long</span> lockTimeout = Long.parseLong(PropertiesUtil.getProperty("lock.timeout", "5000"<span style="color: #000000;">));
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">这个方法的缺陷在这里，如果setnx成功后，锁已经存到Redis里面了，服务器异常关闭重启，将不会执行closeOrder，也就不会设置锁的有效期，这样的话锁就不会释放了，就会产生死锁</span>
+        Long setnxResult = RedisShardedPoolUtil.setnx(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK, String.valueOf(System.currentTimeMillis() +<span style="color: #000000;"> lockTimeout));
+        </span><span style="color: #0000ff;">if</span> (setnxResult != <span style="color: #0000ff;">null</span> &amp;&amp; setnxResult.intValue() == 1<span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果返回值为1，代表设置成功，获取锁</span>
+<span style="color: #000000;">            closeOrder(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            log.info(</span>"没有获得分布式锁:{}"<span style="color: #000000;">, Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+        }
+        log.info(</span>"关闭订单定时任务结束"<span style="color: #000000;">);
+    }
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> closeOrder(String lockName) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">对锁设置有效期</span>
+        RedisShardedPoolUtil.expire(lockName, 5);<span style="color: #008000;">//</span><span style="color: #008000;">有效期为5秒，防止死锁</span>
+        log.info("获取锁:{},ThreadName:{}"<span style="color: #000000;">,Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK, Thread.currentThread().getName());
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">执行业务</span>
+        <span style="color: #0000ff;">int</span> hour = Integer.parseInt(PropertiesUtil.getProperty("close.order.task.time.hour", "2"<span style="color: #000000;">));
+        iOrderService.closeOrder(hour);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">执行完业务后，释放锁</span>
+<span style="color: #000000;">        RedisShardedPoolUtil.del(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+        log.info(</span>"释放锁:{},ThreadName:{}"<span style="color: #000000;">,Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK, Thread.currentThread().getName());
+        log.info(</span>"================================="<span style="color: #000000;">);
+    }</span></pre>
+</div>
+<p>缺陷：<br/>如果A在setnx成功后，A成功获取锁了，也就是锁已经存到Redis里面了，此时服务器异常关闭或是重启，将不会执行closeOrder，也就不会设置锁的有效期，这样的话锁就不会释放了，就会产生死锁。</p>
+<p>解决方法：<br/>关闭Tomcat有两种方式，一种通过温柔的执行shutdown关闭，一种通过kill杀死进程关闭</p>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">//</span><span style="color: #008000;">通过温柔的执行shutdown关闭时，以下的方法会在关闭前执行，即可以释放锁，而对于通过kill杀死进程关闭时，以下方法不会执行，即不会释放锁
+   </span><span style="color: #008000;">//</span><span style="color: #008000;">这种方式释放锁的缺点在于，如果关闭的锁过多，将造成关闭服务器耗时过长</span>
+<span style="color: #000000;">    @PreDestroy
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> delLock() {
+        RedisShardedPoolUtil.del(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+    }</span></pre>
+</div>
+<h3>redis 分布式锁原理2(优化版)</h3>
+<p>为了解决原理1中会出现的死锁问题，提出原理2双重防死锁，可以更好解决死锁问题。<br/>原理图如下：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/b70e569f04ac9e8d.png"/></p>
+<p> </p>
+<p> </p>
+<p>过程分析：</p>
+<p>当A通过setnx(lockkey,currenttime+timeout)命令能成功设置lockkey时，即返回值为1，过程与原理1一致；<br/>当A通过setnx(lockkey,currenttime+timeout)命令不能成功设置lockkey时，这是不能直接断定获取锁失败；因为我们在设置锁时，设置了锁的超时时间timeout，当当前时间大于redis中存储键值为lockkey的value值时，可以认为上一任的拥有者对锁的使用权已经失效了，A就可以强行拥有该锁；具体判定过程如下；<br/>A通过get(lockkey)，获取redis中的存储键值为lockkey的value值，即获取锁的相对时间lockvalueA<br/>lockvalueA!=null &amp;&amp; currenttime&gt;lockvalue，A通过当前的时间与锁设置的时间做比较，如果当前时间已经大于锁设置的时间临界，即可以进一步判断是否可以获取锁，否则说明该锁还在被占用，A就还不能获取该锁，结束，获取锁失败；<br/>步骤4返回结果为true后，通过getSet设置新的超时时间，并返回旧值lockvalueB，以作判断，因为在分布式环境，在进入这里时可能另外的进程获取到锁并对值进行了修改，只有旧值与返回的值一致才能说明中间未被其他进程获取到这个锁<br/>lockvalueB == null || lockvalueA==lockvalueB，判断：若果lockvalueB为null，说明该锁已经被释放了，此时该进程可以获取锁；旧值与返回的lockvalueB一致说明中间未被其他进程获取该锁，可以获取锁；否则不能获取锁，结束，获取锁失败。<br/>代码实现：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> redis2() {
+        log.info(</span>"关闭订单定时任务启动"<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">long</span> lockTimeout = Long.parseLong(PropertiesUtil.getProperty("lock.timeout", "5000"<span style="color: #000000;">));
+        Long setnxResult </span>= RedisShardedPoolUtil.setnx(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK, String.valueOf(System.currentTimeMillis() +<span style="color: #000000;"> lockTimeout));
+        </span><span style="color: #0000ff;">if</span> (setnxResult != <span style="color: #0000ff;">null</span> &amp;&amp; setnxResult.intValue() == 1<span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果返回值为1，代表设置成功，获取锁</span>
+<span style="color: #000000;">            closeOrder(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">未获取到锁，继续判断，判断时间戳，看是否可以重置并获取到锁</span>
+            String lockValueStr =<span style="color: #000000;"> RedisShardedPoolUtil.get(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">通过当前的时间与锁设置的时间做比较，如果当前时间已经大于锁设置的时间临界，即可以进一步判断是否可以获取锁，否则说明该锁还在被占用，不能获取该锁</span>
+            <span style="color: #0000ff;">if</span> (lockValueStr != <span style="color: #0000ff;">null</span> &amp;&amp; System.currentTimeMillis() &gt;<span style="color: #000000;"> Long.parseLong(lockValueStr)) {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">通过getSet设置新的超时时间，并返回旧值，以作判断，因为在分布式环境，在进入这里时可能另外的进程获取到锁并对值进行了修改，只有旧值与返回的值一致才能说明中间未被其他进程获取到这个锁</span>
+                String getSetResult = RedisShardedPoolUtil.getSet(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK, String.valueOf(System.currentTimeMillis() +<span style="color: #000000;"> lockTimeout));
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">再次用当前时间戳getset。
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">返回给定的key的旧值，与旧值判断，是否可以获取锁
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">当key没有旧值时，即key不存在时，返回nil -&gt;获取锁
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">这里我们set了一个新的value值，获取旧的值。
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">若果getSetResult为null，说明该锁已经被释放了，此时该进程可以获取锁；旧值与返回的getSetResult一致说明中间未被其他进程获取该锁，可以获取锁</span>
+                <span style="color: #0000ff;">if</span> (getSetResult == <span style="color: #0000ff;">null</span> || (getSetResult != <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> StringUtils.equals(lockValueStr, getSetResult))) {
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">真正获取到锁</span>
+<span style="color: #000000;">                    closeOrder(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    log.info(</span>"没有获得分布式锁:{}"<span style="color: #000000;">, Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+                }
+            } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                log.info(</span>"没有获得分布式锁:{}"<span style="color: #000000;">, Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+            }
+        }
+        log.info(</span>"关闭订单定时任务结束"<span style="color: #000000;">);
+    }
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> closeOrder(String lockName) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">对锁设置有效期</span>
+        RedisShardedPoolUtil.expire(lockName, 5);<span style="color: #008000;">//</span><span style="color: #008000;">有效期为5秒，防止死锁</span>
+        log.info("获取锁:{},ThreadName:{}"<span style="color: #000000;">,Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK, Thread.currentThread().getName());
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">执行业务</span>
+        <span style="color: #0000ff;">int</span> hour = Integer.parseInt(PropertiesUtil.getProperty("close.order.task.time.hour", "2"<span style="color: #000000;">));
+        iOrderService.closeOrder(hour);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">执行完业务后，释放锁</span>
+<span style="color: #000000;">        RedisShardedPoolUtil.del(Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK);
+        log.info(</span>"释放锁:{},ThreadName:{}"<span style="color: #000000;">,Const.REDIS_LOCK.CLOSE_ORDER_TASK_LOCK, Thread.currentThread().getName());
+        log.info(</span>"================================="<span style="color: #000000;">);
+    }</span></pre>
+</div>
+<p>优化点：</p>
+<p>加入了超时时间判断锁是否超时了，及时A在成功设置了锁之后，服务器就立即出现宕机或是重启，也不会出现死锁问题；因为B在尝试获取锁的时候，如果不能setnx成功，会去获取redis中锁的超时时间与当前的系统时间做比较，如果当前的系统时间已经大于锁超时时间，说明A已经对锁的使用权失效，B能继续判断能否获取锁，解决了redis分布式锁的死锁问题。</p>
+{% endraw %}

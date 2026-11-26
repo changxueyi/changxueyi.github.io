@@ -1,0 +1,132 @@
+---
+title: "彻底理解 IO多路复用"
+date: 2020-10-10 10:22:00 +0800
+tags: ["【计算机网络】-- 网络"]
+excerpt: "看完下面这些，高频面试题你都会答了吧 目录 1、什么是IO多路复用?2、为什么出现IO多路复用机制?3、IO多路复用的三种实现方式4、select函数接口5、select使用示例6、select缺点7、poll函数接口8、poll使用示例9、poll缺点10、epoll函数接口11、epoll使用示"
+read_minutes: 7
+cnblogs_id: 13790579
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13790579.html"
+---
+{% raw %}
+<blockquote data-tool="mdnice编辑器">
+<p>看完下面这些，高频面试题你都会答了吧</p>
+</blockquote>
+<h2 data-tool="mdnice编辑器">目录</h2>
+<p data-tool="mdnice编辑器">1、什么是IO多路复用?<br/>2、为什么出现IO多路复用机制?<br/>3、IO多路复用的三种实现方式<br/>4、select函数接口<br/>5、select使用示例<br/>6、select缺点<br/>7、poll函数接口<br/>8、poll使用示例<br/>9、poll缺点<br/>10、epoll函数接口<br/>11、epoll使用示例<br/>12、epoll缺点<br/>13、epoll LT 与 ET模式的区别<br/>14、epoll应用<br/>15、select/poll/epoll之间的区别<br/>16、IO多路复用完整代码实现<br/>17、高频面试题</p>
+<h2 data-tool="mdnice编辑器">1、什么是IO多路复用</h2>
+<p data-tool="mdnice编辑器"><strong>「定义」</strong></p>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>IO多路复用是一种同步IO模型，实现一个线程可以监视多个文件句柄；一旦某个文件句柄就绪，就能够通知应用程序进行相应的读写操作；没有文件句柄就绪时会阻塞应用程序，交出cpu。多路是指网络连接，复用指的是同一个线程</li>
+</ul>
+<h2 data-tool="mdnice编辑器">2、为什么有IO多路复用机制?</h2>
+<blockquote data-tool="mdnice编辑器">
+<p>没有IO多路复用机制时，有BIO、NIO两种实现方式，但有一些问题</p>
+</blockquote>
+<h3 data-tool="mdnice编辑器">同步阻塞（BIO）</h3>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>服务端采用单线程，当accept一个请求后，在recv或send调用阻塞时，将无法accept其他请求（必须等上一个请求处recv或send完），<code>无法处理并发</code></li>
+</ul>
+<pre data-tool="mdnice编辑器"><code>// 伪代码描述<br/>while(1) {<br/>  // accept阻塞<br/>  client_fd = accept(listen_fd)<br/>  fds.append(client_fd)<br/>  for (fd in fds) {<br/>    // recv阻塞（会影响上面的accept）<br/>    if (recv(fd)) {<br/>      // logic<br/>    }<br/>  }  <br/>}<br/></code></pre>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>服务器端采用多线程，当accept一个请求后，开启线程进行recv，可以完成并发处理，但随着请求数增加需要增加系统线程，<code>大量的线程占用很大的内存空间，并且线程切换会带来很大的开销，10000个线程真正发生读写事件的线程数不会超过20%，每次accept都开一个线程也是一种资源浪费</code></li>
+</ul>
+<pre data-tool="mdnice编辑器"><code>// 伪代码描述<br/>while(1) {<br/>  // accept阻塞<br/>  client_fd = accept(listen_fd)<br/>  // 开启线程read数据（fd增多导致线程数增多）<br/>  new Thread func() {<br/>    // recv阻塞（多线程不影响上面的accept）<br/>    if (recv(fd)) {<br/>      // logic<br/>    }<br/>  }  <br/>}<br/><br/></code></pre>
+<h3 data-tool="mdnice编辑器">同步非阻塞（NIO）</h3>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>服务器端当accept一个请求后，加入fds集合，每次轮询一遍fds集合recv(非阻塞)数据，没有数据则立即返回错误，<code>每次轮询所有fd（包括没有发生读写事件的fd）会很浪费cpu</code></li>
+</ul>
+<pre data-tool="mdnice编辑器"><code>setNonblocking(listen_fd)<br/>// 伪代码描述<br/>while(1) {<br/>  // accept非阻塞（cpu一直忙轮询）<br/>  client_fd = accept(listen_fd)<br/>  if (client_fd != null) {<br/>    // 有人连接<br/>    fds.append(client_fd)<br/>  } else {<br/>    // 无人连接<br/>  }  <br/>  for (fd in fds) {<br/>    // recv非阻塞<br/>    setNonblocking(client_fd)<br/>    // recv 为非阻塞命令<br/>    if (len = recv(fd) &amp;&amp; len &gt; 0) {<br/>      // 有读写数据<br/>      // logic<br/>    } else {<br/>       无读写数据<br/>    }<br/>  }  <br/>}<br/></code></pre>
+<h3 data-tool="mdnice编辑器">IO多路复用（现在的做法）</h3>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>服务器端采用单线程通过select/epoll等系统调用获取fd列表，遍历有事件的fd进行accept/recv/send，使其能<code>支持更多的并发连接请求</code></li>
+</ul>
+<pre data-tool="mdnice编辑器"><code>fds = [listen_fd]<br/>// 伪代码描述<br/>while(1) {<br/>  // 通过内核获取有读写事件发生的fd，只要有一个则返回，无则阻塞<br/>  // 整个过程只在调用select、poll、epoll这些调用的时候才会阻塞，accept/recv是不会阻塞<br/>  for (fd in select(fds)) {<br/>    if (fd == listen_fd) {<br/>        client_fd = accept(listen_fd)<br/>        fds.append(client_fd)<br/>    } elseif (len = recv(fd) &amp;&amp; len != -1) { <br/>      // logic<br/>    }<br/>  }  <br/>}<br/></code></pre>
+<h2 data-tool="mdnice编辑器">3、IO多路复用的三种实现方式</h2>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>select</li>
+<li>poll</li>
+<li>epoll</li>
+</ul>
+<h2 data-tool="mdnice编辑器">4、select函数接口</h2>
+<pre data-tool="mdnice编辑器"><code>#include &lt;sys/select.h&gt;<br/>#include &lt;sys/time.h&gt;<br/><br/>#define FD_SETSIZE 1024<br/>#define NFDBITS (8 * sizeof(unsigned long))<br/>#define __FDSET_LONGS (FD_SETSIZE/NFDBITS)<br/><br/>// 数据结构 (bitmap)<br/>typedef struct {<br/>    unsigned long fds_bits[__FDSET_LONGS];<br/>} fd_set;<br/><br/>// API<br/>int select(<br/>    int max_fd, <br/>    fd_set *readset, <br/>    fd_set *writeset, <br/>    fd_set *exceptset, <br/>    struct timeval *timeout<br/>)                              // 返回值就绪描述符的数目<br/><br/>FD_ZERO(int fd, fd_set* fds)   // 清空集合<br/>FD_SET(int fd, fd_set* fds)    // 将给定的描述符加入集合<br/>FD_ISSET(int fd, fd_set* fds)  // 判断指定描述符是否在集合中 <br/>FD_CLR(int fd, fd_set* fds)    // 将给定的描述符从文件中删除  <br/></code></pre>
+<h2 data-tool="mdnice编辑器">5、select使用示例</h2>
+<pre data-tool="mdnice编辑器"><code>int main() {<br/>  /*<br/>   * 这里进行一些初始化的设置，<br/>   * 包括socket建立，地址的设置等,<br/>   */<br/><br/>  fd_set read_fs, write_fs;<br/>  struct timeval timeout;<br/>  int max = 0;  // 用于记录最大的fd，在轮询中时刻更新即可<br/><br/>  // 初始化比特位<br/>  FD_ZERO(&amp;read_fs);<br/>  FD_ZERO(&amp;write_fs);<br/><br/>  int nfds = 0; // 记录就绪的事件，可以减少遍历的次数<br/>  while (1) {<br/>    // 阻塞获取<br/>    // 每次需要把fd从用户态拷贝到内核态<br/>    nfds = select(max + 1, &amp;read_fd, &amp;write_fd, NULL, &amp;timeout);<br/>    // 每次需要遍历所有fd，判断有无读写事件发生<br/>    for (int i = 0; i &lt;= max &amp;&amp; nfds; ++i) {<br/>      if (i == listenfd) {<br/>         --nfds;<br/>         // 这里处理accept事件<br/>         FD_SET(i, &amp;read_fd);//将客户端socket加入到集合中<br/>      }<br/>      if (FD_ISSET(i, &amp;read_fd)) {<br/>        --nfds;<br/>        // 这里处理read事件<br/>      }<br/>      if (FD_ISSET(i, &amp;write_fd)) {<br/>         --nfds;<br/>        // 这里处理write事件<br/>      }<br/>    }<br/>  }<br/></code></pre>
+<h2 data-tool="mdnice编辑器">6、select缺点</h2>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>单个进程所打开的FD是有限制的，通过FD_SETSIZE设置，默认1024</li>
+<li>每次调用select，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大</li>
+<li>对socket扫描时是线性扫描，采用轮询的方法，效率较低（高并发时）</li>
+</ul>
+<h2 data-tool="mdnice编辑器">7、poll函数接口</h2>
+<blockquote data-tool="mdnice编辑器">
+<p>poll与select相比，只是没有fd的限制，其它基本一样</p>
+</blockquote>
+<pre data-tool="mdnice编辑器"><code>#include &lt;poll.h&gt;<br/>// 数据结构<br/>struct pollfd {<br/>    int fd;                         // 需要监视的文件描述符<br/>    short events;                   // 需要内核监视的事件<br/>    short revents;                  // 实际发生的事件<br/>};<br/><br/>// API<br/>int poll(struct pollfd fds[], nfds_t nfds, int timeout);<br/></code></pre>
+<h2 data-tool="mdnice编辑器">8、poll使用示例</h2>
+<pre data-tool="mdnice编辑器"><code>// 先宏定义长度<br/>#define MAX_POLLFD_LEN 4096  <br/><br/>int main() {<br/>  /*<br/>   * 在这里进行一些初始化的操作，<br/>   * 比如初始化数据和socket等。<br/>   */<br/><br/>  int nfds = 0;<br/>  pollfd fds[MAX_POLLFD_LEN];<br/>  memset(fds, 0, sizeof(fds));<br/>  fds[0].fd = listenfd;<br/>  fds[0].events = POLLRDNORM;<br/>  int max  = 0;  // 队列的实际长度，是一个随时更新的，也可以自定义其他的<br/>  int timeout = 0;<br/><br/>  int current_size = max;<br/>  while (1) {<br/>    // 阻塞获取<br/>    // 每次需要把fd从用户态拷贝到内核态<br/>    nfds = poll(fds, max+1, timeout);<br/>    if (fds[0].revents &amp; POLLRDNORM) {<br/>        // 这里处理accept事件<br/>        connfd = accept(listenfd);<br/>        //将新的描述符添加到读描述符集合中<br/>    }<br/>    // 每次需要遍历所有fd，判断有无读写事件发生<br/>    for (int i = 1; i &lt; max; ++i) {     <br/>      if (fds[i].revents &amp; POLLRDNORM) { <br/>         sockfd = fds[i].fd<br/>         if ((n = read(sockfd, buf, MAXLINE)) &lt;= 0) {<br/>            // 这里处理read事件<br/>            if (n == 0) {<br/>                close(sockfd);<br/>                fds[i].fd = -1;<br/>            }<br/>         } else {<br/>             // 这里处理write事件     <br/>         }<br/>         if (--nfds &lt;= 0) {<br/>            break;       <br/>         }   <br/>      }<br/>    }<br/>  }<br/></code></pre>
+<h2 data-tool="mdnice编辑器">9、poll缺点</h2>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>每次调用poll，都需要把fd集合从用户态拷贝到内核态，这个开销在fd很多时会很大</li>
+<li>对socket扫描时是线性扫描，采用轮询的方法，效率较低（高并发时）</li>
+</ul>
+<h2 data-tool="mdnice编辑器">10、epoll函数接口</h2>
+<pre data-tool="mdnice编辑器"><code>#include &lt;sys/epoll.h&gt;<br/><br/>// 数据结构<br/>// 每一个epoll对象都有一个独立的eventpoll结构体<br/>// 用于存放通过epoll_ctl方法向epoll对象中添加进来的事件<br/>// epoll_wait检查是否有事件发生时，只需要检查eventpoll对象中的rdlist双链表中是否有epitem元素即可<br/>struct eventpoll {<br/>    /*红黑树的根节点，这颗树中存储着所有添加到epoll中的需要监控的事件*/<br/>    struct rb_root  rbr;<br/>    /*双链表中则存放着将要通过epoll_wait返回给用户的满足条件的事件*/<br/>    struct list_head rdlist;<br/>};<br/><br/>// API<br/><br/>int epoll_create(int size); // 内核中间加一个 ep 对象，把所有需要监听的 socket 都放到 ep 对象中<br/>int epoll_ctl(int epfd, int op, int fd, struct epoll_event *event); // epoll_ctl 负责把 socket 增加、删除到内核红黑树<br/>int epoll_wait(int epfd, struct epoll_event * events, int maxevents, int timeout);// epoll_wait 负责检测可读队列，没有可读 socket 则阻塞进程<br/></code></pre>
+<h2 data-tool="mdnice编辑器">11、epoll使用示例</h2>
+<pre data-tool="mdnice编辑器"><code>int main(int argc, char* argv[])<br/>{<br/>   /*<br/>   * 在这里进行一些初始化的操作，<br/>   * 比如初始化数据和socket等。<br/>   */<br/><br/>    // 内核中创建ep对象<br/>    epfd=epoll_create(256);<br/>    // 需要监听的socket放到ep中<br/>    epoll_ctl(epfd,EPOLL_CTL_ADD,listenfd,&amp;ev);<br/> <br/>    while(1) {<br/>      // 阻塞获取<br/>      nfds = epoll_wait(epfd,events,20,0);<br/>      for(i=0;i&lt;nfds;++i) {<br/>          if(events[i].data.fd==listenfd) {<br/>              // 这里处理accept事件<br/>              connfd = accept(listenfd);<br/>              // 接收新连接写到内核对象中<br/>              epoll_ctl(epfd,EPOLL_CTL_ADD,connfd,&amp;ev);<br/>          } else if (events[i].events&amp;EPOLLIN) {<br/>              // 这里处理read事件<br/>              read(sockfd, BUF, MAXLINE);<br/>              //读完后准备写<br/>              epoll_ctl(epfd,EPOLL_CTL_MOD,sockfd,&amp;ev);<br/>          } else if(events[i].events&amp;EPOLLOUT) {<br/>              // 这里处理write事件<br/>              write(sockfd, BUF, n);<br/>              //写完后准备读<br/>              epoll_ctl(epfd,EPOLL_CTL_MOD,sockfd,&amp;ev);<br/>          }<br/>      }<br/>    }<br/>    return 0;<br/>}<br/></code></pre>
+<h2 data-tool="mdnice编辑器">12、epoll缺点</h2>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>epoll只能工作在linux下</li>
+</ul>
+<h2 data-tool="mdnice编辑器">13、epoll LT 与 ET模式的区别</h2>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>epoll有EPOLLLT和EPOLLET两种触发模式，LT是默认的模式，ET是“高速”模式。</li>
+<li>LT模式下，只要这个fd还有数据可读，每次 epoll_wait都会返回它的事件，提醒用户程序去操作</li>
+<li>ET模式下，它只会提示一次，直到下次再有数据流入之前都不会再提示了，无论fd中是否还有数据可读。所以在ET模式下，read一个fd的时候一定要把它的buffer读完，或者遇到EAGAIN错误</li>
+</ul>
+<h2 data-tool="mdnice编辑器">14、epoll应用</h2>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>redis</li>
+<li>nginx</li>
+</ul>
+<h2 data-tool="mdnice编辑器">15、select/poll/epoll之间的区别</h2>
+<table data-tool="mdnice编辑器">
+<thead>
+<tr><th> </th><th>select</th><th>poll</th><th>epoll</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>数据结构</td>
+<td>bitmap</td>
+<td>数组</td>
+<td>红黑树</td>
+</tr>
+<tr>
+<td>最大连接数</td>
+<td>1024</td>
+<td>无上限</td>
+<td>无上限</td>
+</tr>
+<tr>
+<td>fd拷贝</td>
+<td>每次调用select拷贝</td>
+<td>每次调用poll拷贝</td>
+<td>fd首次调用epoll_ctl拷贝，每次调用epoll_wait不拷贝</td>
+</tr>
+<tr>
+<td>工作效率</td>
+<td>轮询：O(n)</td>
+<td>轮询：O(n)</td>
+<td>回调：O(1)</td>
+</tr>
+</tbody>
+</table>
+<h2 data-tool="mdnice编辑器">16、完整代码示例</h2>
+<p data-tool="mdnice编辑器">https://github.com/caijinlin/learning-pratice/tree/master/linux/io</p>
+<h2 data-tool="mdnice编辑器">17、高频面试题</h2>
+<ul class="list-paddingleft-2" data-tool="mdnice编辑器">
+<li>什么是IO多路复用?</li>
+<li>nginx/redis 所使用的IO模型是什么？</li>
+<li>select、poll、epoll之间的区别</li>
+<li>epoll 水平触发（LT）与 边缘触发（ET）的区别？</li>
+</ul>
+{% endraw %}

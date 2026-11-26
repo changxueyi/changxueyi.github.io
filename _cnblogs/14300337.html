@@ -1,0 +1,286 @@
+---
+title: "PHP研发开发规范2"
+date: 2021-01-19 21:55:00 +0800
+tags: ["【PHP】-- PHP基础", "【开发规范】编码规范"]
+excerpt: "1 php编码规范 1.1 php开发工具 1.2 使用fis3上传代码 1.3 编码规范参照百度代码规范执行 1.4 代码注释 2 odp开发规范 2.1 action基类 2.2 dao基类 2.3 脚本 2.4 日志 2.5 parent-phplib库公共方法 2.6 rpc调用 2.7 接"
+read_minutes: 5
+cnblogs_id: 14300337
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14300337.html"
+tags_inferred: true
+---
+{% raw %}
+<div class="toc-macro client-side-toc-macro conf-macro output-block hidden-outline" data-hasbody="false" data-headerelements="H1,H2,H3,H4,H5,H6,H7" data-macro-name="toc">
+<ul>
+<li><span class="toc-item-body" data-outline="1"><span class="toc-item-body" data-outline="1"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-1php%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83">1 php编码规范</a></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="1.1"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-1.1php%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7">1.1 php开发工具</a></span></li>
+<li><span class="toc-item-body" data-outline="1.2"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-1.2%E4%BD%BF%E7%94%A8fis3%E4%B8%8A%E4%BC%A0%E4%BB%A3%E7%A0%81">1.2 使用fis3上传代码</a></span></li>
+<li><span class="toc-item-body" data-outline="1.3"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-1.3%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83%E5%8F%82%E7%85%A7%E7%99%BE%E5%BA%A6%E4%BB%A3%E7%A0%81%E8%A7%84%E8%8C%83%E6%89%A7%E8%A1%8C">1.3 编码规范参照百度代码规范执行</a></span></li>
+<li><span class="toc-item-body" data-outline="1.4"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-1.4%E4%BB%A3%E7%A0%81%E6%B3%A8%E9%87%8A">1.4 代码注释</a></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="2"><span class="toc-item-body" data-outline="2"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2odp%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83">2 odp开发规范</a></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="2.1"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.1action%E5%9F%BA%E7%B1%BB">2.1 action基类</a></span></li>
+<li><span class="toc-item-body" data-outline="2.2"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.2dao%E5%9F%BA%E7%B1%BB">2.2 dao基类</a></span></li>
+<li><span class="toc-item-body" data-outline="2.3"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.3%E8%84%9A%E6%9C%AC">2.3 脚本</a></span></li>
+<li><span class="toc-item-body" data-outline="2.4"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.4%E6%97%A5%E5%BF%97">2.4 日志</a></span></li>
+<li><span class="toc-item-body" data-outline="2.5"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.5parent-phplib%E5%BA%93%E5%85%AC%E5%85%B1%E6%96%B9%E6%B3%95">2.5 parent-phplib库公共方法</a></span></li>
+<li><span class="toc-item-body" data-outline="2.6"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.6rpc%E8%B0%83%E7%94%A8">2.6 rpc调用</a></span></li>
+<li><span class="toc-item-body" data-outline="2.7"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.7%E6%8E%A5%E5%8F%A3%E8%A7%84%E8%8C%83">2.7 接口规范</a></span></li>
+<li><span class="toc-item-body" data-outline="2.8"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-2.7%E5%85%B6%E4%BB%96">2.7 其他</a></span></li>
+<li class="toc-empty-item"></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="3"><span class="toc-item-body" data-outline="3"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-3mysql">3 mysql</a></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="3.1"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-3.1%E8%A1%A8%E8%AE%BE%E8%AE%A1">3.1 表设计</a></span></li>
+<li><span class="toc-item-body" data-outline="3.2"><a class="toc-link" href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368880#id-00-%E5%90%8E%E7%AB%AF%E7%A0%94%E5%8F%91%E5%BC%80%E5%8F%91%E8%A7%84%E8%8C%83-3.2%E8%A1%A8%E6%B3%A8%E9%87%8A">3.2 表注释</a></span></li>
+</ul>
+</li>
+</ul>
+</div>
+<h3 id="id-00-后端研发开发规范-1php编码规范">1 php编码规范</h3>
+<h4 id="id-00-后端研发开发规范-1.1php开发工具">1.1 php开发工具</h4>
+<ul>
+<li>统一使用phpstorm开发</li>
+<li>代码格式化统一使用prettier<br/><a class="external-link" href="https://prettier.io/" rel="nofollow">https://prettier.io/</a><br/><a class="external-link" href="https://github.com/prettier/plugin-php" rel="nofollow">https://github.com/prettier/plugin-php</a></li>
+</ul>
+<p>安装prettier方法如下</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl hide-border-bottom"><strong class="code-title">安装prettier</strong><span class="collapse-source expand-control"><span class="expand-control-icon icon"> <span class="expand-control-text">展开源码</span></span></span></div>
+</div>
+<pre>说明：</pre>
+<pre>1.phpstorm每次新建的项目，File Watchers默认没勾选上，需要自己在勾选下</pre>
+<p>2. prettier的watcher配置如下</p>
+<p><span class="confluence-embedded-file-wrapper"><img class="confluence-embedded-image confluence-thumbnail" data-base-url="https://wiki.zuoyebang.cc" data-image-src="/download/attachments/142368880/image2020-6-20_16-34-52.png?version=1&amp;modificationDate=1598960975000&amp;api=v2" data-linked-resource-container-id="142368880" data-linked-resource-container-version="3" data-linked-resource-content-type="image/png" data-linked-resource-default-alias="image2020-6-20_16-34-52.png" data-linked-resource-id="142368860" data-linked-resource-type="attachment" data-linked-resource-version="1" data-unresolved-comment-count="0" loading="lazy" referrerpolicy="no-referrer" src="https://wiki.zuoyebang.cc/download/thumbnails/142368880/image2020-6-20_16-34-52.png?version=1&amp;modificationDate=1598960975000&amp;api=v2"/></span></p>
+<p>3. 每个项目git仓库会增加一个配置文件.prettierrc，严禁修改</p>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-1.2使用fis3上传代码">1.2 使用fis3上传代码</h4>
+<p>docker和开发机都可以使用fis3上传代码，操作步骤如下：</p>
+<p>1） 在自己电脑上按照好fis3工具</p>
+<p>2）将fis3执行脚本放在php项目根目录下，注意在.gitignore添加此文件，不要把此脚本提交到git仓库里，脚本请到这里下载：<a class="external-link" href="https://git.zuoyebang.cc/parent_rd/phpstorm_conf/blob/master/fis-conf.js" rel="nofollow"><br/></a></p>
+<p>3）修改脚本的App<span class="s1">和RemoteServer<span class="s1">两个参数，app是项目名字，RemoteServer中修改想要上传的目标服务器域名</span></span></p>
+<p><span class="s1">4）在项目根目录下执行命令（fis3 release -Lw），每次执行会先全量上传整个项目，然后脚本会一直监控，每当有文件修改会自动上传</span></p>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-1.3编码规范参照百度代码规范执行">1.3 编码规范参照代码规范执行</h4>
+<p><a href="https://wiki.zuoyebang.cc/pages/viewpage.action?pageId=142368990"> </a></p>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-1.4代码注释">1.4 代码注释</h4>
+<p>文件、类和函数必须写注释</p>
+<p>一定不要因为代码或者文件复制过来的而不去修改注释</p>
+<p>phpstorm设置注释模板，进入设置：Editor-》File and Code Tempates-》PHP File Header</p>
+<p>phpstorm添加函数注释快捷方式，在函数上方输入/**，然后回车就会自动生成函数注释</p>
+<p>文件注释示例</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter php" id="highlighter_238648">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="php comments">/**</code></div>
+<div class="line number2 index1 alt1"><code class="php spaces"> </code><code class="php comments">* @befie 示例                             # 功能说明</code></div>
+<div class="line number3 index2 alt2"><code class="php spaces"> </code><code class="php comments">* @file <a href="https://wiki.zuoyebang.cc/pages/XX.php%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0">XX.php                          </a> # 文件名字</code></div>
+<div class="line number4 index3 alt1"><code class="php spaces"> </code><code class="php comments">* @author xxx&lt;xxx@<a href="https://wiki.zuoyebang.cc/pages/zuoyebang.com">zuoyebang.com</a>&gt;         # 作者</code></div>
+<div class="line number5 index4 alt2"><code class="php spaces"> </code><code class="php comments">* @version <a href="https://wiki.zuoyebang.cc/pages/1.0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0%C2%A0">1.0                          </a> # 版本</code></div>
+<div class="line number6 index5 alt1"><code class="php spaces"> </code><code class="php comments">* @since   1.1 2020-06-10 第二版 @xingfu  # 更新说明</code></div>
+<div class="line number7 index6 alt2"><code class="php spaces"> </code><code class="php comments">* @date 2019-05-19                       # 创建时间</code></div>
+<div class="line number8 index7 alt1"><code class="php spaces"> </code><code class="php comments">*/</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>函数注释示例</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter php" id="highlighter_348659">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="php comments">/**</code></div>
+<div class="line number2 index1 alt1"><code class="php spaces"> </code><code class="php comments">* 函数功能</code></div>
+<div class="line number3 index2 alt2"><code class="php spaces"> </code><code class="php comments">* @param 参数1</code></div>
+<div class="line number4 index3 alt1"><code class="php spaces"> </code><code class="php comments">* @param 参数2</code></div>
+<div class="line number5 index4 alt2"><code class="php spaces"> </code><code class="php comments">* @return 返回值</code></div>
+<div class="line number6 index5 alt1"><code class="php spaces"> </code><code class="php comments">* @throws Exception</code></div>
+<div class="line number7 index6 alt2"><code class="php spaces"> </code><code class="php comments">*/</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h3 id="id-00-后端研发开发规范-2odp开发规范">2 odp开发规范</h3>
+<h4 id="id-00-后端研发开发规范-2.1action基类">2.1 action基类</h4>
+<p>parent-phplib库统一封装了各种场景的action基类，各个服务里不要在自己封装action基类</p>
+<div class="table-wrap">
+<table class="wrapped confluenceTable tablesorter tablesorter-default stickyTableHeaders"><colgroup><col/><col/><col/></colgroup>
+<thead class="tableFloatingHeaderOriginal">
+<tr class="tablesorter-headerRow"><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="0" scope="col">
+<div class="tablesorter-header-inner">action基类</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="1" scope="col">
+<div class="tablesorter-header-inner">说明</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" colspan="1" data-column="2" scope="col">
+<div class="tablesorter-header-inner">使用范围</div>
+</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="confluenceTd">Parentlib_Action_BaseAction</td>
+<td class="confluenceTd">
+<p>此基类用于app端返回json数据接口，需要校验conf文件</p>
+</td>
+<td class="confluenceTd" colspan="1">端上接口</td>
+</tr>
+<tr>
+<td class="confluenceTd">Parentlib_Action_BaseAjaxAction</td>
+<td class="confluenceTd">
+<p>此基类用于前端返回json数据接口，需要校验conf文件</p>
+</td>
+<td class="confluenceTd" colspan="1">fe接口</td>
+</tr>
+<tr>
+<td class="confluenceTd"><s>Parentlib_Action_BaseMagicAction</s></td>
+<td class="confluenceTd">
+<p><s>此基类用于app端或者前端返回json数据接口，需要校验conf文件</s></p>
+</td>
+<td class="confluenceTd" colspan="1"><s>通用接口，有安全问题，不建议使用</s></td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1"><s>Parentlib_Action_BaseWebAction</s></td>
+<td class="confluenceTd" colspan="1">
+<p><s>此基类用于前端不返回json数据接口，不需要校验conf文件，tpl接口使用</s></p>
+</td>
+<td class="confluenceTd" colspan="1"><s>tpl接口，禁用</s></td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1"><s>Parentlib_Action_BaseFeAction</s></td>
+<td class="confluenceTd" colspan="1">
+<p><s>此基类用于前端返回json数据接口，不需要校验conf文件</s></p>
+</td>
+<td class="confluenceTd" colspan="1"><s>fe接口，禁用</s></td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">Parentlib_Action_BaseInternalAction</td>
+<td class="confluenceTd" colspan="1">
+<p>此基类用于内网服务接口action基类</p>
+</td>
+<td class="confluenceTd" colspan="1">内网接口</td>
+</tr>
+<tr>
+<td class="confluenceTd" colspan="1">Parentlib_Action_BaseWxxcxAction</td>
+<td class="confluenceTd" colspan="1">此基类用于微信小程序接口，会进行接口参数签名</td>
+<td class="confluenceTd" colspan="1">小程序接口</td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4 id="id-00-后端研发开发规范-2.2dao基类">2.2 dao基类</h4>
+<p>parent-phplib库统一封装了dao基类，各个服务里请直接使用lib库的基类</p>
+<p>说明：hk库共有3个dao基类，除了下面这2个，还有个Hk_Common_Dao，之前封装了一个基于此类的Parentlib_Dao_Base</p>
+<div class="table-wrap">
+<table class="wrapped relative-table confluenceTable tablesorter tablesorter-default stickyTableHeaders"><colgroup><col/><col/><col/></colgroup>
+<thead class="tableFloatingHeaderOriginal">
+<tr class="tablesorter-headerRow"><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="0" scope="col">
+<div class="tablesorter-header-inner">dao基类</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="1" scope="col">
+<div class="tablesorter-header-inner">说明</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" colspan="1" data-column="2" scope="col">
+<div class="tablesorter-header-inner">方法</div>
+</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="confluenceTd">Parentlib_Common_BaseDao</td>
+<td class="confluenceTd">
+<p>此基类用于单表dao，继承至Hk_Common_BaseDao</p>
+</td>
+<td class="confluenceTd" colspan="1">
+<p>获取查询字段数组：getQueryFields</p>
+<p>查询带分页的列表数据：getPageList</p>
+<p>查询列表数据，并返回是否还有下一页：getMoreList</p>
+</td>
+</tr>
+<tr>
+<td class="confluenceTd">Parentlib_Common_BaseMultiDao</td>
+<td class="confluenceTd">
+<p>此基类用于分表dao，继承至Hk_Common_BaseMultiDao</p>
+</td>
+<td class="confluenceTd" colspan="1">
+<p>获取查询字段数组：getQueryFields</p>
+<p>按环境获取分表数量：getMaxTableNum</p>
+<p>查询所有表数据：queryAllTable</p>
+<p>查询带分页的列表数据：getPageList</p>
+<p>查询列表数据，并返回是否还有下一页：getMoreList</p>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-2.3脚本">2.3 脚本</h4>
+<ul>
+<li>脚本文件严禁直接创建在/script根目录下</li>
+<li>按照模块创建目录</li>
+<li>模块目录内的脚本类型分为守护进程deamon、定时任务cron和一次性任务once，分表创建目录，见下图</li>
+</ul>
+<p><span class="confluence-embedded-file-wrapper"><img class="confluence-embedded-image confluence-thumbnail" data-base-url="https://wiki.zuoyebang.cc" data-image-src="/download/attachments/142368880/image2019-5-18_19-0-24.png?version=1&amp;modificationDate=1598960975000&amp;api=v2" data-linked-resource-container-id="142368880" data-linked-resource-container-version="3" data-linked-resource-content-type="image/png" data-linked-resource-default-alias="image2019-5-18_19-0-24.png" data-linked-resource-id="142368875" data-linked-resource-type="attachment" data-linked-resource-version="1" data-unresolved-comment-count="0" loading="lazy" referrerpolicy="no-referrer" src="https://wiki.zuoyebang.cc/download/thumbnails/142368880/image2019-5-18_19-0-24.png?version=1&amp;modificationDate=1598960975000&amp;api=v2"/></span></p>
+<p>2）脚本编码</p>
+<ul>
+<li>脚本文件名字必须以大写字母开头</li>
+<li>脚本统一继承脚本基类Parentlib_Common_BaseScript</li>
+<li>脚本必须写完整注释，定时任务需要在注释里写清楚crontab计划</li>
+<li>脚本内打info日志直接使用Bd_Log::addNotice，基类会统一打一条日志</li>
+<li>脚本里注释填写好jira工单地址</li>
+<li>脚本一定要写到自己相关的项目里</li>
+</ul>
+<h4 id="id-00-后端研发开发规范-2.4日志">2.4 日志</h4>
+<p>代码里打日志的地方一定要想清楚该往info还是wf里写</p>
+<p>wf日志：不要什么错误都往wf里打，Bd_Log::warning()和Bd_Log::fatal()每次请求都会打一条日志，一次接口请求里代码多次调用会打多条wf日志，影响接口错误里的统计</p>
+<p>info日志：一次接口请求框架会最后打一条info日志，不要在代码中使用Bd_Log::notice()，应该使用Bd_Log::AddNotice()</p>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-2.5parent-phplib库公共方法">2.5 parent-phplib库公共方法</h4>
+<p>parent-phplib库封装了公共的ds，service和util，开发时统一使用公共库的方法，不要重复造轮子</p>
+<p>使用手册见wiki：<a class="createlink" href="https://wiki.zuoyebang.cc/pages/createpage.action?spaceKey=BASE&amp;title=parent-phplib%E5%BA%93%E4%BD%BF%E7%94%A8%E6%89%8B%E5%86%8C&amp;linkCreation=true&amp;fromPageId=142368880">parent-phplib库使用手册</a></p>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-2.6rpc调用">2.6 rpc调用</h4>
+<p>每个项目调用一个第三方服务时，在library/XX/rpc/目录下封装一个类来统一封装这个第三方服务的所有接口，不要在其他地方分散去单独写，方便维护和管理</p>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-2.7接口规范">2.7 接口规范</h4>
+<p>入参和出参字段必须使用驼峰</p>
+<p> </p>
+<h4 id="id-00-后端研发开发规范-2.7其他">2.7 其他</h4>
+<ul>
+<li>不要直接复制目录或者文件到其他项目，按需获取，无效的代码要删除</li>
+<li>测试接口不要对外发布，如果有测试需要一定要继承内网的action</li>
+</ul>
+<h4 id="id-00-后端研发开发规范-"> </h4>
+<h3 id="id-00-后端研发开发规范-3mysql">3 mysql</h3>
+<h4 id="id-00-后端研发开发规范-3.1表设计">3.1 表设计</h4>
+<ul>
+<li>表名称以tbl开头，驼峰格式命名，</li>
+<li>字段名字使用下划线的格式，不要用驼峰</li>
+<li>非text字段一定要设置NOT NULL</li>
+<li>注意id字段的长度，比如公司的用户uid一定要用bigint</li>
+<li>记录id不要用自增id，要用发号器生成的id</li>
+</ul>
+<h4 id="id-00-后端研发开发规范-3.2表注释">3.2 表注释</h4>
+<ul>
+<li>一定要写表名称和字段的注释，自增id也需要写注释</li>
+<li>枚举字段主要把每个值含义写到注释里</li>
+</ul>
+{% endraw %}

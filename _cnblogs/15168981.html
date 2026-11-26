@@ -1,0 +1,242 @@
+---
+title: "SpringBoot之定时任务详解"
+date: 2021-08-21 10:20:00 +0800
+tags: ["【框架】-- Spring"]
+excerpt: "阅读目录： 序言 一、静态：基于注解 二、动态：基于接口 三、多线程定时任务 阅读正文： 回到顶部 序言 使用SpringBoot创建定时任务非常简单，目前主要有以下三种创建方式： 一、基于注解(@Scheduled) 二、基于接口（SchedulingConfigurer） 前者相信大家都很熟悉，"
+read_minutes: 5
+cnblogs_id: 15168981
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15168981.html"
+---
+{% raw %}
+<p><strong>阅读目录：</strong></p>
+<ul>
+<li><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_label0">序言</a></li>
+<li><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_label1">一、静态：基于注解</a></li>
+<li><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_label2">二、动态：基于接口</a></li>
+<li><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_label3">三、多线程定时任务</a></li>
+</ul>
+<p> </p>
+<p><strong>阅读正文：</strong></p>
+<div><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_labelTop">回到顶部</a><a name="_label0"></a></div>
+<h2>序言</h2>
+<p data-source-line="3">使用SpringBoot创建定时任务非常简单，目前主要有以下三种创建方式：</p>
+<ul data-source-line="4">
+<li>一、基于注解(@Scheduled)</li>
+<li>二、基于接口（SchedulingConfigurer） 前者相信大家都很熟悉，但是实际使用中我们往往想从数据库中读取指定时间来动态执行定时任务，这时候基于接口的定时任务就派上用场了。</li>
+<li>三、基于注解设定多线程定时任务</li>
+</ul>
+<div><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_labelTop">回到顶部</a><a name="_label1"></a></div>
+<h2 data-source-line="7" id="静态基于注解">一、静态：基于注解</h2>
+<p data-source-line="8">基于注解@Scheduled默认为单线程，开启多个任务时，任务的执行时机会受上一个任务执行时间的影响。</p>
+<h4 data-source-line="9" id="创建定时器">1、创建定时器</h4>
+<p data-source-line="10">使用SpringBoot基于注解来创建定时任务非常简单，只需几行代码便可完成。<span class="Apple-converted-space"> 代码如下：</span></p>
+<div class="cnblogs_code">
+
+<pre>@Configuration      //1.主要用于标记配置类，兼备Component的效果。
+@EnableScheduling   // 2.开启定时任务
+public class SaticScheduleTask {
+    //3.添加定时任务
+    @Scheduled(cron = "0/5 * * * * ?")
+    //或直接指定时间间隔，例如：5秒
+    //@Scheduled(fixedRate=5000)
+    private void configureTasks() {
+        System.err.println("执行静态定时任务时间: " + LocalDateTime.now());
+    }
+}</pre>
+
+</div>
+<p data-source-line="26"> </p>
+<p data-source-line="26">Cron表达式参数分别表示：</p>
+<ul data-source-line="27">
+<li>秒（0~59） 例如0/5表示每5秒</li>
+<li>分（0~59）</li>
+<li>时（0~23）</li>
+<li>日（0~31）的某天，需计算</li>
+<li>月（0~11）</li>
+<li>周几（ 可填1-7 或 SUN/MON/TUE/WED/THU/FRI/SAT）</li>
+</ul>
+<p data-source-line="34">@Scheduled：除了支持灵活的参数表达式cron之外，还支持简单的延时操作，例如 fixedDelay ，fixedRate 填写相应的毫秒数即可。</p>
+<p data-source-line="34"> </p>
+<div class="cnblogs_code">
+
+<pre>// Cron表达式范例：
+
+每隔5秒执行一次：*/5 * * * * ?
+
+每隔1分钟执行一次：0 */1 * * * ?
+
+每天23点执行一次：0 0 23 * * ?
+
+每天凌晨1点执行一次：0 0 1 * * ?
+
+每月1号凌晨1点执行一次：0 0 1 1 * ?
+
+每月最后一天23点执行一次：0 0 23 L * ?
+
+每周星期天凌晨1点实行一次：0 0 1 ? * L
+
+在26分、29分、33分执行一次：0 26,29,33 * * * ?
+
+每天的0点、13点、18点、21点都执行一次：0 0 0,13,18,21 * * ?</pre>
+
+</div>
+<p> </p>
+<h4 data-source-line="35" id="启动测试">2、启动测试</h4>
+<p data-source-line="36">启动应用，可以看到控制台打印出如下信息：</p>
+<p data-source-line="36"><img alt="在这里插入图片描述" data-processed="https%3A%2F%2Fimg-blog.csdnimg.cn%2F20181220161509852.png" loading="lazy" src="/images/cnblogs/75b976e9c7d0e5b6.png"/><span class="Apple-converted-space"> <br/></span></p>
+<p data-source-line="36"><span class="Apple-converted-space">显然，使用@Scheduled 注解很方便，但缺点是当我们调整了执行周期的时候，需要重启应用才能生效，这多少有些不方便。为了达到实时生效的效果，可以使用接口来完成定时任务。</span></p>
+<p data-source-line="36"> </p>
+<div><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_labelTop">回到顶部</a><a name="_label2"></a></div>
+<h2 data-source-line="41" id="动态基于接口">二、动态：基于接口</h2>
+<p data-source-line="42">基于接口（SchedulingConfigurer）</p>
+<h4 data-source-line="43" id="导入依赖包">1、导入依赖包：</h4>
+<div class="cnblogs_code">
+
+<pre>    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter&lt;/artifactId&gt;
+        &lt;version&gt;2.0.4.RELEASE&lt;/version&gt;
+    &lt;/parent&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;&lt;!--添加Web依赖 --&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;&lt;!--添加MySql依赖 --&gt;
+             &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;&lt;!--添加Mybatis依赖 配置mybatis的一些初始化的东西--&gt;
+            &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.3.1&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;&lt;!-- 添加mybatis依赖 --&gt;
+            &lt;groupId&gt;org.mybatis&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis&lt;/artifactId&gt;
+            &lt;version&gt;3.4.5&lt;/version&gt;
+            &lt;scope&gt;compile&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;</pre>
+
+</div>
+<p data-source-line="73"> </p>
+<h4 data-source-line="73">2、添加数据库记录：</h4>
+<p data-source-line="74">开启本地数据库mysql，随便打开查询窗口，然后执行脚本内容，如下：</p>
+<div class="cnblogs_code">
+
+<pre>DROP DATABASE IF EXISTS `socks`;
+CREATE DATABASE `socks`;
+USE `SOCKS`;
+DROP TABLE IF EXISTS `cron`;
+CREATE TABLE `cron`  (
+  `cron_id` varchar(30) NOT NULL PRIMARY KEY,
+  `cron` varchar(30) NOT NULL  
+);
+INSERT INTO `cron` VALUES ('1', '0/5 * * * * ?');</pre>
+
+</div>
+<p data-source-line="86"><img alt="在这里插入图片描述" data-processed="https%3A%2F%2Fimg-blog.csdnimg.cn%2F20181220161546371.png" loading="lazy" src="/images/cnblogs/2b7ee81aaa80c444.png"/><span class="Apple-converted-space"> <br/></span></p>
+<p data-source-line="86"><span class="Apple-converted-space">然后在项目中的application.yml 添加数据源：</span></p>
+<div class="cnblogs_code">
+<pre>spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/socks
+    username: root
+    password: 123456</pre>
+</div>
+<p data-source-line="96"> </p>
+<h4 data-source-line="96" id="创建定时器-2">3、创建定时器</h4>
+<p data-source-line="97">数据库准备好数据之后，我们编写定时任务，注意这里添加的是TriggerTask，目的是循环读取我们在数据库设置好的执行周期，以及执行相关定时任务的内容。<br/>具体代码如下：</p>
+<div class="cnblogs_code">
+
+<pre>@Configuration      //1.主要用于标记配置类，兼备Component的效果。
+@EnableScheduling   // 2.开启定时任务
+public class DynamicScheduleTask implements SchedulingConfigurer {
+
+    @Mapper
+    public interface CronMapper {
+        @Select("select cron from cron limit 1")
+        public String getCron();
+    }
+
+    @Autowired      //注入mapper
+    @SuppressWarnings("all")
+    CronMapper cronMapper;
+
+    /**
+     * 执行定时任务.
+     */
+    @Override
+    public void configureTasks(ScheduledTaskRegistrar taskRegistrar) {
+
+        taskRegistrar.addTriggerTask(
+                //1.添加任务内容(Runnable)
+                () -&gt; System.out.println("执行动态定时任务: " + LocalDateTime.now().toLocalTime()),
+                //2.设置执行周期(Trigger)
+                triggerContext -&gt; {
+                    //2.1 从数据库获取执行周期
+                    String cron = cronMapper.getCron();
+                    //2.2 合法性校验.
+                    if (StringUtils.isEmpty(cron)) {
+                        // Omitted Code ..
+                    }
+                    //2.3 返回执行周期(Date)
+                    return new CronTrigger(cron).nextExecutionTime(triggerContext);
+                }
+        );
+    }
+
+}</pre>
+
+</div>
+<p data-source-line="140"> </p>
+<h4 data-source-line="140" id="启动测试-2">4、启动测试</h4>
+<p data-source-line="141">启动应用后，查看控制台，打印时间是我们预期的每10秒一次：<br/><img alt="在这里插入图片描述" data-processed="https%3A%2F%2Fimg-blog.csdnimg.cn%2F20181220161739406.png" loading="lazy" src="/images/cnblogs/e84fe2cd3e8416e3.png"/><span class="Apple-converted-space"> </span></p>
+<p data-source-line="141"><span class="Apple-converted-space">然后打开Navicat ，将执行周期修改为每6秒执行一次，如图：<br/><img alt="在这里插入图片描述" data-processed="https%3A%2F%2Fimg-blog.csdnimg.cn%2F20181220161905131.png" loading="lazy" src="/images/cnblogs/9d5db14fb4518516.png"/><span class="Apple-converted-space"> <br/></span></span></p>
+<p data-source-line="141"><span class="Apple-converted-space">查看控制台，发现执行周期已经改变，并且不需要我们重启应用，十分方便。如图：<br/><img alt="在这里插入图片描述" data-processed="https%3A%2F%2Fimg-blog.csdnimg.cn%2F20181220161911141.png" loading="lazy" src="/images/cnblogs/7ef5befbd8193775.png"/><span class="Apple-converted-space"> <br/></span></span></p>
+<p data-source-line="141"><span class="Apple-converted-space"><span class="Apple-converted-space"><span class="Apple-converted-space">注意：<span class="Apple-converted-space"> 如果在数据库修改时格式出现错误，则定时任务会停止，即使重新修改正确；此时只能重新启动项目才能恢复。</span></span></span></span></p>
+<p data-source-line="141"> </p>
+<div><a href="https://www.cnblogs.com/mmzs/p/10161936.html#_labelTop">回到顶部</a><a name="_label3"></a></div>
+<h2 data-source-line="148" id="多线程">三、多线程定时任务</h2>
+<p data-source-line="149">基于注解设定多线程定时任务</p>
+<h4 data-source-line="150" id="创建多线程定时任务">1、创建多线程定时任务</h4>
+<div class="cnblogs_code">
+
+<pre>//@Component注解用于对那些比较中立的类进行注释；
+//相对与在持久层、业务层和控制层分别采用 @Repository、@Service 和 @Controller 对分层中的类进行注释
+@Component
+@EnableScheduling   // 1.开启定时任务
+@EnableAsync        // 2.开启多线程
+public class MultithreadScheduleTask {
+
+        @Async
+        @Scheduled(fixedDelay = 1000)  //间隔1秒
+        public void first() throws InterruptedException {
+            System.out.println("第一个定时任务开始 : " + LocalDateTime.now().toLocalTime() + "\r\n线程 : " + Thread.currentThread().getName());
+            System.out.println();
+            Thread.sleep(1000 * 10);
+        }
+
+        @Async
+        @Scheduled(fixedDelay = 2000)
+        public void second() {
+            System.out.println("第二个定时任务开始 : " + LocalDateTime.now().toLocalTime() + "\r\n线程 : " + Thread.currentThread().getName());
+            System.out.println();
+        }
+    }</pre>
+
+</div>
+<p data-source-line="175"><strong>注： </strong>这里的<a href="https://www.cnblogs.com/mmzs/p/11557583.html" target="_blank">@Async</a>注解很关键</p>
+<p data-source-line="175"> </p>
+<h4 data-source-line="175" id="启动测试-3">2、启动测试</h4>
+<p data-source-line="176">启动应用后，查看控制台：<br/><img alt="在这里插入图片描述" data-processed="https%3A%2F%2Fimg-blog.csdnimg.cn%2F20181220165535820.png%3Fx-oss-process%3Dimage%2Fwatermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L01vYml1c1N0cmlw%2Csize_16%2Ccolor_FFFFFF%2Ct_70" loading="lazy" src="/images/cnblogs/723f87e003715fce.png"/><span class="Apple-converted-space"> <br/></span></p>
+<p data-source-line="176"><span class="Apple-converted-space">从控制台可以看出，第一个定时任务和第二个定时任务互不影响；</span></p>
+<p data-source-line="180">并且，由于开启了多线程，第一个任务的执行时间也不受其本身执行时间的限制，所以需要注意可能会出现重复操作导致数据异常。</p>
+<p data-source-line="180"> </p>
+<p data-source-line="180">代码地址：<a href="https://github.com/mmzsblog/springboot-schedule">https://github.com/mmzsblog/springboot-schedule</a></p>
+<p data-source-line="180"> </p>
+<p data-source-line="180">原文链接：<a href="https://www.mmzsblog.cn/articles/2019/08/08/1565247960802.html">https://www.mmzsblog.cn/articles/2019/08/08/1565247960802.html</a></p>
+<p data-source-line="180"> </p>
+{% endraw %}

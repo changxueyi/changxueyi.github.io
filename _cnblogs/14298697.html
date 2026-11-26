@@ -1,0 +1,493 @@
+---
+title: "TP6 学习-路由操作"
+date: 2021-01-19 16:39:00 +0800
+tags: ["【PHP框架】-- TP6"]
+excerpt: "ThinkPHP-路由 by:Mirror王宇阳 Thinkphp的路由的主要作用是为了让URL地址更加美观、简洁、优雅……；设置路由对URL的检测、验证等操作提供了极大的便利性；路由功能是默认开启的config/app.php文件中设置： 'with_route' => true; 路由配置文件："
+read_minutes: 7
+cnblogs_id: 14298697
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14298697.html"
+---
+{% raw %}
+<h2 id="thinkphp-路由">ThinkPHP-路由</h2>
+<blockquote>
+<p>by:Mirror王宇阳</p>
+</blockquote>
+<p>Thinkphp的路由的主要作用是为了让URL地址更加美观、简洁、优雅……；设置路由对URL的检测、验证等操作提供了极大的便利性；路由功能是默认开启的<code>config/app.php</code>文件中设置：</p>
+<pre><code class="language-php hljs"><span class="hljs-string">'with_route'	=&gt;	<span class="hljs-literal">true;
+</span></span></code></pre>
+<ul>
+<li>
+<p><strong>路由配置文件：<code>config/route.php</code></strong></p>
+</li>
+<li>
+<p><strong>路由定义文件：<code>route/app.php</code></strong></p>
+</li>
+</ul>
+<blockquote>
+<p>route目录下的定义文件的文件名是随机的，都会有效。</p>
+</blockquote>
+<p><a name="_caption0"></a></p>
+<h3 id="路由定义">路由定义</h3>
+<p>定义一次路由测试的文件：<code>Address.php</code></p>
+<pre><code class="language-php hljs"><span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Address
+{
+    <span class="hljs-keyword">public <span class="hljs-function"><span class="hljs-keyword">function <span class="hljs-title">index(<span class="hljs-params">)
+    {
+        <span class="hljs-keyword">return <span class="hljs-string">'index';
+    }
+    <span class="hljs-keyword">public <span class="hljs-function"><span class="hljs-keyword">function <span class="hljs-title">details(<span class="hljs-params">$id)
+    {
+        <span class="hljs-keyword">return <span class="hljs-string">'details目前调用的ID'.$id;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<ul>
+<li>
+<p>未定义路由规则的情况下，默认的URL访问方法</p>
+<pre><code class="language-url">http://xxx.com/Index.php/address/id/5
+</code></pre>
+</li>
+<li>
+<p>定义URL路由规则，在<code>route/app.php</code>定义文件中配置</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id',<span class="hljs-string">'Address/details')
+</span></span></code></pre>
+<pre><code class="language-url">http://xxx.com/Index.php/details/5
+</code></pre>
+<blockquote>
+<p>路由规则配置完成后，必须使用路由规则进行访问；否则视为非法请求</p>
+</blockquote>
+</li>
+</ul>
+<hr/>
+<h4 id="注册路由定义">注册路由定义</h4>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'路由表达式',<span class="hljs-string">'路由地址',<span class="hljs-string">'请求类型')
+</span></span></span></code></pre>
+<blockquote>
+<p>路由表达式：泛指路由访问规则</p>
+<p>路由地址：泛指访问目标的地址（控制器/方法/参数）</p>
+<p>请求类型：默认 -&gt; any</p>
+<table>
+<thead>
+<tr><th>类型</th><th>描述</th><th>快捷方法</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td>GET请求</td>
+<td>get</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>POST请求</td>
+<td>post</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>PUT请求</td>
+<td>put</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td>DELETE请求</td>
+<td>delete</td>
+</tr>
+<tr>
+<td>PATCH</td>
+<td>PATCH请求</td>
+<td>patch</td>
+</tr>
+<tr>
+<td>*</td>
+<td>任何请求类型</td>
+<td>any</td>
+</tr>
+</tbody>
+</table>
+<p><strong>快捷注册路由定义</strong>：</p>
+<pre><code class="language-php hljs">Route::[快捷方法名](<span class="hljs-string">'路由表达式',<span class="hljs-string">'路由地址')
+</span></span></code></pre>
+</blockquote>
+<p>示例：</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id',<span class="hljs-string">'Address/details')
+    
+URL：http:<span class="hljs-comment">//xxx.com/Index.php/details/5
+</span></span></span></code></pre>
+<blockquote>
+<p>注册<code>rule</code>路由到<code>Address</code>控制器的<code>details</code></p>
+</blockquote>
+<p>强制路由：设置开启了强制路由，所有访问都会要求按照路由访问规则进行，否则报错；</p>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 是否强制使用路由
+<span class="hljs-string">'url_route_must'        =&gt; <span class="hljs-literal">true,
+</span></span></span></code></pre>
+<blockquote>
+<p>首页路由配置：（反斜杠就是首页地址）</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'/',<span class="hljs-string">'Index/index');
+</span></span></code></pre>
+</blockquote>
+<p><strong>闭包支持</strong></p>
+<p>闭包支持我们直接通过URL执行，而不需要通过控制器方法：</p>
+<pre><code class="language-php hljs">Route::get(<span class="hljs-string">'think', <span class="hljs-function"><span class="hljs-keyword">function (<span class="hljs-params">) {
+    <span class="hljs-keyword">return <span class="hljs-string">'hello,ThinkPHP6!';
+});
+</span></span></span></span></span></span></code></pre>
+<pre><code class="language-php hljs">Route::get(<span class="hljs-string">'think', <span class="hljs-function"><span class="hljs-keyword">function (<span class="hljs-params">$id) {
+    <span class="hljs-keyword">return <span class="hljs-string">'hello!'.$id;
+});
+</span></span></span></span></span></span></code></pre>
+<hr/>
+<h4 id="路由规则表达式">路由规则表达式</h4>
+<p>规则表达式通常包含<strong>静态规则</strong>和<strong>动态规则</strong>，以及两种规则的结合，例如下面都属于有效的规则表达式：</p>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 静态路由
+Route::rule(<span class="hljs-string">'ads',<span class="hljs-string">'Address/index');
+[URL]=&gt; tp/Index.php/ads
+</span></span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 静态+动态路由
+Route::rule(<span class="hljs-string">'datails/:id',<span class="hljs-string">'Address/details');
+[URL]=&gt; tp/Index.php/details
+</span></span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-comment">// (多参数)静态+动态路由
+Route::rule(<span class="hljs-string">'search/:id/:uid',<span class="hljs-string">'Address/search');
+[URL]=&gt; tp/Index.php/search/<span class="hljs-number">1/<span class="hljs-number">1
+</span></span></span></span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 全动态地址 不会限制search参数固定
+Route::rule(<span class="hljs-string">':search/:id/:uid',<span class="hljs-string">'Address/search');
+[URL]=&gt; tp/Index.php/search/<span class="hljs-number">1/<span class="hljs-number">1
+[URL]=&gt; tp/Index.php/s/<span class="hljs-number">1/<span class="hljs-number">1
+</span></span></span></span></span></span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 可选参数地址
+Route::rule(<span class="hljs-string">'blog/:year/[:month]',<span class="hljs-string">'Address/blog');
+</span></span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 完全匹配地址
+Route::rule(<span class="hljs-string">'search/:id/:uid$',<span class="hljs-string">'Address/search');
+[URL]=&gt; tp/Index.php/search/<span class="hljs-number">1/<span class="hljs-number">1
+    
+<span class="hljs-comment">//在路由配置文件中可以开启全局路由完全匹配
+<span class="hljs-comment">//开启完全匹配后，使用`completeMatch(false)`关闭
+</span></span></span></span></span></span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 额外参数 (隐式传值)
+<span class="hljs-comment">// 路由跳转支持传入不显示在URL中参数
+Route::rule(<span class="hljs-string">'blog/:id',<span class="hljs-string">'blog/read')
+    -&gt;append([<span class="hljs-string">'status'=&gt;<span class="hljs-number">1,<span class="hljs-string">'app_id'=&gt;<span class="hljs-number">5]);
+</span></span></span></span></span></span></span></span></code></pre>
+<h4 id="路由标识">路由标识</h4>
+<p>根据路由生成URL地址，定义路由的时候指定生成唯一性标识</p>
+<pre><code class="language-php hljs"><span class="hljs-comment">// 定义标识
+Route::rule(<span class="hljs-string">'blog/:year/:month',<span class="hljs-string">'Adderss/blog')
+    -&gt;name(<span class="hljs-string">'route_blog');
+</span></span></span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-keyword">return url(<span class="hljs-string">'route_blog',
+	[<span class="hljs-string">'year'=&gt;$year,<span class="hljs-string">'month'=&gt;$month]
+);
+</span></span></span></span></code></pre>
+<hr/>
+<p><a name="_caption1"></a></p>
+<h3 id="变量规则">变量规则</h3>
+<p>系统默认的路由变量规则是<code>\w+</code> ；可以在路由配置文件中修改变量规则</p>
+<p>使用<code>pattern()</code>方法，可以对参数变量进行规则设置：</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id',<span class="hljs-string">'Address/details')
+    -&gt;pattern([<span class="hljs-string">'id'=&gt;<span class="hljs-string">'\d+']);
+</span></span></span></span></code></pre>
+<blockquote>
+<p><code>pattern()</code>接收数组传递，支持设置多个参数变量的规则</p>
+</blockquote>
+<pre><code class="language-php hljs">Route::pattern([
+   <span class="hljs-string">'id'		=&gt;	<span class="hljs-string">'\d+',
+   <span class="hljs-string">'uid'	=&gt;	<span class="hljs-string">'\d+'
+]);
+</span></span></span></span></code></pre>
+<blockquote>
+<p>在路由定义文件中可以用上述方法定义全局规则</p>
+</blockquote>
+<p>支持使用组合变量规则方式，实现路由规划：</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details-&lt;id&gt;',<span class="hljs-string">'Address/details')
+    -&gt;pattern(<span class="hljs-string">'id',<span class="hljs-string">'\d+');
+</span></span></span></span></code></pre>
+<p>动态组合拼装：</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details-:name-:id',<span class="hljs-string">'Hello:name/index')
+    -&gt;pattern(<span class="hljs-string">'id',<span class="hljs-string">'\d+')
+</span></span></span></span></code></pre>
+<hr/>
+<p><a name="_caption2"></a></p>
+<h3 id="路由地址">路由地址</h3>
+<p>路由的地址一般为：<code>控制器/操作方法</code></p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'/',<span class="hljs-string">'Index/index.php');
+</span></span></code></pre>
+<p>多级控制器，路由地址</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id',<span class="hljs-string">'group.Blog/details');
+</span></span></code></pre>
+<blockquote>
+<p>完整路径的操作方法：<code>完整类名@操作方法</code></p>
+<p>静态方法的地址操作：<code>完整类名::静态方法</code></p>
+</blockquote>
+<p>路由使用<code>::readirect()</code>方法实现重定向跳转</p>
+<hr/>
+<p><a name="_caption3"></a></p>
+<h3 id="路由参数">路由参数</h3>
+<p>设置路由的时候，可以设置相关的方法进行，从而实施匹配检测和行为执行</p>
+<table>
+<thead>
+<tr><th>参数</th><th>说明</th><th>方法名</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>ext</td>
+<td>URL后缀检测，支持匹配多个后缀</td>
+<td>ext</td>
+</tr>
+<tr>
+<td>deny_ext</td>
+<td>URL禁止后缀检测，支持匹配多个后缀</td>
+<td>denyExt</td>
+</tr>
+<tr>
+<td>https</td>
+<td>检测是否https请求</td>
+<td>https</td>
+</tr>
+<tr>
+<td>domain</td>
+<td>域名检测</td>
+<td>domain</td>
+</tr>
+<tr>
+<td>complete_match</td>
+<td>是否完整匹配路由</td>
+<td>completeMatch</td>
+</tr>
+<tr>
+<td>model</td>
+<td>绑定模型</td>
+<td>model</td>
+</tr>
+<tr>
+<td>cache</td>
+<td>请求缓存</td>
+<td>cache</td>
+</tr>
+<tr>
+<td>ajax</td>
+<td>Ajax检测</td>
+<td>ajax</td>
+</tr>
+<tr>
+<td>pjax</td>
+<td>Pjax检测</td>
+<td>pjax</td>
+</tr>
+<tr>
+<td>json</td>
+<td>JSON检测</td>
+<td>json</td>
+</tr>
+<tr>
+<td>validate</td>
+<td>绑定验证器类进行数据验证</td>
+<td>validate</td>
+</tr>
+<tr>
+<td>append</td>
+<td>追加额外的参数</td>
+<td>append</td>
+</tr>
+<tr>
+<td>middleware</td>
+<td>注册路由中间件</td>
+<td>middleware</td>
+</tr>
+<tr>
+<td>filter</td>
+<td>请求变量过滤</td>
+<td>filter</td>
+</tr>
+</tbody>
+</table>
+<p><code>ext</code>方法是检测URL后缀</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id',<span class="hljs-string">'Address/details')-&gt;ext(<span class="hljs-string">'html');
+</span></span></span></code></pre>
+<p><code>https</code>方法检测是否为https请求</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id',<span class="hljs-string">'Address/details')
+    -&gt;https()
+    -&gt;ext(<span class="hljs-string">'html');
+</span></span></span></code></pre>
+<p>如果你需要批量设置路由参数，也可以使用<code>option</code>方法。</p>
+<pre><code class="language-PHP hljs">Route::get(<span class="hljs-string">'new/:id', <span class="hljs-string">'News/read')
+    -&gt;option([
+        <span class="hljs-string">'ext'   =&gt; <span class="hljs-string">'html',
+        <span class="hljs-string">'https' =&gt; <span class="hljs-literal">true
+    ]);
+</span></span></span></span></span></span></code></pre>
+<hr/>
+<p><a name="_caption4"></a></p>
+<h3 id="域名路由">域名路由</h3>
+<p>限制在某域名下才解析路由</p>
+<pre><code class="language-php hljs">Route::domain(<span class="hljs-string">'baidu.com',<span class="hljs-function"><span class="hljs-keyword">function(<span class="hljs-params">){
+    Route::rule(<span class="hljs-string">'blog/:id',<span class="hljs-string">'Address/blog')
+})
+</span></span></span></span></span></span></code></pre>
+<blockquote>
+<p>域名路由支持路由参数的操作</p>
+</blockquote>
+<p><a name="_caption5"></a></p>
+<h3 id="跨域请求">跨域请求</h3>
+<p>浏览器的安全机制会拦截非同源（跨域）的请求；在Thinkphp路由中，使用<code>allowCrossDomain()</code>来实现跨域请求，设置后该条路由就会允许非同源的请求：</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id'.<span class="hljs-string">'Address/details')
+    -&gt;allowCrossDomain();
+</span></span></code></pre>
+<p>同时为了安全考虑（不是什么人都可以来我这的）支持限制指定的跨站请求：</p>
+<pre><code class="language-php hljs">Route::rule(<span class="hljs-string">'details/:id'.<span class="hljs-string">'Address/details')
+    -&gt;allowCrossDomain([
+        <span class="hljs-string">'Access-Control-Allow-Origin' =&gt; <span class="hljs-string">"http://baidu.com"
+    ]);
+</span></span></span></span></code></pre>
+<hr/>
+<p><a name="_caption6"></a></p>
+<h3 id="路由分组">路由分组</h3>
+<p>路由分组，将相同前缀的路由合并分组，简化路由定义有利于匹配和维护；</p>
+<p><strong>使用<code>group()</code>进行分组路由注册：</strong></p>
+<pre><code class="language-php hljs">Route::group(<span class="hljs-string">'address',<span class="hljs-function"><span class="hljs-keyword">function(<span class="hljs-params">){
+    Route::rule(<span class="hljs-string">':id',<span class="hljs-string">'Address/details'),
+    Route::rule(<span class="hljs-string">':name',<span class="hljs-string">'Address/search');
+})-&gt;pattern([<span class="hljs-string">'id'=&gt;<span class="hljs-string">'\d+',<span class="hljs-string">'name'=&gt;<span class="hljs-string">'\w+']);
+</span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<blockquote>
+<p><code>group()</code>的第一参数可以省略，第一参数仅仅是给路由设置了一个公共路由设置参数，第一参数添加后就可以省略路由规则的内容，<strong>上述和下面两个程序对比就有效果</strong>；不过如果简写了规则名，就会发生访问冲突，这是就需要使用<code>pattern()</code> 限制每一参数的接收范围 不建议简写；个人更建议用下面的这种方法来分组。</p>
+</blockquote>
+<pre><code class="language-php hljs">Route::group(<span class="hljs-string">'add',<span class="hljs-function"><span class="hljs-keyword">function(<span class="hljs-params">){
+    Route::rule(<span class="hljs-string">'de/:id',<span class="hljs-string">'Address/details'),
+    Route::rule(<span class="hljs-string">'se/:name',<span class="hljs-string">'Address/search');
+});
+[URL] =&gt; tp/Index.php/add/de/<span class="hljs-number">1
+</span></span></span></span></span></span></span></span></span></code></pre>
+<p>使用<code>prefix()</code>可以省略分组地址中的控制器</p>
+<pre><code class="language-php hljs">Route::group(<span class="hljs-string">'add',<span class="hljs-function"><span class="hljs-keyword">function(<span class="hljs-params">){
+    Route::rule(<span class="hljs-string">'de/:id',<span class="hljs-string">'details'),
+    Route::rule(<span class="hljs-string">'se/:name',<span class="hljs-string">'search');
+})-&gt;prefix(<span class="hljs-string">'Address/');
+</span></span></span></span></span></span></span></span></span></code></pre>
+<blockquote>
+<p>路由规则在解析的时候会消耗较多的内存资源，尤其是路由规则特别庞大的时候；</p>
+<p>这里可以开启延迟解析来节约内存空间（只有匹配到才执行路由）</p>
+</blockquote>
+<p><a name="_caption7"></a></p>
+<h3 id="miss路由">MISS路由</h3>
+<p><strong>全局MISS</strong>：类似开启强制路由功能，匹配不到相应规则自动跳到MISS；</p>
+<pre><code class="language-php hljs">Route::miss(<span class="hljs-string">'public/miss');
+<span class="hljs-comment">// 闭包
+Route::miss(<span class="hljs-function"><span class="hljs-keyword">function(<span class="hljs-params">){
+    <span class="hljs-keyword">return <span class="hljs-string">'404 Not Found!';
+});
+</span></span></span></span></span></span></span></code></pre>
+<p><strong>局部/分组MISS</strong>：在分组中使用，不满足匹配规则调整到该分组</p>
+<pre><code class="language-php hljs">Route::group(<span class="hljs-string">'add',<span class="hljs-function"><span class="hljs-keyword">function(<span class="hljs-params">){
+    Route::rule(<span class="hljs-string">'de/:id',<span class="hljs-string">'details'),
+    Route::rule(<span class="hljs-string">'se/:name',<span class="hljs-string">'search'),
+    Route::miss(<span class="hljs-string">'miss')
+})-&gt;prefix(<span class="hljs-string">'Address/');
+
+</span></span></span></span></span></span></span></span></span></span></code></pre>
+<p><strong>域名MISS路由</strong>：支持该路由设置单独MISS路由</p>
+<pre><code class="language-php hljs">Route::domain(<span class="hljs-string">'blog', <span class="hljs-function"><span class="hljs-keyword">function (<span class="hljs-params">) {
+    <span class="hljs-comment">// 动态注册域名的路由规则
+    Route::rule(<span class="hljs-string">'new/:id', <span class="hljs-string">'news/read');
+    Route::rule(<span class="hljs-string">':user', <span class="hljs-string">'user/info');
+    Route::miss(<span class="hljs-string">'blog/miss');
+});
+</span></span></span></span></span></span></span></span></span></span></code></pre>
+<hr/>
+<p><a name="_caption8"></a></p>
+<h3 id="资源路由">资源路由</h3>
+<p>资源路由：采用固定的常用方法实现简化URL的功能；</p>
+<p><strong>创建资源路由</strong></p>
+<pre><code class="language-php hljs">Route::resource(<span class="hljs-string">'[资源规则名]',<span class="hljs-string">'[访问路径]');
+</span></span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Address
+{
+    <span class="hljs-keyword">public <span class="hljs-function"><span class="hljs-keyword">function <span class="hljs-title">index(<span class="hljs-params">)
+    {
+        <span class="hljs-keyword">return <span class="hljs-string">'index';
+    }
+    <span class="hljs-keyword">public <span class="hljs-function"><span class="hljs-keyword">function <span class="hljs-title">details(<span class="hljs-params">$id)
+    {
+        <span class="hljs-keyword">return <span class="hljs-string">'details目前调用的ID=&gt;'.$id;
+    }
+    <span class="hljs-keyword">public <span class="hljs-function"><span class="hljs-keyword">function <span class="hljs-title">search(<span class="hljs-params">$name)
+    {
+        <span class="hljs-keyword">return <span class="hljs-string">"Name =&gt; ".$name;
+    }
+    <span class="hljs-keyword">public <span class="hljs-function"><span class="hljs-keyword">function <span class="hljs-title">blog(<span class="hljs-params">$year,$month)
+    {
+        <span class="hljs-keyword">return url(<span class="hljs-string">'route_blog',[<span class="hljs-string">'year'=&gt;$year,<span class="hljs-string">'month'=&gt;$month]);
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>创建<code>Address</code>的资源控制器后，在路由定义文件中注册资源路由</p>
+<pre><code class="language-php hljs">Route::resource(<span class="hljs-string">'add',<span class="hljs-string">'Address');
+</span></span></code></pre>
+<blockquote>
+<p>资源路由被被成功注册后就会自动完成方法匹配：</p>
+<p><code>index</code> ==&gt; <code>Address/index</code> -&gt; index</p>
+<p><code>details</code> ==&gt; <code>Address/details</code>-&gt; details/:id</p>
+<p><code>search</code> ==&gt; <code>Address/search</code> -&gt; search/:name</p>
+<p><code>blog</code> ==&gt; <code>Address/blog</code> -&gt; blog/:year/:month</p>
+</blockquote>
+<p><code>vars()</code>修改默认参数名称；参数默认采用<code>$id</code>名称</p>
+<pre><code class="language-php hljs">Route::resource(<span class="hljs-string">'add',<span class="hljs-string">'Address')
+    -&gt;vars([<span class="hljs-string">'add'=&gt;<span class="hljs-string">'add_id']);
+</span></span></span></span></code></pre>
+<blockquote>
+<p>在控制器中也要相应的修改</p>
+</blockquote>
+<p><code>only()</code>限定系统提供的资源方法</p>
+<pre><code class="language-php hljs">Route::resource(<span class="hljs-string">'add',<span class="hljs-string">'Address')
+    -&gt;only([<span class="hljs-string">'index',<span class="hljs-string">'search',<span class="hljs-string">'blog']);
+</span></span></span></span></span></code></pre>
+<p><code>except()</code>排除系统提供的资源方法</p>
+<pre><code class="language-php hljs">Route::resource(<span class="hljs-string">'add',<span class="hljs-string">'Address')
+    -&gt;except([<span class="hljs-string">'index']);
+</span></span></span></code></pre>
+<p><code>rest()</code>更改系统的默认方法（请求方法、地址、操作）</p>
+<pre><code class="language-php hljs">Route::rest(<span class="hljs-string">'create',[<span class="hljs-string">'GET',<span class="hljs-string">'/:id/add',<span class="hljs-string">'add'])
+</span></span></span></span></code></pre>
+<p><strong>嵌套资源路由</strong></p>
+<p>……</p>
+<p><a name="_caption9"></a></p>
+<h3 id="注解路由">注解路由</h3>
+<p>路由的注解方式不是系统默认支持，需要安装扩展：</p>
+<pre><code class="language-php hljs">composer <span class="hljs-keyword">require tohthink/think-annotation
+</span></code></pre>
+<p>引入相关类库：<code>use think\annotation\Route</code></p>
+<p>完成简单的引入之后，在控制端设置注解代码即可，使用PHPDOC生成一段；然后添加路由规则；</p>
+<pre><code class="language-php hljs"><span class="hljs-comment">/**
+ * <span class="hljs-doctag">@parom $id
+ * <span class="hljs-doctag">@return string
+ * <span class="hljs-doctag">@route("details/:id");
+ */
+</span></span></span></span></code></pre>
+<p>注解模式支持资源路由：</p>
+<pre><code class="language-php hljs"><span class="hljs-keyword">use <span class="hljs-title">think\<span class="hljs-title">annontation\<span class="hljs-title">Route\<span class="hljs-title">Resource;
+<span class="hljs-comment">/**
+ * <span class="hljs-doctag">@Resource("blog")
+ */
+</span></span></span></span></span></span></span></code></pre>
+<p>注解模式支持分组：</p>
+<pre><code class="language-php hljs"><span class="hljs-keyword">use <span class="hljs-title">think\<span class="hljs-title">annontation\<span class="hljs-title">route\<span class="hljs-title">Group;
+<span class="hljs-comment">/**
+ * <span class="hljs-doctag">@Group('ads')
+ */
+</span></span></span></span></span></span></span></code></pre>
+<hr/>
+<p><a name="_caption10"></a></p>
+<h3 id="url生成">URL生成</h3>
+<p>使用<code>Route::buildUrl()</code>获取路由的URL地址</p>
+<pre><code class="language-php hljs">Route::buildUrl(<span class="hljs-string">'地址',[参数]……)
+</span></code></pre>
+<pre><code class="language-php hljs"><span class="hljs-keyword">public <span class="hljs-function"><span class="hljs-keyword">function <span class="hljs-title">details(<span class="hljs-params">$id)
+{
+	<span class="hljs-keyword">return Route::buildUrl(<span class="hljs-string">'Url/details',[<span class="hljs-string">'id'=&gt;$id]);
+}
+</span></span></span></span></span></span></span></span></code></pre>
+<p>如果给路由定义了一个别名，就可以在<code>buildUrl()</code>中使用；</p>
+<blockquote>
+<p>同时可以使用助手函数<code>url()</code>来代替；</p>
+</blockquote>
+{% endraw %}

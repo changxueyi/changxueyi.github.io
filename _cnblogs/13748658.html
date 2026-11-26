@@ -1,0 +1,62 @@
+---
+title: "面试官：大key和大value的危害，如何处理？"
+date: 2020-09-29 11:11:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "还记得上次和同事一起去面试候选人时，同事提了一个问题：Redis的大key有什么危害？当时候选人主要作答的角度是一个key的value较大时的情况，比如： 1.内存不均：单value较大时，可能会导致节点之间的内存使用不均匀，间接地影响key的部分和负载不均匀； 2.阻塞请求：redis为单线程，单"
+read_minutes: 3
+cnblogs_id: 13748658
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13748658.html"
+---
+{% raw %}
+<div>
+<p>还记得上次和同事一起去面试候选人时，同事提了一个问题：Redis的大key有什么危害？当时候选人主要作答的角度是一个key的value较大时的情况，比如：</p>
+<p>1.内存不均：单value较大时，可能会导致节点之间的内存使用不均匀，间接地影响key的部分和负载不均匀；<br/>
+2.阻塞请求：redis为单线程，单value较大读写需要较长的处理时间，会阻塞后续的请求处理；<br/>
+3.阻塞网络：单value较大时会占用服务器网卡较多带宽，可能会影响该服务器上的其他Redis实例或者应用。</p>
+<p>虽说答的是挺好的，但是我又随之产生了另一个疑惑，如果redis的key较长时，会产生什么样的影响呢？查了很多文章，说的都不是特别清楚。所以我决心探究一下这个问题。</p>
+<p>我们需要知道Redis是如何存储key和value的：<br/>
+根结构为RedisServer，其中包含RedisDB（数据库）。而RedisDB实际上是使用Dict（字典）结构对Redis中的kv进行存储的。这里的key即字符串，value可以是string/hash/list/set/zset这五种对象之一。</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="728" data-width="1560"><img data-image-index="0" data-original-filesize="328171" data-original-format="image/png" data-original-height="728" data-original-src="//upload-images.jianshu.io/upload_images/24788834-16ac71f3187ff875.png" data-original-width="1560" loading="lazy" src="/images/cnblogs/e3dc8ad349c02e9f.webp"/></div>
+</div>
+<div class="image-caption">image.png</div>
+</div>
+<p>Dict字典结构中，存储数据的主题为DictHt，即哈希表。而哈希表本质上是一个DictEntry（哈希表节点）的数组，并且使用链表法解决哈希冲突问题（关于哈希冲突的解决方法可以参考大佬的文章 <a href="https://www.jianshu.com/p/4d3cb99d7580" target="_blank">解决哈希冲突的常用方法分析</a>）。</p>
+<p>所以在这里实际存储时，key和value都是存储在DictEntry中的。所以基本上来说，大key和大value带来的内存不均和网络IO压力都是一致的，只是key相较于value还多一个做hashcode和比较的过程（链表中进行遍历比较key），会有更多的内存相关开销。</p>
+<p>结论：</p>
+<ol>
+<li>大key和大value的危害是一致的：内存不均、阻塞请求、阻塞网络。</li>
+<li>key由于比value需要做更多的操作如hashcode、链表中比较等操作，所以会比value更多一些内存相关开销。</li>
+</ol></div>
+<h2>
+如何处理？</h2>
+<h1>Redis 大key</h1>
+<p>Redis使用过程中经常会有各种大key的情况， 比如：</p>
+<ol>
+<li>单个简单的key存储的value很大</li>
+<li>hash， set，zset，list 中存储过多的元素（以万为单位）</li>
+</ol>
+<p>由于redis是单线程运行的，如果一次操作的value很大会对整个redis的响应时间造成负面影响，所以，业务上能拆则拆，下面举几个典型的分拆方案。</p>
+<p><strong>业务场景：</strong></p>
+<p>即通过hash的方式来存储每一天用户订单次数。那么key = order_20200102, field = order_id, value = 10。那么如果一天有百万千万甚至上亿订单的时候，key后面的值是很多，存储空间也很大，造成所谓的大key。</p>
+<p><strong>大key的风险：</strong><br/>1.读写大key会导致超时严重，甚至阻塞服务。</p>
+<p>2.如果删除大key，DEL命令可能阻塞Redis进程数十秒，使得其他请求阻塞，对应用程序和Redis集群可用性造成严重的影响。</p>
+<p><strong>redis使用会出现大key的场景：</strong></p>
+<p>1.单个简单key的存储的value过大；</p>
+<p>2.hash、set、zset、list中存储过多的元素。</p>
+<p><strong>解决问题：</strong></p>
+<p><strong>1.单个简单key的存储的value过大的解决方案：</strong></p>
+<p><strong>将大key拆分成对个key-value，使用multiGet方法获得值，这样的拆分主要是为了减少单台操作的压力，而是将压力平摊到集群各个实例中，降低单台机器的IO操作。</strong></p>
+<p><strong>2.hash、set、zset、list中存储过多的元素的解决方案：</strong></p>
+<p><strong>1).类似于第一种场景，使用第一种方案拆分;</strong></p>
+<p><strong>2).以hash为例，将原先的hget、hset方法改成（加入固定一个hash桶的数量为10000），先计算field的hash值模取10000，确定该field在哪一个key上。</strong></p>
+<p>将大key进行分割，为了均匀分割，可以对field进行hash并通过质数N取余，将余数加到key上面，我们取质数N为997。</p>
+<p>那么新的key则可以设置为：</p>
+<p>newKey = order_20200102_String.valueOf( Math.abs(order_id.hashcode() % 997) )</p>
+<p>field = order_id</p>
+<p>value = 10</p>
+<p>hset (newKey, field, value) ;  </p>
+<p>hget(newKey, field)</p>
+{% endraw %}

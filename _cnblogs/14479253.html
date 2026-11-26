@@ -1,0 +1,321 @@
+---
+title: "深入浅出Go的切片，以及Map"
+date: 2021-03-04 11:27:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "创建数组切片 Go语言提供的内置函数make()可以用于灵活地创建数组切片。创建一个初始元素个数为5的数组切片，元素初始值为0：mySlice1 := make([]int, 5)创建一个初始元素个数为5的数组切片，元素初始值为0，并预留10个元素的存储空间：mySlice2 := make([]i"
+read_minutes: 13
+cnblogs_id: 14479253
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14479253.html"
+tags_inferred: true
+---
+{% raw %}
+<p><strong>创建数组切片</strong></p>
+<p>Go语言提供的内置函数make()可以用于灵活地创建数组切片。<br/>创建一个初始元素个数为5的数组切片，元素初始值为0：<br/>mySlice1 := make([]int, 5)<br/>创建一个初始元素个数为5的数组切片，元素初始值为0，并预留10个元素的存储空间：<br/>mySlice2 := make([]int, 5, 10) </p>
+<p><strong>创建一个map</strong></p>
+<div class="cnblogs_code">
+<pre>myMap = make(map[string] PersonInfo) </pre>
+</div>
+<p>创建了一个键类型为string、值类型为PersonInfo的map.//from:http://www.cnblogs.com/osfipin/</p>
+<div class="cnblogs_code">
+<pre>myMap = make(map[string] PersonInfo, 100) </pre>
+</div>
+<p>也可以选择是否在创建时指定该map的初始存储能力，创建了一个初始存储能力为100的map.</p>
+<div class="cnblogs_code">
+<pre>myMap = map[string] PersonInfo{ 
+  "1234": PersonInfo{"1", "Jack", "Room 101,..."}, 
+} </pre>
+</div>
+<p>创建并初始化map的代码.</p>
+<p>切片(slice)是 Golang 中一种比较特殊的数据结构，这种数据结构更便于使用和管理数据集合。切片是围绕动态数组的概念构建的，可以按需自动增长和缩小。切片的动态增长是通过内置函数 append() 来实现的，这个函数可以快速且高效地增长切片，也可以通过对切片再次切割，缩小一个切片的大小。因为切片的底层也是在连续的内存块中分配的，所以切片还能获得索引、迭代以及为垃圾回收优化的好处。</p>
+<p>本文将介绍 Golang 切片的基本概念和用法，演示环境为 ubuntu 18.04 &amp; go1.10.1。</p>
+<h2><strong>切片的内部实现</strong></h2>
+<p>切片是一个很小的对象，它对底层的数组(内部是通过数组保存数据的)进行了抽象，并提供相关的操作方法。切片是一个有三个字段的数据结构，这些数据结构包含 Golang 需要操作底层数组的元数据：</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="220" data-width="620"><img alt="" data-image-index="0" data-original-filesize="4438" data-original-format="image/png" data-original-height="220" data-original-src="//upload-images.jianshu.io/upload_images/7209287-4ea0567cb3328888" data-original-width="620" loading="lazy" src="/images/cnblogs/371c6e8518f922a4.webp"/></div>
+</div>
+<div class="image-caption">image</div>
+</div>
+<p>这 3 个字段分别是指向底层数组的指针、切片访问的元素的个数(即长度)和切片允许增长到的元素个数(即容量)。</p>
+<h2><strong>切片的创建和初始化</strong></h2>
+<p>在 Golang 中可以通过多种方式创建和初始化切片。是否提前知道切片所需的容量通常会决定如何创建切片。</p>
+<p><strong>通过 make() 函数创建切片</strong><br/>使用 Golang 内置的 make() 函数创建切片，此时需要传入一个参数来指定切片的长度：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建一个整型切片
+<span class="token comment"><span class="hljs-comment">// 其长度和容量都是 5 个元素
+slice <span class="token operator">:= <span class="token function"><span class="hljs-built_in">make<span class="token punctuation">(<span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">, <span class="token number"><span class="hljs-number">5<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>此时只指定了切片的长度，那么切片的容量和长度相等。也可以分别指定长度和容量：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建一个整型切片
+<span class="token comment"><span class="hljs-comment">// 其长度为 3 个元素，容量为 5 个元素
+slice <span class="token operator">:= <span class="token function"><span class="hljs-built_in">make<span class="token punctuation">(<span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">, <span class="token number"><span class="hljs-number">3<span class="token punctuation">, <span class="token number"><span class="hljs-number">5<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>分别指定长度和容量时，创建的切片，底层数组的长度是指定的容量，但是初始化后并不能访问所有的数组元素。</p>
+<p>注意，Golang 不允许创建容量小于长度的切片，当创建的切片容量小于长度时会在编译时刻报错：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建一个整型切片
+<span class="token comment"><span class="hljs-comment">// 使其长度大于容量
+myNum <span class="token operator">:= <span class="token function"><span class="hljs-built_in">make<span class="token punctuation">(<span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">, <span class="token number"><span class="hljs-number">5<span class="token punctuation">, <span class="token number"><span class="hljs-number">3<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>编译上面的代码，会收到下面的编译错误：</p>
+<p>len larger than cap in make([]int)</p>
+<p><strong>通过字面量创建切片</strong><br/>另一种常用的创建切片的方法是使用切片字面量，这种方法和创建数组类似，只是不需要指定[]运算符里的值。初始的长度和容量会基于初始化时提供的元素的个数确定：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建字符串切片
+<span class="token comment"><span class="hljs-comment">// 其长度和容量都是 3 个元素
+myStr <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">string<span class="token punctuation">{<span class="token string"><span class="hljs-string">"Jack"<span class="token punctuation">, <span class="token string"><span class="hljs-string">"Mark"<span class="token punctuation">, <span class="token string"><span class="hljs-string">"Nick"<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 创建一个整型切片
+<span class="token comment"><span class="hljs-comment">// 其长度和容量都是 4 个元素
+myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>当使用切片字面量创建切片时，还可以设置初始长度和容量。要做的就是在初始化时给出所需的长度和容量作为索引。下面的语法展示了如何使用索引方式创建长度和容量都是100个元素的切片：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建字符串切片
+<span class="token comment"><span class="hljs-comment">// 使用空字符串初始化第 100 个元素
+myStr <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">string<span class="token punctuation">{<span class="token number"><span class="hljs-number">99<span class="token punctuation">: <span class="token string"><span class="hljs-string">""<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p><strong>区分数组的声明和切片的声明方式</strong><br/>当使用字面量来声明切片时，其语法与使用字面量声明数组非常相似。二者的区别是：如果在 [] 运算符里指定了一个值，那么创建的就是数组而不是切片。只有在 [] 中不指定值的时候，创建的才是切片。看下面的例子：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建有 3 个元素的整型数组
+myArray <span class="token operator">:= <span class="token punctuation">[<span class="token number"><span class="hljs-number">3<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 创建长度和容量都是 3 的整型切片
+mySlice <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<h2><strong>nil 和空切片</strong></h2>
+<p>有时，程序可能需要声明一个值为 nil 的切片（也称nil切片）。只要在声明时不做任何初始化，就会创建一个 nil 切片</p>
+<pre class="line-numbers language-csharp codeblock"><code class="language-csharp hljs"><span class="token comment"><span class="hljs-comment">// 创建 nil 整型切片
+<span class="token keyword"><span class="hljs-keyword">var myNum <span class="token punctuation">[<span class="token punctuation">]<span class="token keyword"><span class="hljs-built_in">int
+</span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>在 Golang 中，nil 切片是很常见的创建切片的方法。nil 切片可以用于很多标准库和内置函数。在需要描述一个不存在的切片时，nil 切片会很好用。比如，函数要求返回一个切片但是发生异常的时候。下图描述了 nil 切片的状态：</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="110" data-width="510"><img alt="" data-image-index="1" data-original-filesize="4757" data-original-format="image/png" data-original-height="110" data-original-src="//upload-images.jianshu.io/upload_images/7209287-50482a08f10d8e13.png" data-original-width="510" loading="lazy" src="/images/cnblogs/3d4c652ef11459a5.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>空切片和 nil 切片稍有不同，下面的代码分别通过 make() 函数和字面量的方式创建空切片：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 使用 make 创建空的整型切片
+myNum <span class="token operator">:= <span class="token function"><span class="hljs-built_in">make<span class="token punctuation">(<span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">, <span class="token number"><span class="hljs-number">0<span class="token punctuation">)
+<span class="token comment"><span class="hljs-comment">// 使用切片字面量创建空的整型切片
+myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>空切片的底层数组中包含 0 个元素，也没有分配任何存储空间。想表示空集合时空切片很有用，比如，数据库查询返回 0 个查询结果时。下图描述了空切片的状态：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="132" data-width="510"><img alt="" data-image-index="2" data-original-filesize="5999" data-original-format="image/png" data-original-height="132" data-original-src="//upload-images.jianshu.io/upload_images/7209287-93ea6a8348784b76.png" data-original-width="510" loading="lazy" src="/images/cnblogs/3b2a7d940734a515.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>不管是使用 nil 切片还是空切片，对其调用内置函数 append()、len() 和 cap() 的效果都是一样的。</p>
+<h2><strong>为切片中的元素赋值</strong></h2>
+<p>对切片里某个索引指向的元素赋值和对数组里某个索引指向的元素赋值的方法完全一样。使用 [] 操作符就可以改变某个元素的值，下面是使用切片字面量来声明切片：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建一个整型切片
+<span class="token comment"><span class="hljs-comment">// 其容量和长度都是 5 个元素
+myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">, <span class="token number"><span class="hljs-number">50<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 改变索引为 1 的元素的值
+myNum <span class="token punctuation">[<span class="token number"><span class="hljs-number">1<span class="token punctuation">] <span class="token operator">= <span class="token number"><span class="hljs-number">25
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<h2><strong>通过切片创建新的切片</strong></h2>
+<p>切片之所以被称为切片，是因为创建一个新的切片，也就是把底层数组切出一部分。通过切片创建新切片的语法如下：</p>
+<pre class="line-numbers language-css codeblock"><code class="language-css hljs"><span class="hljs-selector-tag">slice<span class="hljs-selector-attr">[<span class="token property"><span class="hljs-selector-attr">i<span class="token punctuation"><span class="hljs-selector-attr">:j]
+<span class="hljs-selector-tag">slice<span class="hljs-selector-attr">[<span class="token property"><span class="hljs-selector-attr">i<span class="token punctuation"><span class="hljs-selector-attr">:<span class="token property"><span class="hljs-selector-attr">j<span class="token punctuation"><span class="hljs-selector-attr">:k]
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>其中 i 表示从 slice 的第几个元素开始切，j 控制切片的长度(j-i)，k 控制切片的容量(k-i)，如果没有给定 k，则表示切到底层数组的最尾部。下面是几种常见的简写形式：</p>
+<pre class="line-numbers language-cpp codeblock"><code class="language-cpp hljs">slice<span class="token punctuation">[i<span class="token operator">:<span class="token punctuation">]  <span class="token comment"><span class="hljs-comment">// 从 i 切到最尾部
+slice<span class="token punctuation">[<span class="token operator">:j<span class="token punctuation">]  <span class="token comment"><span class="hljs-comment">// 从最开头切到 j(不包含 j)
+slice<span class="token punctuation">[<span class="token operator">:<span class="token punctuation">]   <span class="token comment"><span class="hljs-comment">// 从头切到尾，等价于复制整个 slice
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>让我们通过下面的例子来理解通过切片创建新的切片的本质：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建一个整型切片
+<span class="token comment"><span class="hljs-comment">// 其长度和容量都是 5 个元素
+myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">, <span class="token number"><span class="hljs-number">50<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 创建一个新切片
+<span class="token comment"><span class="hljs-comment">// 其长度为 2 个元素，容量为 4 个元素
+newNum <span class="token operator">:= slice<span class="token punctuation">[<span class="token number"><span class="hljs-number">1<span class="token punctuation">:<span class="token number"><span class="hljs-number">3<span class="token punctuation">]
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>执行上面的代码后，我们有了两个切片，它们共享同一段底层数组，但通过不同的切片会看到底层数组的不同部分：</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="356" data-width="620"><img alt="" data-image-index="3" data-original-filesize="10891" data-original-format="image/png" data-original-height="356" data-original-src="//upload-images.jianshu.io/upload_images/7209287-1cb15c878f886072.png" data-original-width="620" loading="lazy" src="/images/cnblogs/fd441884c4879c13.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>注意：截取新切片时的原则是 "左含右不含"。所以 newNum 是从 myNum 的 index=1 处开始截取，截取到 index=3 的前一个元素，也就是不包含 index=3 这个元素。所以，新的 newNum 是由 myNum 中的第2个元素、第3个元素组成的新的切片构，长度为 2，容量为 4。切片 myNum 能够看到底层数组全部 5 个元素的容量，而 newNum 能看到的底层数组的容量只有 4 个元素。newNum 无法访问到底层数组的第一个元素。所以，对 newNum 来说，那个元素就是不存在的。</p>
+<p><strong>共享底层数组的切片</strong><br/>需要注意的是：现在两个切片 myNum 和 newNum 共享同一个底层数组。如果一个切片修改了该底层数组的共享<br/>部分，另一个切片也能感知到(请参考前图)：</p>
+<pre class="line-numbers language-cpp codeblock"><code class="language-cpp hljs"><span class="token comment"><span class="hljs-comment">// 修改 newNum 索引为 1 的元素
+<span class="token comment"><span class="hljs-comment">// 同时也修改了原切片 myNum 的索引为 2 的元素
+newNum<span class="token punctuation">[<span class="token number"><span class="hljs-number">1<span class="token punctuation">] <span class="token operator">= <span class="token number"><span class="hljs-number">35
+</span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>把 35 赋值给 newNum 索引为 1 的元素的同时也是在修改 myNum 索引为 2 的元素：</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="356" data-width="620"><img alt="" data-image-index="4" data-original-filesize="11139" data-original-format="image/png" data-original-height="356" data-original-src="//upload-images.jianshu.io/upload_images/7209287-bfc0707034334851.png" data-original-width="620" loading="lazy" src="/images/cnblogs/cac4ef304a47ad68.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p><strong>切片只能访问到其长度内的元素</strong><br/>切片只能访问到其长度内的元素，试图访问超出其长度的元素将会导致语言运行时异常。在使用这部分元素前，必须将其合并到切片的长度里。下面的代码试图为 newNum 中的元素赋值：</p>
+<pre class="line-numbers language-cpp codeblock"><code class="language-cpp hljs"><span class="token comment"><span class="hljs-comment">// 修改 newNum 索引为 3 的元素
+<span class="token comment"><span class="hljs-comment">// 这个元素对于 newNum 来说并不存在
+newNum<span class="token punctuation">[<span class="token number"><span class="hljs-number">3<span class="token punctuation">] <span class="token operator">= <span class="token number"><span class="hljs-number">45
+</span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>上面的代码可以通过编译，但是会产生运行时错误：<br/>panic: runtime error: index out of range</p>
+<h2><strong>切片扩容</strong></h2>
+<p>相对于数组而言，使用切片的一个好处是：可以按需增加切片的容量。Golang 内置的 append() 函数会处理增加长度时的所有操作细节。要使用 append() 函数，需要一个被操作的切片和一个要追加的值，当 append() 函数返回时，会返回一个包含修改结果的新切片。函数 append() 总是会增加新切片的长度，而容量有可能会改变，也可能不会改变，这取决于被操作的切片的可用容量。</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs">myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">, <span class="token number"><span class="hljs-number">50<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 创建新的切片，其长度为 2 个元素，容量为 4 个元素
+newNum <span class="token operator">:= myNum<span class="token punctuation">[<span class="token number"><span class="hljs-number">1<span class="token punctuation">:<span class="token number"><span class="hljs-number">3<span class="token punctuation">]
+<span class="token comment"><span class="hljs-comment">// 使用原有的容量来分配一个新元素
+<span class="token comment"><span class="hljs-comment">// 将新元素赋值为 60
+newNum <span class="token operator">= <span class="token function"><span class="hljs-built_in">append<span class="token punctuation">(newNum<span class="token punctuation">, <span class="token number"><span class="hljs-number">60<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>执行上面的代码后的底层数据结构如下图所示：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="378" data-width="620"><img alt="" data-image-index="5" data-original-filesize="12811" data-original-format="image/png" data-original-height="378" data-original-src="//upload-images.jianshu.io/upload_images/7209287-1fe7b5bad1bcc0a4.png" data-original-width="620" loading="lazy" src="/images/cnblogs/fb1d259b22475594.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>此时因为 newNum 在底层数组里还有额外的容量可用，append() 函数将可用的元素合并入切片的长度，并对其进行赋值。由于和原始的切片共享同一个底层数组，myNum 中索引为 3 的元素的值也被改动了。</p>
+<p>如果切片的底层数组没有足够的可用容量，append() 函数会创建一个新的底层数组，将被引用的现有的值复制到新数组里，再追加新的值，此时 append 操作同时增加切片的长度和容量：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建一个长度和容量都是 4 的整型切片
+myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 向切片追加一个新元素
+<span class="token comment"><span class="hljs-comment">// 将新元素赋值为 50
+newNum <span class="token operator">:= <span class="token function"><span class="hljs-built_in">append<span class="token punctuation">(myNum<span class="token punctuation">, <span class="token number"><span class="hljs-number">50<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>当这个 append 操作完成后，newSlice 拥有一个全新的底层数组，这个数组的容量是原来的两倍：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="433" data-width="576"><img alt="" data-image-index="6" data-original-filesize="13065" data-original-format="image/png" data-original-height="433" data-original-src="//upload-images.jianshu.io/upload_images/7209287-90c12832f1dd1f0a.png" data-original-width="576" loading="lazy" src="/images/cnblogs/16254ffe7fe5491f.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>函数 append() 会智能地处理底层数组的容量增长。在切片的容量小于 1000 个元素时，总是会成倍地增加容量。一旦元素个数超过 1000，容量的增长因子会设为 1.25，也就是会每次增加 25%的容量(随着语言的演化，这种增长算法可能会有所改变)。</p>
+<h2><strong>限制切片的容量</strong></h2>
+<p>在创建切片时，使用第三个索引选项引可以用来控制新切片的容量。其目的并不是要增加容量，而是要限制容量。允许限制新切片的容量为底层数组提供了一定的保护，可以更好地控制追加操作。</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建长度和容量都是 5 的字符串切片
+fruit <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">string<span class="token punctuation">{<span class="token string"><span class="hljs-string">"Apple"<span class="token punctuation">, <span class="token string"><span class="hljs-string">"Orange"<span class="token punctuation">, <span class="token string"><span class="hljs-string">"Plum"<span class="token punctuation">, <span class="token string"><span class="hljs-string">"Banana"<span class="token punctuation">, <span class="token string"><span class="hljs-string">"Grape"<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>下面尝试使用第三个索引项来完成切片操作：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 将第三个元素切片，并限制容量
+<span class="token comment"><span class="hljs-comment">// 其长度为 1 个元素，容量为 2 个元素
+myFruit <span class="token operator">:= fruit<span class="token punctuation">[<span class="token number"><span class="hljs-number">2<span class="token punctuation">:<span class="token number"><span class="hljs-number">3<span class="token punctuation">:<span class="token number"><span class="hljs-number">4<span class="token punctuation">]
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>这个切片操作执行后，新切片里从底层数组引用了 1 个元素，容量是 2 个元素。具体来说，新切片引用了 Plum 元素，并将容量扩展到 Banana 元素：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="356" data-width="620"><img alt="" data-image-index="7" data-original-filesize="12620" data-original-format="image/png" data-original-height="356" data-original-src="//upload-images.jianshu.io/upload_images/7209287-8f5fcd9c34f45540.png" data-original-width="620" loading="lazy" src="/images/cnblogs/28da9ad2c9bd3efa.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>如果设置的容量比可用的容量还大，就会得到一个运行时错误：<br/>myFruit := fruit[2:3:6]<br/>panic: runtime error: slice bounds out of range</p>
+<p>内置函数 append() 在操作切片时会首先使用可用容量。一旦没有可用容量，就会分配一个新的底层数组。这导致很容易忘记切片间正在共享同一个底层数组。一旦发生这种情况，对切片进行修改，很可能会导致随机且奇怪的问题，这种问题一般都很难调查。如果在创建切片时设置切片的容量和长度一样，就可以强制让新切片的第一个 append 操作创建新的底层数组，与原有的底层数组分离。这样就可以安全地进行后续的修改操作了：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs">myFruit <span class="token operator">:= fruit<span class="token punctuation">[<span class="token number"><span class="hljs-number">2<span class="token punctuation">:<span class="token number"><span class="hljs-number">3<span class="token punctuation">:<span class="token number"><span class="hljs-number">3<span class="token punctuation">]
+<span class="token comment"><span class="hljs-comment">// 向 myFruit 追加新字符串
+myFruit <span class="token operator">= <span class="token function"><span class="hljs-built_in">append<span class="token punctuation">(myFruit<span class="token punctuation">, <span class="token string"><span class="hljs-string">"Kiwi"<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>这里，我们限制了 myFruit 的容量为 1。当我们第一次对 myFruit 调用 append() 函数的时候，会创建一个新的底层数组，这个数组包括 2 个元素，并将水果 Plum 复制进来，再追加新水果 Kiwi，并返回一个引用了这个底层数组的新切片。因为新的切片 myFruit 拥有了自己的底层数组，所以杜绝了可能发生的问题。我们可以继续向新切片里追加水果，而不用担心会不小心修改了其他切片里的水果。可以通过下图来理解此时内存中的数据结构：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="422" data-width="620"><img alt="" data-image-index="8" data-original-filesize="12382" data-original-format="image/png" data-original-height="422" data-original-src="//upload-images.jianshu.io/upload_images/7209287-9269c54d1699204d.png" data-original-width="620" loading="lazy" src="/images/cnblogs/ebe8d0e1215d9908.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p><strong>将一个切片追加到另一个切片</strong><br/>内置函数 append() 也是一个可变参数的函数。这意味着可以在一次调用中传递多个值。如果使用 … 运算符，可以将一个切片的所有元素追加到另一个切片里：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token comment"><span class="hljs-comment">// 创建两个切片，并分别用两个整数进行初始化
+num1 <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">1<span class="token punctuation">, <span class="token number"><span class="hljs-number">2<span class="token punctuation">}
+num2 <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">3<span class="token punctuation">, <span class="token number"><span class="hljs-number">4<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 将两个切片追加在一起，并显示结果
+fmt<span class="token punctuation">.<span class="token function">Printf<span class="token punctuation">(<span class="token string"><span class="hljs-string">"%v\n"<span class="token punctuation">, <span class="token function"><span class="hljs-built_in">append<span class="token punctuation">(num1<span class="token punctuation">, num2<span class="token operator">...<span class="token punctuation">)<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>输出的结果为：<br/>[1 2 3 4]<br/>在返回的新的切片中，切片 num2 里的所有值都追加到了切片 num1 中的元素后面。</p>
+<h2><strong>遍历切片</strong></h2>
+<p>切片是一个集合，可以迭代其中的元素。Golang 有个特殊的关键字 range，它可以配合关键字 for 来迭代切片里的元素</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs">myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">, <span class="token number"><span class="hljs-number">50<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 迭代每一个元素，并显示其值
+<span class="token keyword"><span class="hljs-keyword">for index<span class="token punctuation">, value <span class="token operator">:= <span class="token keyword"><span class="hljs-keyword">range myNum <span class="token punctuation">{
+    fmt<span class="token punctuation">.<span class="token function">Printf<span class="token punctuation">(<span class="token string"><span class="hljs-string">"index: %d value: %d\n"<span class="token punctuation">, index<span class="token punctuation">, value<span class="token punctuation">)
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>输出的结果为：</p>
+<pre class="line-numbers language-csharp codeblock"><code class="language-csharp hljs">index<span class="token punctuation">: <span class="token number"><span class="hljs-number">0 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">10
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">1 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">20
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">2 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">30
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">3 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">40
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">4 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">50
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>当迭代切片时，关键字 range 会返回两个值。第一个值是当前迭代到的索引位置，第二个值是该位置对应元素值的一份副本。需要强调的是，range 创建了每个元素的副本，而不是直接返回对该元素的引用。要想获取每个元素的地址，可以使用切片变量和索引值：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs">myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">, <span class="token number"><span class="hljs-number">50<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 修改切片元素的值
+<span class="token comment"><span class="hljs-comment">// 使用空白标识符(下划线)来忽略原始值
+<span class="token keyword"><span class="hljs-keyword">for index<span class="token punctuation">, <span class="token boolean">_ <span class="token operator">:= <span class="token keyword"><span class="hljs-keyword">range myNum <span class="token punctuation">{
+    myNum<span class="token punctuation">[index<span class="token punctuation">] <span class="token operator">+= <span class="token number"><span class="hljs-number">1
+<span class="token punctuation">}
+<span class="token keyword"><span class="hljs-keyword">for index<span class="token punctuation">, value <span class="token operator">:= <span class="token keyword"><span class="hljs-keyword">range myNum <span class="token punctuation">{
+    fmt<span class="token punctuation">.<span class="token function">Printf<span class="token punctuation">(<span class="token string"><span class="hljs-string">"index: %d value: %d\n"<span class="token punctuation">, index<span class="token punctuation">, value<span class="token punctuation">)
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>输出的结果为：</p>
+<pre class="line-numbers language-csharp codeblock"><code class="language-csharp hljs">index<span class="token punctuation">: <span class="token number"><span class="hljs-number">0 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">11
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">1 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">21
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">2 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">31
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">3 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">41
+index<span class="token punctuation">: <span class="token number"><span class="hljs-number">4 <span class="token keyword"><span class="hljs-keyword">value<span class="token punctuation">: <span class="token number"><span class="hljs-number">51
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>关键字 range 总是会从切片头部开始遍历。如果想对遍历做更多的控制，可以使用传统的 for 循环配合 len() 函数实现：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs">myNum <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">, <span class="token number"><span class="hljs-number">40<span class="token punctuation">, <span class="token number"><span class="hljs-number">50<span class="token punctuation">}
+<span class="token comment"><span class="hljs-comment">// 从第三个元素开始迭代每个元素
+<span class="token keyword"><span class="hljs-keyword">for index <span class="token operator">:= <span class="token number"><span class="hljs-number">2<span class="token punctuation">; index <span class="token operator">&lt; <span class="token function"><span class="hljs-built_in">len<span class="token punctuation">(myNum<span class="token punctuation">)<span class="token punctuation">; index<span class="token operator">++ <span class="token punctuation">{
+    <span class="token operator">...
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<h2><strong>切片间的拷贝操作</strong></h2>
+<p>Golang 内置的 copy() 函数可以将一个切片中的元素拷贝到另一个切片中，其函数声明为：</p>
+<pre class="line-numbers language-swift codeblock"><code class="language-swift hljs"><span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">copy<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(dst<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">, src <span class="token punctuation"><span class="hljs-function"><span class="hljs-params">[<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">]<span class="token keyword"><span class="hljs-function"><span class="hljs-params"><span class="hljs-keyword">Type<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">) int
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>它表示把切片 src 中的元素拷贝到切片 dst 中，返回值为拷贝成功的元素个数。如果 src 比 dst 长，就截断；如果 src 比 dst 短，则只拷贝 src 那部分：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs">num1 <span class="token operator">:= <span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">{<span class="token number"><span class="hljs-number">10<span class="token punctuation">, <span class="token number"><span class="hljs-number">20<span class="token punctuation">, <span class="token number"><span class="hljs-number">30<span class="token punctuation">}
+num2 <span class="token operator">:= <span class="token function"><span class="hljs-built_in">make<span class="token punctuation">(<span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">, <span class="token number"><span class="hljs-number">5<span class="token punctuation">)
+count <span class="token operator">:= <span class="token function"><span class="hljs-built_in">copy<span class="token punctuation">(num2<span class="token punctuation">, num1<span class="token punctuation">)
+fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(count<span class="token punctuation">)
+fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(num2<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>运行这段单面，输出的结果为：</p>
+<pre class="line-numbers language-json codeblock"><code class="language-json hljs"><span class="token number"><span class="hljs-number">3
+<span class="token punctuation">[<span class="token number"><span class="hljs-number">10 <span class="token number"><span class="hljs-number">20 <span class="token number"><span class="hljs-number">30 <span class="token number"><span class="hljs-number">0 <span class="token number"><span class="hljs-number">0<span class="token punctuation">]
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>3 表示拷贝成功的元素个数。</p>
+<h2><strong>把切片传递给函数</strong></h2>
+<p>函数间传递切片就是要在函数间以值的方式传递切片。由于切片的尺寸很小，在函数间复制和传递切片成本也很低。</p>
+<p>让我们创建一个包含 100 万个整数的切片，并将这个切片以值的方式传递给函数 foo()：</p>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs">myNum <span class="token operator">:= <span class="token function"><span class="hljs-built_in">make<span class="token punctuation">(<span class="token punctuation">[<span class="token punctuation">]<span class="token builtin"><span class="hljs-keyword">int<span class="token punctuation">, <span class="token number"><span class="hljs-number">1e6<span class="token punctuation">)
+<span class="token comment"><span class="hljs-comment">// 将 myNum 传递到函数 foo()
+slice <span class="token operator">= <span class="token function">foo<span class="token punctuation">(myNum<span class="token punctuation">)
+<span class="token comment"><span class="hljs-comment">// 函数 foo() 接收一个整型切片，并返回这个切片
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">foo<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(slice <span class="token punctuation"><span class="hljs-function"><span class="hljs-params">[<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">]<span class="token builtin"><span class="hljs-function"><span class="hljs-params"><span class="hljs-keyword">int<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">) <span class="token punctuation"><span class="hljs-function">[<span class="token punctuation"><span class="hljs-function">]<span class="token builtin"><span class="hljs-function"><span class="hljs-title">int <span class="token punctuation">{
+<span class="token operator">...
+<span class="token keyword"><span class="hljs-keyword">return slice
+<span class="token punctuation">} 
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code><button class="VJbwyy" type="button"></button></pre>
+<p>在 64 位架构的机器上，一个切片需要 24 字节的内存：指针字段需要 8 字节，长度和容量字段分别需要 8 字节。由于与切片关联的数据包含在底层数组里，不属于切片本身，所以将切片复制到任意函数的时候，对底层数组大小都不会有影响。复制时只会复制切片本身，不会涉及底层数组：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="312" data-width="543"><img alt="" data-image-index="9" data-original-filesize="14427" data-original-format="image/png" data-original-height="312" data-original-src="//upload-images.jianshu.io/upload_images/7209287-a1d97f445df313da.png" data-original-width="543" loading="lazy" src="/images/cnblogs/e03c46936c906cff.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>在函数间传递 24 字节的数据会非常快速、简单。这也是切片效率高的地方。不需要传递指针和处理复杂的语法，只需要复制切片，按想要的方式修改数据，然后传递回一份新的切片副本。</p>
+<h2><strong>总结</strong></h2>
+<p>切片是 Golang 中比较有特色的一种数据类型，既为我们操作集合类型的数据提供了便利的方式，又能够高效的在函数间进行传递，因此在代码中切片类型被使用的相当广泛。</p>
+{% endraw %}

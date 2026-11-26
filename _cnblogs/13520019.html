@@ -1,0 +1,13 @@
+---
+title: "<![CDATA[]]>和转义字符"
+date: 2020-08-17 20:56:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "被<![CDATA[]]>这个标记所包含的内容将表示为纯文本，比如<![CDATA[<]]>表示文本内容“<”。 此标记用于xml文档中，我们先来看看使用转义符的情况。我们知道，在xml中，”<”、”>”、”&”等字符是不能直接存入的，否则xml语法检查时会报错，如果想在xml中使用这些符号，必须将"
+read_minutes: 1
+cnblogs_id: 13520019
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13520019.html"
+tags_inferred: true
+---
+{% raw %}
+<p>被<code>&lt;![CDATA[]]&gt;</code>这个标记所包含的内容将表示为<strong>纯文本</strong>，比如<code>&lt;![CDATA[&lt;]]&gt;</code>表示文本内容<code>“&lt;”</code>。<br/>　　此标记用于xml文档中，我们先来看看使用转义符的情况。我们知道，在xml中，<code>”&lt;”</code>、<code>”&gt;”</code>、<code>”&amp;”</code>等字符是不能直接存入的，否则xml语法检查时会<strong>报错</strong>，如果想在xml中使用这些符号，必须将其转义为实体，如<code>”&amp;lt;”</code>、<code>”&amp;gt;”</code>、<code>”&amp;amp;”</code>，这样才能保存进xml文档。<br/>　　在使用程序读取的时候，解析器会自动将这些实体转换回<code>”&lt;”</code>、<code>”&gt;”</code>、<code>”&amp;”</code>。举个例子：<br/>　　<code>&lt;age&gt; age &lt; 30 &lt;/age&gt;</code><br/>　　上面这种写法会报错，<strong>应该这样写</strong>：<br/>　　<code>&lt;age&gt; age &amp;lt; 30 &lt;/age&gt;</code><br/>　　值得注意的是：<br/>　　(1)转义序列字符之间不能有空格；<br/>　　(2) 转义序列必须以”;”结束；<br/>　　(3) 单独出现的”&amp;”不会被认为是转义的开始；<br/>　　(4) 区分大小写。<br/>　　<br/>　　在XML中，需要转义的字符有：<br/>　　(1)&amp;　　　<code>&amp;amp;</code><br/>　　(2)&lt;　　　<code>&amp;lt;</code><br/>　　(3)&gt;　　　<code>&amp;gt;</code><br/>　　(4)＂　　　<code>&amp;quot;</code><br/>　　(5)＇　　　<code>&amp;apos;</code><br/>　　但是严格来说，在XML中只有”&lt;”和”&amp;”是非法的，其它三个都是可以合法存在的，但是，把它们都进行转义是一个好的习惯。<br/>　　不管怎么样，转义前的字符也好，转义后的字符也好，都会被xml解析器解析，<strong>为了方便起见</strong>，使用<code>&lt;![CDATA[]]&gt;</code>来包含不被xml解析器解析的内容。但要注意的是：<br/>　　(1) 此部分不能再包含<code>”]]&gt;”</code>；<br/>　　(2) 不允许嵌套使用；<br/>　　(3)<code>”]]&gt;”</code>这部分不能包含空格或者换行。<br/>　　最后，说说<code>&lt;![CDATA[]]&gt;</code>和xml转移字符的关系，它们两个看起来是不是感觉功能重复了？<br/>　　是的，它们的功能就是一样的，只是应用场景和需求有些不同：<br/>　　(1)<code>&lt;![CDATA[]]&gt;</code>不能适用所有情况，转义字符可以；<br/>　　(2) 对于短字符串<code>&lt;![CDATA[]]&gt;</code>写起来啰嗦，对于长字符串转义字符写起来可读性差；<br/>　　(3) <code>&lt;![CDATA[]]&gt;</code>表示xml解析器忽略解析，所以更快。</p>
+{% endraw %}

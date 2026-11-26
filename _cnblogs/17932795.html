@@ -1,0 +1,72 @@
+---
+title: "【Golang】Golang的跳一跳"
+date: 2023-12-28 15:19:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "一、基本概念 在Go语言中，代码跳转是指从一个位置跳转到另一个位置。一般而言，我们可以通过函数调用进行代码跳转，也可以通过goto语句进行跳转。不同的跳转方式有不同的适用场景。 二、函数调用 函数是Go语言中的基本构建块之一。调用函数时，程序的执行流程会跳转到被调用的函数中，并在函数执行完毕后返回到"
+read_minutes: 1
+cnblogs_id: 17932795
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/17932795.html"
+---
+{% raw %}
+<h1 class="mp-heading" data-indent="0" data-morpho-type="heading" data-slate-node="element" data-uuid="f1c94410-a550-11ee-97d4-31e1b40b6745">一、基本概念</h1>
+<div class="mp-paragraph-wrapper" data-morpho-type="paragraph" data-slate-node="element">在Go语言中，代码跳转是指从一个位置跳转到另一个位置。一般而言，我们可以通过函数调用进行代码跳转，也可以通过goto语句进行跳转。不同的跳转方式有不同的适用场景。</div>
+<h1 class="mp-heading" data-indent="0" data-morpho-type="heading" data-slate-node="element" data-uuid="f3706460-a550-11ee-97d4-31e1b40b6745">二、函数调用</h1>
+<div class="mp-paragraph-wrapper" data-morpho-type="paragraph" data-slate-node="element">函数是Go语言中的基本构建块之一。调用函数时，程序的执行流程会跳转到被调用的函数中，并在函数执行完毕后返回到调用点继续执行。因此，函数调用可以看作是一种隐式的代码跳转。</div>
+<div class="mp-paragraph-wrapper" data-morpho-type="paragraph" data-slate-node="element">下面是一个例子：</div>
+<div class="mp-block-code-container">
+<div class="mp-block-code-content mp-block-code-content-auto-wrap">
+<div class="mp-block-code-line" data-text-content="package main">
+<div class="cnblogs_code">
+<pre><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">package</span><span style="color: #000000;"> main
+</span><span style="color: #008080;"> 2</span>  
+<span style="color: #008080;"> 3</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> (
+</span><span style="color: #008080;"> 4</span> <span style="color: #800000;">"</span><span style="color: #800000;">fmt</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 5</span> <span style="color: #000000;">)
+</span><span style="color: #008080;"> 6</span>  
+<span style="color: #008080;"> 7</span> <span style="color: #0000ff;">func</span><span style="color: #000000;"> main() {
+</span><span style="color: #008080;"> 8</span> a := <span style="color: #800080;">1</span>
+<span style="color: #008080;"> 9</span> b := <span style="color: #800080;">2</span>
+<span style="color: #008080;">10</span> c :=<span style="color: #000000;"> add(a, b)
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">fmt.Println(c)
+</span><span style="color: #008080;">12</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">13</span>  
+<span style="color: #008080;">14</span> <span style="color: #0000ff;">func</span> add(x, y <span style="color: #0000ff;">int</span>) <span style="color: #0000ff;">int</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">15</span> <span style="color: #0000ff;">return</span> x +<span style="color: #000000;"> y
+</span><span style="color: #008080;">16</span> }</pre>
+</div>
+<p> </p>
+</div>
+</div>
+</div>
+<div class="mp-paragraph-wrapper" data-morpho-type="paragraph" data-slate-node="element">在这个例子中，程序的执行流程会跳转到add函数中执行，等函数执行完毕后再返回到main函数中执行。因此，我们可以将add函数视为代码跳转的一个目标位置。</div>
+<h1 class="mp-heading" data-indent="0" data-morpho-type="heading" data-slate-node="element" data-uuid="f4cbd5b0-a550-11ee-97d4-31e1b40b6745">三、goto语句</h1>
+<div class="mp-paragraph-wrapper" data-morpho-type="paragraph" data-slate-node="element">在Go语言中，我们还可以使用goto语句进行代码跳转。goto语句会使程序直接跳转到指定的标签位置，并继续执行后续的代码。goto语句主要用于处理错误或特定情况的逻辑跳转，但过度使用goto语句会使代码变得难以维护和理解，因此必须慎重使用。</div>
+<div class="mp-paragraph-wrapper" data-morpho-type="paragraph" data-slate-node="element">下面是一个使用goto语句的例子：</div>
+<div class="mp-block-code-container">
+<div class="mp-block-code-content mp-block-code-content-auto-wrap">
+<div class="mp-block-code-line" data-text-content="package main">
+<div class="cnblogs_Highlighter">
+<pre class="brush:go;gutter:true;">package main
+
+import (
+    "fmt"
+)
+
+func main() {
+    i := 0
+Here:
+    fmt.Println(i)
+    i++
+    if i &lt; 10 {
+        goto Here
+    }
+}
+</pre>
+</div>
+<p>　　</p>
+<div class="mp-paragraph-wrapper" data-morpho-type="paragraph" data-slate-node="element">在这个例子中，我们使用了goto语句来实现循环。程序首先输出i的值，然后将i加1，接着通过if语句判断i是否小于10，如果小于10，则跳转到Here标签位置继续执行。这个过程会循环执行直到i的值大于等于10为止。</div>
+</div>
+</div>
+</div>
+<iframe style="display: none !important;"></iframe>
+{% endraw %}

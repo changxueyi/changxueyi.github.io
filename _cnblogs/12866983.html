@@ -1,0 +1,39 @@
+---
+title: "Mysql实现分页"
+date: 2020-05-11 09:00:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "1、Mysql的limit用法 limit分页公式 （1）limit分页公式：curPage是当前第几页；pageSize是一页多少条记录 limit (curPage-1)*pageSize,pageSize （2）用的地方：sql语句中 select * from student limit(c"
+read_minutes: 2
+cnblogs_id: 12866983
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12866983.html"
+---
+{% raw %}
+<h2>1、Mysql的limit用法</h2>
+<h3 id="limit%E5%88%86%E9%A1%B5%E5%85%AC%E5%BC%8F">limit分页公式</h3>
+<div class="cnblogs_code">
+<pre>（<span style="color: #800000; font-weight: bold;">1</span><span style="color: #000000;">）limit分页公式：curPage是当前第几页；pageSize是一页多少条记录
+limit (curPage</span><span style="color: #808080;">-</span><span style="color: #800000; font-weight: bold;">1</span>)<span style="color: #808080;">*</span><span style="color: #000000;">pageSize,pageSize
+（</span><span style="color: #800000; font-weight: bold;">2</span><span style="color: #000000;">）用的地方：sql语句中
+</span><span style="color: #0000ff;">select</span> <span style="color: #808080;">*</span> <span style="color: #0000ff;">from</span> student limit(curPage<span style="color: #808080;">-</span><span style="color: #800000; font-weight: bold;">1</span>)<span style="color: #808080;">*</span>pageSize,pageSize;</pre>
+</div>
+<h3 id="%E6%80%BB%E9%A1%B5%E6%95%B0%E5%85%AC%E5%BC%8F">总页数公式</h3>
+<p>（1）总页数公式：totalRecord是总记录数；pageSize是一页分多少条记录<br/>int totalPageNum = (totalRecord +pageSize - 1) / pageSize;<br/>（2）用的地方：前台UI分页插件显示分页码<br/>（3）查询总条数：totalRecord是总记录数<br/>SELECT COUNT(*) FROM tablename</p>
+<p>例如：<br/>select * from orders_history where type=8 limit 100,100;<br/>select * from orders_history where type=8 limit 1000,100;<br/>select * from orders_history where type=8 limit 10000,100;<br/>select * from orders_history where type=8 limit 100000,100;<br/>select * from orders_history where type=8 limit 1000000,100;</p>
+<p>但是这种查询比较慢，因为：limit 200000,200，需要扫描200200行，如果在一个高并发的应用里，每次查询需要扫描超过20W行，效率十分低下。</p>
+<p>limit m语句</p>
+<p> select * from dept where deptno &gt;10 order by deptno asc limit n;//下一页<br/> select * from dept where deptno &lt;60 order by deptno desc limit n//上一页<br/>这种方式不管翻多少页只需要扫描n条数据。</p>
+<p><br/>3、方法2 虽然扫描的数据量少了，但是在某些需要跳转到多少也得时候就无法实现，这时还是需要用到方法1，既然不能避免，那么我们可以考虑尽量减小m的值，因此我们可以给这条语句加上一个条件限制。是的每次扫描不用从第一条开始。这样就能尽量减少扫描的数据量。</p>
+<div class="cnblogs_code">
+<pre>例如：每页10条数据，当前是第10页，当前条目ID的最大值是109，最小值是100.(当前100<span style="color: #808080;">-</span><span style="color: #800000; font-weight: bold;">109</span><span style="color: #000000;">)
+那么跳到第9页：
+</span><span style="color: #0000ff;">select</span> <span style="color: #808080;">*</span> <span style="color: #0000ff;">from</span> dept <span style="color: #0000ff;">where</span> deptno<span style="color: #808080;">&lt;</span><span style="color: #800000; font-weight: bold;">100</span> <span style="color: #0000ff;">order</span> <span style="color: #0000ff;">by</span> deptno <span style="color: #0000ff;">desc</span> limit <span style="color: #800000; font-weight: bold;">0</span>,<span style="color: #800000; font-weight: bold;">10</span>;   <span style="color: #808080;">//</span><span style="color: #000000;">倒序
+
+那么跳到第8页：
+</span><span style="color: #0000ff;">select</span> <span style="color: #808080;">*</span> <span style="color: #0000ff;">from</span> dept <span style="color: #0000ff;">where</span> deptno<span style="color: #808080;">&lt;</span><span style="color: #800000; font-weight: bold;">100</span> <span style="color: #0000ff;">order</span> <span style="color: #0000ff;">by</span> deptno <span style="color: #0000ff;">desc</span> limit <span style="color: #800000; font-weight: bold;">10</span>,<span style="color: #800000; font-weight: bold;">10</span><span style="color: #000000;">;
+
+那么跳到第11页：
+</span><span style="color: #0000ff;">select</span> <span style="color: #808080;">*</span> <span style="color: #0000ff;">from</span> dept <span style="color: #0000ff;">where</span> deptno<span style="color: #808080;">&gt;</span><span style="color: #800000; font-weight: bold;">109</span> <span style="color: #0000ff;">order</span> <span style="color: #0000ff;">by</span> deptno <span style="color: #0000ff;">asc</span> limit <span style="color: #800000; font-weight: bold;">0</span>,<span style="color: #800000; font-weight: bold;">10</span>;</pre>
+</div>
+<p><br/>最后附上参考文档网址：http://www.open-open.com/doc/view/2bda32bf64864e8e965e91686f5309d4<br/>如有错误，敬请指正，在此提前表示感谢！！！</p>
+<p> </p>
+{% endraw %}

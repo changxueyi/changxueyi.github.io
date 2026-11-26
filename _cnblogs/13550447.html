@@ -1,0 +1,537 @@
+---
+title: "Json详解以及fastjson使用教程"
+date: 2020-08-23 20:06:00 +0800
+tags: ["【框架】-- Spring", "【Java】-- Java基础", "【微服务】-- 解决方案"]
+excerpt: "Json是一种轻量级的数据交换格式，采用一种“键：值”对的文本格式来存储和表示数据，在系统交换数据过程中常常被使用，是一种理想的数据交换语言。在使用Java做Web开发时，不可避免的会遇到Json的使用。下面我们就简单讲一下Json的使用以及fastjson.jar包的使用。 一：JSON形式与语法"
+read_minutes: 8
+cnblogs_id: 13550447
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13550447.html"
+---
+{% raw %}
+<p>Json是一种轻量级的数据交换格式，采用一种“键：值”对的文本格式来存储和表示数据，在系统交换数据过程中常常被使用，是一种理想的数据交换语言。在使用Java做Web开发时，不可避免的会遇到Json的使用。下面我们就简单讲一下Json的使用以及fastjson.jar包的使用。</p>
+<h2>一：JSON形式与语法</h2>
+<h3><a name="t1"></a>1.1：JSON对象</h3>
+<p>我们先来看以下数据：</p>
+<div class="cnblogs_code">
+
+<pre>{
+    "ID": 1001,
+    "name": "张三",
+    "age": 24
+}</pre>
+
+</div>
+<p>第一个数据就是一个Json对象，观察它的数据形式，可以得出以下语法：</p>
+<p>1：数据在花括号中</p>
+<p>2：数据以"键：值"对的形式出现（其中键多以字符串形式出现，值可取字符串，数值，甚至其他json对象）</p>
+<p>3：每两个"键：值"对以逗号分隔（最后一个"键：值"对省略逗号）</p>
+<p>遵守上面3点，便可以形成一个json对象。</p>
+<h3>1.2：JSON对象数组</h3>
+<p>接下来我们再看第二个数据，观察它的数据形式，可以得出以下语法：</p>
+<div class="cnblogs_code">
+
+<pre>[
+    {"ID": 1001, "name": "张三", "age": 24},
+    {"ID": 1002, "name": "李四", "age": 25},
+    {"ID": 1003, "name": "王五", "age": 22}
+
+]</pre>
+
+</div>
+<p>1：数据在方括号中（可理解为数组）</p>
+<p>2：方括号中每个数据以json对象形式出现</p>
+<p>3：每两个数据以逗号分隔（最后一个无需逗号）</p>
+<p>遵守上面3点，便可形成一个json对象数组（及一个数组中，存储了多个json对象）</p>
+<p>理解了上面两种基本的形式，我们就可以得出其他的数据形式，例如下面这个：</p>
+<div class="cnblogs_code">
+
+<pre>{
+    "部门名称":"研发部",
+    "部门成员":[
+    {"ID": 1001, "name": "张三", "age": 24},
+    {"ID": 1002, "name": "李四", "age": 25},
+    {"ID": 1003, "name": "王五", "age": 22}],
+    "部门位置":"xx楼21号"
+}</pre>
+
+</div>
+<p>这是上面两个基本形式结合出来的一种变形，通过这种变形，使得数据的封装具有很大的灵活性，能让开发者自由的发挥想象力。</p>
+<p><strong>1.3：JSON字符串</strong></p>
+<p>JSON字符串也是在平时开发中使用较多的，json字符串应满足以下条件：</p>
+<p>1：它必须是一个字符串，由" "或者' '包裹数据，支持字符串的各种操作</p>
+<p>2：里面的数据格式应该要满足其中一个格式，可以是json对象，也可以是json对象数组或者是两种基本形式的组合变形。</p>
+<p>总结：json可以简单的分为基本形式：json对象，json对象数组。两种基本格式组合变形出其他的形式，但其本质还是json对象或者json对象数组中的一种。json对象或对象数组可以转化为json字符串，使用于不同的场合。</p>
+<p>注意点：在封装json数据的时候，很容易出现错误，比如粗心的在最后一条数据的末尾加上了逗号等等，可以使用一些工具去验证json数据格式的正确性，也可以用在线检测：<a href="https://www.json.cn/" target="_blank" title="https://www.json.cn/">https://www.json.cn/</a>。</p>
+<p><strong>二：fastjson介绍与使用</strong></p>
+<p><strong>2.1：fastjson简介与jar下载</strong></p>
+<p>　　fastjson.jar是阿里爸爸开发的一款专门用于Java开发的包，可以方便的实现json对象与JavaBean对象的转换，实现JavaBean对象与json字符串的转换，实现json对象与json字符串的转换。除了这个fastjson以外，还有Google开发的Gson包，其他形式的如net.sf.json包，都可以实现json的转换。方法名称不同而已，最后的实现结果都是一样的。</p>
+<h2>2.2：首先理解JSONArrary和JsonObject</h2>
+<p> </p>
+<p><strong>1、JSONObject和JSONArray的数据表示形式</strong></p>
+<p>JSONObject的数据是用 {  } 来表示的，</p>
+<p>        例如：   { "id" : "123", "courseID" : "huangt-test", "title" : "提交作业", "content" : null  }  </p>
+<p>而JSONArray，顾名思义是由JSONObject构成的数组，用  [ { } , { } , ......  , { } ]  来表示</p>
+<p>       例如：   [ {  "id" : "123", "courseID" : "huangt-test", "title" : "提交作业" }  ,  {  "content" : null, "beginTime" : 1398873600000  "endTime" } ] ； </p>
+<p>        表示了包含2个JSONObject的JSONArray。 </p>
+<p>可以看到一个很明显的区别，一个最外面用的是 {  }  ，一个最外面用的是 [  ]  ；  </p>
+<p><strong>2、如何从字符串String获得JSONObject对象和JSONArray对象</strong></p>
+<p>          JSONObject  jsonObject  = new JSONObject ( String  str);</p>
+<p>         JSONArray jsonArray = new JSONArray(String    str  ) ;</p>
+<p><strong>3、如何从JSONArray中获得JSONObject对象</strong></p>
+<p>       大家可以把JSONArray当成一般的数组来对待，只是获取的数据内数据的方法不一样</p>
+<p>         JSONObject   jsonObject  =  jsonArray.getJSONObject(i) ;    </p>
+<p>4、获取JSON内的数据</p>
+<p>         int   mid= jsonObject.getInt ( "id" ) ;    //  这里的mid得到的数据就是123.</p>
+<p>         String  mcourse=jsonObject.getString( " courseID") ;   // 这里的mcourse得到的数据就是huangt-test.</p>
+<div class="cnblogs_code">
+
+<pre>  1 import java.io.IOException;
+  2 import java.io.InputStream;
+  3 import java.util.ArrayList;
+  4 import java.util.Iterator;
+  5 import java.util.List;
+  6 
+  7 import org.apache.commons.io.IOUtils;
+  8 import org.junit.Test;
+  9 
+ 10 import com.alibaba.fastjson.JSON;
+ 11 import com.alibaba.fastjson.JSONArray;
+ 12 import com.alibaba.fastjson.JSONObject;
+ 13 import com.alibaba.fastjson.serializer.SerializerFeature;
+ 14 
+ 15 /**
+ 16  * JSONArray : 相当于List &lt;/br&gt;
+ 17  * JSONObject: 相当于Map&lt;String,Object&gt;
+ 18  * @author yang.han
+ 19  *
+ 20  */
+ 21 public class TestFastJosn {
+ 22 
+ 23     /**
+ 24      * java对象转 json字符串
+ 25      */
+ 26     @Test
+ 27     public void objectToJson() {
+ 28         // 简单java类转json字符串
+ 29         User user = new User("dmego", "123456");
+ 30         String UserJson = JSON.toJSONString(user);
+ 31         System.out.println("简单java类转json字符串:" + UserJson);
+ 32 
+ 33         // List&lt;Object&gt;转json字符串
+ 34         User user1 = new User("zhangsan", "123123");
+ 35         User user2 = new User("lisi", "321321");
+ 36         List&lt;User&gt; users = new ArrayList&lt;User&gt;();
+ 37         users.add(user1);
+ 38         users.add(user2);
+ 39         String ListUserJson = JSON.toJSONString(users);
+ 40         System.out.println("List&lt;Object&gt;转json字符串:" + ListUserJson);
+ 41 
+ 42         // 复杂java类转json字符串
+ 43         UserGroup userGroup = new UserGroup("userGroup", users);
+ 44         String userGroupJson = JSON.toJSONString(userGroup);
+ 45         System.out.println("复杂java类转json字符串:" + userGroupJson);
+ 46 
+ 47     }
+ 48 
+ 49     /**
+ 50      * json字符串转java对象 注：字符串中使用双引号需要转义 (" --&gt; \"),这里使用的是单引号
+ 51      */
+ 52     @Test
+ 53     public void JsonToObject() {
+ 54         /*
+ 55          * json字符串转简单java对象 字符串：{"password":"123456","username":"dmego"}
+ 56          */
+ 57 
+ 58         String jsonStr1 = "{'password':'123456','username':'dmego'}";
+ 59         User user = JSON.parseObject(jsonStr1, User.class);
+ 60         System.out.println("json字符串转简单java对象:" + user.toString());
+ 61 
+ 62         /*
+ 63          * json字符串转List&lt;Object&gt;对象
+ 64          * 字符串：[{"password":"123123","username":"zhangsan"
+ 65          * },{"password":"321321","username":"lisi"}]
+ 66          */
+ 67         String jsonStr2 = "[{'password':'123123','username':'zhangsan'},{'password':'321321','username':'lisi'}]";
+ 68         List&lt;User&gt; users = JSON.parseArray(jsonStr2, User.class);
+ 69         System.out.println("json字符串转List&lt;Object&gt;对象:" + users.toString());
+ 70 
+ 71         /*
+ 72          * json字符串转复杂java对象
+ 73          * 字符串：{"name":"userGroup","users":[{"password":"123123"
+ 74          * ,"username":"zhangsan"},{"password":"321321","username":"lisi"}]}
+ 75          */
+ 76         String jsonStr3 = "{'name':'userGroup','users':[{'password':'123123','username':'zhangsan'},{'password':'321321','username':'lisi'}]}";
+ 77         UserGroup userGroup = JSON.parseObject(jsonStr3, UserGroup.class);
+ 78         System.out.println("json字符串转复杂java对象:" + userGroup);
+ 79     }
+ 80     
+ 81     @Test
+ 82     public void parserJsonTxt() throws IOException{
+ 83         ClassLoader cl = this.getClass().getClassLoader();
+ 84         InputStream inputStream = cl.getResourceAsStream("date1.json");
+ 85         String jsontext = IOUtils.toString(inputStream, "utf8");
+ 86         
+ 87         JSONObject obj=JSONObject.parseObject(jsontext);//获取jsonobject对象  
+ 88         JSONObject obj1 = obj.getJSONObject("data");
+ 89         JSONArray jsonArray = obj1.getJSONArray("rows");
+ 90         System.out.println("jsonArray:"+jsonArray);
+ 91         JSONObject obj2 = jsonArray.getJSONObject(1);
+ 92         System.out.println("obj2:" +obj2);
+ 93         for(Iterator iterator = jsonArray.iterator(); iterator.hasNext();) {
+ 94             JSONObject jsonObject1 = (JSONObject) iterator.next();
+ 95             System.out.println(jsonObject1);
+ 96         }
+ 97         
+ 98         info_util iu = JSON.parseObject(jsontext, info_util.class);//取得第一层JSONObject
+ 99         info_data_util du = JSON.parseObject(iu.getData(), info_data_util.class);//取得第二层JSONObject
+100         List&lt;info_array_Util&gt; olist = JSON.parseArray(du.getRows(), info_array_Util.class);//取得第三层JSONArray
+101         System.out.println(iu);
+102         System.out.println(du);
+103         System.out.println(olist);
+104         
+105     }
+106 
+107 }</pre>
+
+</div>
+<p> </p>
+<div class="cnblogs_code">
+
+<pre>public class User {
+    private String username;
+    private String password;
+
+    public User() {
+    }
+
+    public User(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "User [username=" + username + ", password=" + password + "]";
+    }
+}</pre>
+
+</div>
+<div class="cnblogs_code">
+
+<pre>import java.util.ArrayList;
+import java.util.List;
+
+public class UserGroup {
+    private String name;
+    private List&lt;User&gt; users = new ArrayList&lt;User&gt;();
+
+    public UserGroup() {
+    }
+
+    public UserGroup(String name, List&lt;User&gt; users) {
+        this.name = name;
+        this.users = users;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List&lt;User&gt; getUsers() {
+        return users;
+    }
+
+    public void setUsers(List&lt;User&gt; users) {
+        this.users = users;
+    }
+
+    @Override
+    public String toString() {
+        return "UserGroup [name=" + name + ", users=" + users + "]";
+    }
+}</pre>
+
+</div>
+<div class="cnblogs_code">
+
+<pre>public class info_util {
+    private int status;
+    private String msg;
+    private String data;
+
+    public int getStatus() {
+        return status;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public String getMsg() {
+        return msg;
+    }
+
+    public void setMsg(String msg) {
+        this.msg = msg;
+    }
+
+    public String getData() {
+        return data;
+    }
+
+    public void setData(String data) {
+        this.data = data;
+    }
+
+    @Override
+    public String toString() {
+        return "info_util [status=" + status + ", msg=" + msg + ", data="
+                + data + "]";
+    }
+
+}</pre>
+
+</div>
+<div class="cnblogs_code">
+
+<pre>public class info_data_util {
+    private int start, limit, total;
+    private String rows;
+
+    @Override
+    public String toString() {
+        return "info_data_util [start=" + start + ", limit=" + limit
+                + ", total=" + total + ", rows=" + rows + "]";
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
+
+    public int getTotal() {
+        return total;
+    }
+
+    public void setTotal(int total) {
+        this.total = total;
+    }
+
+    public String getRows() {
+        return rows;
+    }
+
+    public void setRows(String rows) {
+        this.rows = rows;
+    }
+}</pre>
+
+</div>
+<div class="cnblogs_code">
+
+<pre>public class info_array_Util {
+    private String messageNo, memberNo, mobileNo, nickname, headPath, content;
+    private int messageType, readFlag;
+    private long sendTime, updateTime;
+
+    public String getMessageNo() {
+        return messageNo;
+    }
+
+    public void setMessageNo(String messageNo) {
+        this.messageNo = messageNo;
+    }
+
+    public String getMemberNo() {
+        return memberNo;
+    }
+
+    public void setMemberNo(String memberNo) {
+        this.memberNo = memberNo;
+    }
+
+    public String getMobileNo() {
+        return mobileNo;
+    }
+
+    public void setMobileNo(String mobileNo) {
+        this.mobileNo = mobileNo;
+    }
+
+    public String getNickname() {
+        return nickname;
+    }
+
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public String getHeadPath() {
+        return headPath;
+    }
+
+    public void setHeadPath(String headPath) {
+        this.headPath = headPath;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public void setContent(String content) {
+        this.content = content;
+    }
+
+    public int getMessageType() {
+        return messageType;
+    }
+
+    public void setMessageType(int messageType) {
+        this.messageType = messageType;
+    }
+
+    public int getReadFlag() {
+        return readFlag;
+    }
+
+    public void setReadFlag(int readFlag) {
+        this.readFlag = readFlag;
+    }
+
+    public long getSendTime() {
+        return sendTime;
+    }
+
+    public void setSendTime(long sendTime) {
+        this.sendTime = sendTime;
+    }
+
+    public long getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(long updateTime) {
+        this.updateTime = updateTime;
+    }
+
+    @Override
+    public String toString() {
+        return "info_array_Util [messageNo=" + messageNo + ", memberNo="
+                + memberNo + ", mobileNo=" + mobileNo + ", nickname="
+                + nickname + ", headPath=" + headPath + ", content=" + content
+                + ", messageType=" + messageType + ", readFlag=" + readFlag
+                + ", sendTime=" + sendTime + ", updateTime=" + updateTime + "]";
+    }
+
+}</pre>
+
+</div>
+<p> date1.json 文件内容</p>
+<div class="cnblogs_code">
+
+<pre>{
+    "status": 1,
+    "msg": null,
+    "data": {
+        "start": 0,
+        "limit": 10,
+        "total": 5,
+        "rows": [
+            {
+                "messageNo": "Me201607211148242364423",
+                "memberNo": "AD2016070812145640900000003",
+                "mobileNo": "151****1314",
+                "nickname": "远方",
+                "headPath": "/fileupload/memberImage/83788978A0614007BF7F5D20F668088A1468667650848.jpg",
+                "messageType": 0,
+                "readFlag": 0,
+                "sendTime": 1469072904000,
+                "content": "   ",
+                "updateTime": 1469072904000
+            },
+            {
+                "messageNo": "Me201607211146458551987",
+                "memberNo": "AD2016070812145640900000003",
+                "mobileNo": "151****1314",
+                "nickname": "远方",
+                "headPath": "/fileupload/memberImage/83788978A0614007BF7F5D20F668088A1468667650848.jpg",
+                "messageType": 0,
+                "readFlag": 0,
+                "sendTime": 1469072805000,
+                "content": "有6",
+                "updateTime": 1469072805000
+            },
+            {
+                "messageNo": "Me201607191730505629442",
+                "memberNo": "AD2016070810124275700000002",
+                "mobileNo": "156****3913",
+                "nickname": "呵呵",
+                "headPath": "/fileupload/memberImage/FD5DAE12CB79447BB5263EB0EE4E75F41469069984778.jpg",
+                "messageType": 0,
+                "readFlag": 0,
+                "sendTime": 1468920650000,
+                "content": "额",
+                "updateTime": 1468920650000
+            },
+            {
+                "messageNo": "Me201607161049255579387",
+                "memberNo": "AD2016070812145640900000003",
+                "mobileNo": "151****1314",
+                "nickname": "远方",
+                "headPath": "/fileupload/memberImage/83788978A0614007BF7F5D20F668088A1468667650848.jpg",
+                "messageType": 1,
+                "readFlag": 0,
+                "sendTime": 1468637365000,
+                "content": "111",
+                "updateTime": 1468637365000
+            },
+            {
+                "messageNo": "Me201607161037444613493",
+                "memberNo": "AD2016070812145640900000003",
+                "mobileNo": "151****1314",
+                "nickname": "远方",
+                "headPath": "/fileupload/memberImage/83788978A0614007BF7F5D20F668088A1468667650848.jpg",
+                "messageType": 0,
+                "readFlag": 0,
+                "sendTime": 1468636664000,
+                "content": "哈哈哈",
+                "updateTime": 1468636664000
+            }
+        ],
+        "otherData": null
+    }
+}</pre>
+
+</div>
+{% endraw %}

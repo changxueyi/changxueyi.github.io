@@ -1,0 +1,50 @@
+---
+title: "Java DTO（data transfer object）的理解"
+date: 2020-02-19 18:33:00 +0800
+tags: ["【框架】-- SpringBoot", "【Java】-- Java基础"]
+excerpt: "首先明白springboot每层 model层 model层即数据库实体层，也被称为entity层，pojo层。 一般数据库一张表对应一个实体类，类属性同表字段一一对应。 Model层是数据层: TableName是对数据表实体的映射； Criteria传输前台数据 DTO 传输类间数据 dao层"
+read_minutes: 4
+cnblogs_id: 12332505
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12332505.html"
+---
+{% raw %}
+<h3 class="md-end-block md-heading"><span class="md-plain">首先明白springboot每层</span></h3>
+<h4 class="md-end-block md-heading"><span class="md-plain">model层</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">model层即数据库实体层，也被称为entity层，pojo层。<span class="md-softbreak"> <span class="md-plain">一般数据库一张表对应一个实体类，类属性同表字段一一对应。</span></span></span></p>
+<p class="md-end-block md-p"><span><strong>Model层</strong><span class="md-plain">是数据层: TableName是对<span><strong>数据表实体的映射；</strong></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain"> Criteria传输前台数据</span></p>
+<p class="md-end-block md-p"><span class="md-plain"> DTO 传输类间数据</span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">dao层</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">dao层即数据持久层，也被称为mapper层。<span class="md-softbreak"> <span class="md-plain">dao层的作用为访问数据库，向数据库发送sql语句，完成数据的增删改查任务。</span></span></span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">service层</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">service层即业务逻辑层。<span class="md-softbreak"> <span class="md-plain">service层的作用为完成功能设计。<span class="md-softbreak"> <span class="md-plain">service层调用dao层接口，接收dao层返回的数据，完成项目的基本功能设计。</span></span></span></span></span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">controller层</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">controller层即控制层。<span class="md-softbreak"> <span class="md-plain">controller层的功能为请求和响应控制。<span class="md-softbreak"> <span class="md-plain">controller层负责前后端交互，接受前端请求，调用service层，接收service层返回的数据，最后返回具体的页面和数据到客户端</span></span></span></span></span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">DTO即数据传输对象。</span></h4>
+<h3 class="md-end-block md-heading"><span class="md-plain">现状</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">对于分布式系统，需要在不同系统之间传递与转换域对象。因为我们不希望外部公开内部域对象，也不允许外部域对象渗入系统。传统上，数据对象之间的映射通过手工编码(getter/setter)的方式实现，或对象组装器（或转换器）来解决。我们可能会开发某种自定义映射框架来满足我们的映射转换需求，但这一切都显得不够灵巧。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">之前不明白有些框架中为什么要专门定义DTO来绑定表现层中的数据，为什么不能直接用实体模型呢，有了DTO同时还要维护DTO与Model之间的映射关系，多麻烦</span></p>
+<p class="md-end-block md-p"><span class="md-plain">model层即数据库实体层，也被称为entity层，pojo层。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">然后看了这篇<span class="md-link"><a href="http://www.cnblogs.com/daxnet/archive/2010/07/07/1772584.html"><span class="md-plain">文章</span></a><span class="md-plain">中的讨论部分才恍然大悟。</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">摘两个比较有意义的段落。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">表现层与应用层之间是通过数据传输对象（DTO）进行交互的，数据传输对象是没有行为的POCO对象，它 的目的只是为了对领域对象进行数据封装，实现层与层之间的数据传递。为何不能直接将领域对象用于 数据传递？因为领域对象更注重领域，而DTO更注重数据。不仅如此，由于“富领域模型”的特点，这样 做会直接将领域对象的行为暴露给表现层。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">需要了解的是，数据传输对象DTO本身并不是业务对象。数据传输对象是根据UI的需求进行设计的，而不 是根据领域对象进行设计的。比如，Customer领域对象可能会包含一些诸如FirstName, LastName, Email, Address等信息。但如果UI上不打算显示Address的信息，那么CustomerDTO中也无需包含这个 Address的数据。</span></p>
+<p class="md-end-block md-p"><span><strong>简单来说Model面向业务，我们是通过业务来定义Model的。而DTO是面向界面UI，是通过UI的需求来定义的。通过DTO我们实现了表现层与Model之间的解耦，表现层不引用Model，如果开发过程中我们的模型改变了，而界面没变，我们就只需要改Model而不需要去改表现层中的东西。</strong></span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://img-blog.csdnimg.cn/2019062422452012.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L1NodWZmbGVfVHM=,size_16,color_FFFFFF,t_70"><img alt="img" loading="lazy" src="/images/cnblogs/bacb7f57bbd238ec.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这篇文章主要来谈论一下DTO使用的场合及其带来的好处。首先要理解DTO是什么？</span></p>
+<p class="md-end-block md-p"><span class="md-plain">DTO就是数据传输对象(Data Transfer Object)的缩写。 DTO模式，是指将数据封装成普通的JavaBeans，在J2EE多个层次之间传输。 DTO类似信使，是同步系统中的Message。 该JavaBeans可以是一个数据模型Model。 </span></p>
+<p class="md-end-block md-p"><span class="md-plain">在传统的编程中，我们一般都是前台请求数据，发送到Webservice，然后WebService向数据库发出请求，获取数据，然后一层层返回；模型如下：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="http://images.cnitblog.com/blog/47012/201403/201716102094943.png"><img alt="QQ截图20140320170753" loading="lazy" src="/images/cnblogs/52cd7e917a5db2f3.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这种比较原始的请求方式带来的缺点有很多，多次请求耗费一定的网络资源，减慢效率。如果一次性返回整个实体类，还可能造成数据库表结构的泄漏。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">采用DTO模型之后，整个流程就不一样了：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://images.cnitblog.com/blog/47012/201403/201716108349585.png"><img alt="img" loading="lazy" src="/images/cnblogs/2cdd441f07c87714.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这样带来的好处有：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1.依据现有的类代码，即可方便的构造出DTO对象，而无需重新进行分析。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">2.减少请求次数，大大提高效率。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">3.按需组织DTO对象，页面需要的字段我才组织，不需要的我不组织，可以避免传输整个表的字段，一定程度上提高了安全性。</span></p>
+<p class="md-end-block md-p"><span><strong>结合个人的开发经验来谈一下用法：</strong></span></p>
+<pre class="md-fences md-end-block ty-contain-cm modeLoaded"><span>   一般我们使用DTO类来继承entity实体类，在DTO类里放一些业务字段，并提供get、set方法。当我们在业务逻辑层或者交互层用到一些数据库中不存在的字段时，比如：我的一路顺风汽车电商项目中，使用DTO对，offset，limit,order,sort,search,这些字段在数据库是没有的 。我们就需要在DTO类里放这些字段，这些字段的意义就相当于一些经处理过的数据库字段，实质意义就是方便数据交互，提高效率。</span></pre>
+<p class="md-end-block md-p"><span class="md-plain">更多关于DTO的优化，可以看下面这个博客文章</span></p>
+<p class="md-end-block md-p"><span class="md-link"><a href="https://blog.csdn.net/yusimiao/article/details/90746891?utm_source=distribute.pc_relevant.none-task">https://blog.csdn.net/yusimiao/article/details/90746891?utm_source=distribute.pc_relevant.none-task</a></span></p>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain">Dozer 轻松高效玩转DTO(Data Transfer Object)</span></h4>
+{% endraw %}

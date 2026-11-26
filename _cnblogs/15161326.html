@@ -1,0 +1,54 @@
+---
+title: "压缩解压缩命令"
+date: 2021-08-19 13:36:00 +0800
+tags: ["【Linux】Linux基础"]
+excerpt: "tar命令 gz命令 bz2命令 bz命令 Z命令 zip命令 tar命令 解包：tar zxvf FileName.tar 打包：tar czvf FileName.tar DirName gz命令 解压1：gunzip FileName.gz 解压2：gzip -d FileName.gz 压缩"
+read_minutes: 1
+cnblogs_id: 15161326
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15161326.html"
+---
+{% raw %}
+<div class="toc-macro client-side-toc-macro conf-macro output-block hidden-outline" data-hasbody="false" data-headerelements="H1,H2,H3,H4,H5,H6,H7" data-macro-name="toc">
+<ul>
+<li><span class="toc-item-body" data-outline="1"><a class="toc-link" href="http://wiki.baidu.com/pages/viewpage.action?pageId=883728003#id-%E5%8E%8B%E7%BC%A9%E8%A7%A3%E5%8E%8B%E7%BC%A9%E5%91%BD%E4%BB%A4-tar%E5%91%BD%E4%BB%A4">tar命令</a></span></li>
+<li><span class="toc-item-body" data-outline="2"><a class="toc-link" href="http://wiki.baidu.com/pages/viewpage.action?pageId=883728003#id-%E5%8E%8B%E7%BC%A9%E8%A7%A3%E5%8E%8B%E7%BC%A9%E5%91%BD%E4%BB%A4-gz%E5%91%BD%E4%BB%A4">gz命令</a></span></li>
+<li><span class="toc-item-body" data-outline="3"><a class="toc-link" href="http://wiki.baidu.com/pages/viewpage.action?pageId=883728003#id-%E5%8E%8B%E7%BC%A9%E8%A7%A3%E5%8E%8B%E7%BC%A9%E5%91%BD%E4%BB%A4-bz2%E5%91%BD%E4%BB%A4">bz2命令</a></span></li>
+<li><span class="toc-item-body" data-outline="4"><a class="toc-link" href="http://wiki.baidu.com/pages/viewpage.action?pageId=883728003#id-%E5%8E%8B%E7%BC%A9%E8%A7%A3%E5%8E%8B%E7%BC%A9%E5%91%BD%E4%BB%A4-bz%E5%91%BD%E4%BB%A4">bz命令</a></span></li>
+<li><span class="toc-item-body" data-outline="5"><a class="toc-link" href="http://wiki.baidu.com/pages/viewpage.action?pageId=883728003#id-%E5%8E%8B%E7%BC%A9%E8%A7%A3%E5%8E%8B%E7%BC%A9%E5%91%BD%E4%BB%A4-Z%E5%91%BD%E4%BB%A4">Z命令</a></span></li>
+<li><span class="toc-item-body" data-outline="6"><a class="toc-link" href="http://wiki.baidu.com/pages/viewpage.action?pageId=883728003#id-%E5%8E%8B%E7%BC%A9%E8%A7%A3%E5%8E%8B%E7%BC%A9%E5%91%BD%E4%BB%A4-zip%E5%91%BD%E4%BB%A4">zip命令</a></span></li>
+</ul>
+</div>
+<h3 id="id-压缩解压缩命令-tar命令">tar命令</h3>
+<p>　　解包：tar zxvf FileName.tar</p>
+<p>　　打包：tar czvf FileName.tar DirName</p>
+<h3 id="id-压缩解压缩命令-gz命令">gz命令</h3>
+<p>　　解压1：gunzip FileName.gz</p>
+<p>　　解压2：gzip -d FileName.gz</p>
+<p>　　压缩：gzip FileName</p>
+<p>　　.tar.gz 和 .tgz</p>
+<p>　　解压：tar zxvf FileName.tar.gz</p>
+<p>　　压缩：tar zcvf FileName.tar.gz DirName</p>
+<p>   压缩多个文件：tar zcvf FileName.tar.gz DirName1 DirName2 DirName3 ...</p>
+<h3 id="id-压缩解压缩命令-bz2命令">bz2命令</h3>
+<p>　　解压1：bzip2 -d FileName.bz2</p>
+<p>　　解压2：bunzip2 FileName.bz2</p>
+<p>　　压缩： bzip2 -z FileName</p>
+<p>　　.tar.bz2</p>
+<p>　　解压：tar jxvf FileName.tar.bz2</p>
+<p>　　压缩：tar jcvf FileName.tar.bz2 DirName</p>
+<h3 id="id-压缩解压缩命令-bz命令">bz命令</h3>
+<p>　　解压1：bzip2 -d <a class="external-link" href="http://filename.bz/" rel="nofollow">FileName.bz</a></p>
+<p>　　解压2：bunzip2 <a class="external-link" href="http://filename.bz/" rel="nofollow">FileName.bz</a></p>
+<p>　　压缩：未知</p>
+<p>　　.<a class="external-link" href="http://tar.bz/" rel="nofollow">tar.bz</a></p>
+<p>　　解压：tar jxvf <a class="external-link" href="http://filename.tar.bz/" rel="nofollow">FileName.tar.bz</a></p>
+<h3 id="id-压缩解压缩命令-Z命令">Z命令</h3>
+<p>　　解压：uncompress FileName.Z</p>
+<p>　　压缩：compress FileName</p>
+<p>　　.tar.Z</p>
+<p>　　解压：tar Zxvf FileName.tar.Z</p>
+<p>　　压缩：tar Zcvf FileName.tar.Z DirName</p>
+<h3 id="id-压缩解压缩命令-zip命令">zip命令</h3>
+<p>　　解压：unzip FileName.zip</p>
+<p>　　压缩：zip FileName.zip DirName</p>
+{% endraw %}

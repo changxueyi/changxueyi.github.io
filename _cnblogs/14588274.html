@@ -1,0 +1,58 @@
+---
+title: "go语言time用法总结"
+date: 2021-03-28 12:33:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "1. time.Unix()函数返回公元1970年1月，1日，0时，0分，0秒以来的秒数 代码示例1： // UTC时间1970年1月1日0时0分45秒,所以会打印出 t:45 t, _ := time.ParseInLocation(\"2006-01-02 15:04:05\", \"1970-01-"
+read_minutes: 2
+cnblogs_id: 14588274
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14588274.html"
+---
+{% raw %}
+<p>1. time.Unix()函数返回公元1970年1月，1日，0时，0分，0秒以来的秒数</p>
+<p>代码示例1：</p>
+<p> // UTC时间1970年1月1日0时0分45秒,所以会打印出 t:45<br/>	t, _ := time.ParseInLocation("2006-01-02 15:04:05", "1970-01-01 00:00:45", time.UTC)<br/>	fmt.Println("t:", t.Unix())<br/>结果如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/9fc63528ab69d769.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>代码示例2：</p>
+<p>	// 本地时间1970年1月1日8时0分50秒,因为是中国时间是东八区,比UTC时间早8个小时<br/>	// 相当于UTC的"1970-01-01 08:00:50",所以会打印出 t:50<br/>	t, _ := time.ParseInLocation("2006-01-02 15:04:05", "1970-01-01 08:00:50", time.Local)<br/>	fmt.Println("t:", t.Unix())<br/>结果如下图：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/87b530fb2d134bf3.png"/></p>
+<p> </p>
+<p> </p>
+<p>2. time.Time()声明时，若未初始化则表示UTC时间，公元1年，1月，1日，0时，0分，0秒</p>
+<p>代码示例：</p>
+<p>	t1 := time.Time{}<br/>	t2 := time.Now()<br/>	t1Second := t1.Unix()<br/>	t2Second := t2.Unix()<br/>	fmt.Printf("t1:%v, t1Second:%v \n", t1, t1Second) // UTC时间1970-01-01 08:00:50的秒数为0,所以在此时间之前的为负值,且在int32范围之外<br/>	fmt.Printf("t2:%v, t2Second:%v \n", t2, t2Second)<br/>	fmt.Println("t2Second-t1Second=", t2Second-t1Second) // 所以会返回一个超大的值,已超过int32范围<br/>结果如下图：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/0cc9e092b780face.png"/></p>
+<p> </p>
+<p> </p>
+<p>3. 秒数转Duration，例如 dur := 2*time.Second + 500*time.Millisecond</p>
+<p>代码示例：</p>
+<p>	t1 := time.Now()                            // 当前时间<br/>	time.Sleep(3 * time.Second)                 // 休眠3秒<br/>	dur := 2*time.Second + 500*time.Millisecond // 规定间隔:2秒500毫秒<br/>	// 判断间隔时间<br/>	if time.Now().Sub(t1) &gt; dur {<br/>		fmt.Println("sleep over 2.5s")<br/>	}<br/>结果如下图：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/6da196fc29777593.png"/></p>
+<p> </p>
+<p> </p>
+<p>4. time.Duration 转秒数，接示例3：durSec := dur.Seconds()，返回值类型为float64类型</p>
+<p>代码示例：</p>
+<p>	dur := 2*time.Second + 500*time.Millisecond<br/>	durSec := dur.Seconds()<br/>	fmt.Println("durSec:", durSec)<br/>结果如下图：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/7d98b07f4b9c1665.png"/></p>
+<p> </p>
+<p> </p>
+<p>5. 时间字符串转为本地时间，比如 "2019-03-18 16:31:45"转为本地时间或UTC时间</p>
+<p>代码示例：</p>
+<p>	// 解析字符串 "2019-06-18 08:47:50"为本地时间<br/>	t, _ := time.ParseInLocation("2006-01-02 15:04:05", "2019-06-18 08:47:50", time.Local)<br/>	fmt.Println("t:", t)<br/>结果如下图：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/3b6b65630cd7d95b.png"/></p>
+<p> </p>
+<p> </p>
+<p>6. 比较两个时间Time是否相等</p>
+<p>代码示例：</p>
+<p>	// 解析字符串 "2019-06-18 08:47:50"为本地时间<br/>	t1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2019-06-18 08:47:50", time.Local)<br/>	t2, _ := time.ParseInLocation("2006-01-02 15:04:05", "2019-06-18 08:47:50", time.Local)<br/>	if t1.Equal(t2) {<br/>		fmt.Println("t1 == t2")<br/>	}<br/>结果如下图：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/017dd92d5df12991.png"/></p>
+<p> </p>
+<p> </p>
+<p>7. 得到当年，当月，当日，0时，0分，0秒的时间字符串</p>
+<p>代码示例：</p>
+<p>	t1 := time.Now()                                // 2019年6月18日<br/>	curDayStr := t1.Format("2006-01-02 00:00:00")   // 固定到天<br/>	curMonthStr := t1.Format("2006-01-00 00:00:00") // 固定到月<br/>	fmt.Printf("curDayStr:%v \n", curDayStr)<br/>	fmt.Printf("curMonthStr:%v \n", curMonthStr)<br/>结果如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d651e2406f4e7014.png"/></p>
+<p> </p>
+{% endraw %}

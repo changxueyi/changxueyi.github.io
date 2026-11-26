@@ -1,0 +1,124 @@
+---
+title: "快速排序"
+date: 2020-05-10 15:50:00 +0800
+tags: ["【算法】-- 数据结构与算法"]
+excerpt: "快速排序(QuickSort)划分的关键是要求出基准记录所在的位置pivotpos,编程时候的关键点 快速排序： 既然能把冒泡KO掉，马上就激起我们的兴趣，tnd快排咋这么快，一定要好好研究一下。 首先上图： 从图中我们可以看到： left指针，right指针，base参照数。 其实思想是蛮简单的，"
+read_minutes: 8
+cnblogs_id: 12863545
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12863545.html"
+---
+{% raw %}
+<p><strong>快速排序(QuickSort)<br/>划分的关键是要求出基准记录所在的位置pivotpos,编程时候的关键点</strong></p>
+<p>快速排序：</p>
+<p>既然能把冒泡KO掉，马上就激起我们的兴趣，tnd快排咋这么快，一定要好好研究一下。</p>
+<p>首先上图：    <img alt="" loading="lazy" src="/images/cnblogs/e8d17bcab33b5060.png"/></p>
+<p>从图中我们可以看到：</p>
+<p>left指针，right指针，base参照数。</p>
+<p>其实思想是蛮简单的，就是通过第一遍的遍历（让left和right指针重合）来找到数组的切割点。</p>
+<p>第一步：首先我们从数组的left位置取出该数（20）作为基准（base）参照物。</p>
+<p>第二步：从数组的right位置向前找，一直找到比（base）小的数，如果找到，将此数赋给left位置（也就是将10赋给20），此时数组为：10，40，50，10，60， left和right指针分别为前后的10。</p>
+<p>第三步：从数组的left位置向后找，一直找到比（base）大的数，如果找到，将此数赋给right的位置（也就是40赋给10），此时数组为：10，40，50，40，60，left和right指针分别为前后的40。</p>
+<p>第四步：重复“第二,第三“步骤，直到left和right指针重合，最后将（base）插入到40的位置，此时数组值为： 10，20，50，40，60，至此完成一次排序。</p>
+<p>第五步：此时20已经潜入到数组的内部，20的左侧一组数都比20小，20的右侧作为一组数都比20大，以20为切入点对左右两边数按照"第一，第二，第三，第四"步骤进行，最终快排大功告成。</p>
+<p>快速排序具有最好的平均性能（average behavior），但最坏性能（worst case behavior）和插入排序相同，也是O(n^2)。比如一个序列5,4,3,2,1，要排为1,2,3,4,5。按照快速排序方法，每次只会有一个数据进入正确顺序，不能把数据分成大小相当的两份，很明显，排序的过程就成了一个歪脖子树，树的深度为n，那时间复杂度就成了O(n^2)。尽管如此，需要排序的情况几乎都是乱序的，自然性能就保证了。据书上的测试图来看，在数据量小于20的时候，插入排序具有最好的性能。当大于20时，快速排序具有最好的性能，归并(merge sort)和堆排序(heap sort)也望尘莫及，尽管复杂度都为nlog2(n)。</p>
+<p><strong>1、算法思想</strong><br/>    　快速排序是C.R.A.Hoare于1962年提出的一种划分交换排序。它采用了一种分治的策略，通常称其为分治法(Divide-and-ConquerMethod)。<br/><br/>（1） 分治法的基本思想<br/>    　分治法的基本思想是：将原问题分解为若干个规模更小但结构与原问题相似的子问题。递归地解这些子问题，然后将这些子问题的解组合为原问题的解。<br/><br/>（2）快速排序的基本思想<br/>    　设当前待排序的无序区为R[low..high]，利用分治法可将快速排序的基本思想描述为：<br/><strong>①分解：</strong> <br/>    　在R[low..high]中任选一个记录作为基准(Pivot)，以此基准将当前无序区划分为左、右两个较小的子区间R[low..pivotpos-1)和R[pivotpos+1..high]，并使左边子区间中所有记录的关键字均小于等于基准记录(不妨记为pivot)的关键字pivot.key，右边的子区间中所有记录的关键字均大于等于pivot.key，而基准记录pivot则位于正确的位置(pivotpos)上，它无须参加后续的排序。<br/>  注意：<br/>    　划分的关键是要求出基准记录所在的位置pivotpos。划分的结果可以简单地表示为(注意pivot=R[pivotpos])：<br/>    　R[low..pivotpos-1].keys≤R[pivotpos].key≤R[pivotpos+1..high].keys<br/>                  其中low≤pivotpos≤high。<br/><strong>②求解：</strong> <br/>   　 通过递归调用快速排序对左、右子区间R[low..pivotpos-1]和R[pivotpos+1..high]快速排序。<strong>③组合：</strong> </p>
+<p>    　因为当"求解"步骤中的两个递归调用结束时，其左、右两个子区间已有序。对快速排序而言，"组合"步骤无须做什么，可看作是空操作。<br/><br/><strong>2、快速排序算法QuickSort</strong><br/>  void QuickSort(SeqList R，int low，int high)<br/>   { //对R[low..high]快速排序<br/>     int pivotpos； //划分后的基准记录的位置<br/>     if(low&lt;high){//仅当区间长度大于1时才须排序<br/>        pivotpos=Partition(R，low，high)； //对R[low..high]做划分<br/>        QuickSort(R，low，pivotpos-1)； //对左区间递归排序<br/>        QuickSort(R，pivotpos+1，high)； //对右区间递归排序<br/>      }<br/>    } //QuickSort<br/><br/>注意：<br/>    　为排序整个文件，只须调用QuickSort(R，1，n)即可完成对R[l..n]的排序。</p>
+<div class="cnblogs_code">
+<pre>#include&lt;stdio.h&gt;
+<span style="color: #0000ff;">void</span> quickSort(<span style="color: #0000ff;">int</span> a[],<span style="color: #0000ff;">int</span> left,<span style="color: #0000ff;">int</span><span style="color: #000000;"> right)
+{
+　　</span><span style="color: #0000ff;">int</span> i=<span style="color: #000000;">left;
+　　</span><span style="color: #0000ff;">int</span> j=<span style="color: #000000;">right;
+　　</span><span style="color: #0000ff;">int</span> temp=<span style="color: #000000;">a[left];
+　　</span><span style="color: #0000ff;">if</span>(left&gt;=<span style="color: #000000;">right)
+　　　　</span><span style="color: #0000ff;">return</span><span style="color: #000000;">;
+　　</span><span style="color: #0000ff;">while</span>(i!=<span style="color: #000000;">j)
+　　{
+　　　　</span><span style="color: #0000ff;">while</span>(i&lt;j&amp;&amp;a[j]&gt;=<span style="color: #000000;">temp) 
+　　　　j</span>--<span style="color: #000000;">;
+　　　　</span><span style="color: #0000ff;">if</span>(j&gt;<span style="color: #000000;">i)
+　　　　　　a[i]</span>=a[j];<span style="color: #008000;">//</span><span style="color: #008000;">a[i]已经赋值给temp,所以直接将a[j]赋值给a[i],赋值完之后a[j],有空位</span>
+　　　　<span style="color: #0000ff;">while</span>(i&lt;j&amp;&amp;a[i]&lt;=<span style="color: #000000;">temp)
+　　　　i</span>++<span style="color: #000000;">;
+　　　　</span><span style="color: #0000ff;">if</span>(i&lt;<span style="color: #000000;">j)
+　　　　　　a[j]</span>=<span style="color: #000000;">a[i];
+　　}
+　　a[i]</span>=temp;<span style="color: #008000;">//</span><span style="color: #008000;">把基准插入,此时i与j已经相等R[low..pivotpos-1].keys≤R[pivotpos].key≤R[pivotpos+1..high].keys</span>
+　　quickSort(a,left,i-<span style="color: #800080;">1</span>);<span style="color: #008000;">/*</span><span style="color: #008000;">递归左边</span><span style="color: #008000;">*/</span><span style="color: #000000;">
+　　quickSort(a,i</span>+<span style="color: #800080;">1</span>,right);<span style="color: #008000;">/*</span><span style="color: #008000;">递归右边</span><span style="color: #008000;">*/</span><span style="color: #000000;">
+}
+
+</span><span style="color: #0000ff;">int</span><span style="color: #000000;"> main()
+{
+</span><span style="color: #0000ff;">int</span> a[<span style="color: #800080;">9</span>]={<span style="color: #800080;">8</span>,<span style="color: #800080;">2</span>,<span style="color: #800080;">6</span>,<span style="color: #800080;">12</span>,<span style="color: #800080;">1</span>,<span style="color: #800080;">9</span>,<span style="color: #800080;">5</span>,<span style="color: #800080;">5</span>,<span style="color: #800080;">10</span><span style="color: #000000;">};
+</span><span style="color: #0000ff;">int</span><span style="color: #000000;"> i;
+quickSort(a,</span><span style="color: #800080;">0</span>,<span style="color: #800080;">8</span>);<span style="color: #008000;">/*</span><span style="color: #008000;">排好序的结果</span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">for</span>(i=<span style="color: #800080;">0</span>;i&lt;<span style="color: #800080;">8</span>;i++<span style="color: #000000;">)
+printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">%4d</span><span style="color: #800000;">"</span><span style="color: #000000;">,a[i]);
+getchar();
+</span><span style="color: #0000ff;">return</span> <span style="color: #800080;">0</span><span style="color: #000000;">;
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre>#include&lt;stdio.h&gt;
+
+<span style="color: #0000ff;">int</span> partition(<span style="color: #0000ff;">int</span> a[],<span style="color: #0000ff;">int</span> left,<span style="color: #0000ff;">int</span><span style="color: #000000;"> right)
+{
+    </span><span style="color: #0000ff;">int</span> i=<span style="color: #000000;">left;
+    </span><span style="color: #0000ff;">int</span> j=<span style="color: #000000;">right;
+    </span><span style="color: #0000ff;">int</span> temp=<span style="color: #000000;">a[i];
+    </span><span style="color: #0000ff;">while</span>(i&lt;<span style="color: #000000;">j)
+    {
+        </span><span style="color: #0000ff;">while</span>(i&lt;j &amp;&amp; a[j]&gt;=<span style="color: #000000;">temp)
+            j</span>--<span style="color: #000000;">;
+            </span><span style="color: #0000ff;">if</span>(i&lt;<span style="color: #000000;">j)
+                a[i]</span>=<span style="color: #000000;">a[j];
+        </span><span style="color: #0000ff;">while</span>(i&lt;j &amp;&amp; a[i]&lt;=<span style="color: #000000;">temp)
+            i</span>++<span style="color: #000000;">;
+            </span><span style="color: #0000ff;">if</span>(i&lt;<span style="color: #000000;">j)
+                a[j]</span>=<span style="color: #000000;">a[i];
+    }
+    a[i]</span>=<span style="color: #000000;">temp;
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> i;
+}
+</span><span style="color: #0000ff;">void</span> quickSort(<span style="color: #0000ff;">int</span> a[],<span style="color: #0000ff;">int</span> left,<span style="color: #0000ff;">int</span><span style="color: #000000;"> right)
+{
+    </span><span style="color: #0000ff;">int</span><span style="color: #000000;"> dp;
+    </span><span style="color: #0000ff;">if</span>(left&lt;<span style="color: #000000;">right)
+    {
+        dp</span>=<span style="color: #000000;">partition(a,left,right);
+        quickSort(a,left,dp</span>-<span style="color: #800080;">1</span><span style="color: #000000;">);
+        quickSort(a,dp</span>+<span style="color: #800080;">1</span><span style="color: #000000;">,right);
+    }
+}
+
+</span><span style="color: #0000ff;">int</span><span style="color: #000000;"> main()
+{
+    </span><span style="color: #0000ff;">int</span> a[<span style="color: #800080;">9</span>]={<span style="color: #800080;">5</span>,<span style="color: #800080;">4</span>,<span style="color: #800080;">9</span>,<span style="color: #800080;">1</span>,<span style="color: #800080;">7</span>,<span style="color: #800080;">6</span>,<span style="color: #800080;">2</span>,<span style="color: #800080;">3</span>,<span style="color: #800080;">8</span><span style="color: #000000;">};
+    quickSort(a,</span><span style="color: #800080;">0</span>,<span style="color: #800080;">8</span><span style="color: #000000;">);
+    </span><span style="color: #0000ff;">for</span>(<span style="color: #0000ff;">int</span> i=<span style="color: #800080;">0</span>;i&lt;<span style="color: #800080;">9</span>;i++<span style="color: #000000;">)
+    {
+        printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">%d </span><span style="color: #800000;">"</span><span style="color: #000000;">,a[i]);
+    }
+    </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">0</span><span style="color: #000000;">;
+}</span></pre>
+</div>
+<p>快速排序的最坏情况基于每次划分对主元的选择。基本的快速排序选取第一个元素作为主元。这样在数组已经有序的情况下，每次划分将得到最坏的结果。一种比较常见的优化方法是随机化算法，即随机选取一个元素作为主元。这种情况下虽然最坏情况仍然是O(n^2)，但最坏情况不再依赖于输入数据，而是由于随机函数取值不佳。实际上，随机化快速排序得到理论最坏情况的可能性仅为1/(2^n)。所以随机化快速排序可以对于绝大多数输入数据达到O(nlogn)的期望时间复杂度。一位前辈做出了一个精辟的总结：“随机化快速排序可以满足一个人一辈子的人品需求。”</p>
+<div class="spctrl"> </div>
+<p>　　随机化快速排序的唯一缺点在于，一旦输入数据中有很多的相同数据，随机化的效果将直接减弱。对于极限情况，即对于n个相同的数排序，随机化快速排序的时间复杂度将毫无疑问的降低到O(n^2)。解决方法是用一种方法进行扫描，使没有交换的情况下主元保留在原位置。</p>
+<p> </p>
+<h3 class="headline-2 bk-sidecatalog-title"><span class="headline-content">最坏情况</span></h3>
+<p>　　无论适用哪一种方法来选择pivot，由于我们不知道各个元素间的相对大小关系（若知道就已经排好序了），所以我们无法确定pivot的选择对划分造成的影响。因此对各种pivot选择法而言，最坏情况和最好情况都是相同的。我们从直觉上可以判断出最坏情况发生在每次划分过程产生的两个区间分别包含n-1个元素和1个元素的时候(设输入的表有n个元素)。下面我们暂时认为该猜测正确，在后文我们再详细证明该猜测。对于有n个元素的表L[p..r]，由于函数Partition的计算时间为θ(n)，所以快速排序在序坏情况下的复杂性有递归式如下T(1)=θ(1),T(n)=T(n-1)+T(1)+θ(n) (1)用迭代法可以解出上式的解为T(n)=θ(n2)。这个最坏情况运行时间与<a href="http://baike.baidu.com/view/396887.htm" target="_blank">插入排序</a>是一样的。</p>
+<div class="spctrl">下面我们来证明这种每次划分过程产生的两个区间分别包含n-1个元素和1个元素的情况就是最坏情况。</div>
+<div class="spctrl">设T(n)是过程Quick_Sort作用于规模为n的输入上的最坏情况的时间，则T(n)=max(T(q)+T(n-q))+θ(n),其中1≤q≤n-1 (2)我们假设对于任何k&lt;n，总有T(k)≤ck，其中c为常数；显然当k=1时是成立的。将归纳假设代入(2)，得到：</div>
+<div class="spctrl"> T(n)≤max(cq2+c(n-q)2)+θ(n)=c*max(q2+(n-q)2)+θ(n)；因为在[1,n-1]上q2+(n-q)2关于q递减，所以当q=1时q2+(n-q)2有最大值n2-2(n-1)。于是有：T(n)≤cn2-2c(n-1)+θ(n)≤cn2，只要c足够大，上面的第二个小于等于号就可以成立。于是对于所有的n都有T(n)≤cn。</div>
+<div class="spctrl"> 这样，排序算法的最坏情况运行时间为θ(n2)，且最坏情况发生在每次划分过程产生的两个区间分别包含n-1个元素和1个元素的时候。时间复杂度为o（n2）。</div>
+<h3 class="headline-2 bk-sidecatalog-title"><a name="4_2"></a><span class="headline-content">最好情况</span></h3>
+<p>如果每次划分过程产生的区间大小都为n/2，则快速排序法运行就快得多了。这时有T(n)=2T(n/2)+θ(n),T(1)=θ(1) (3)</p>
+<div class="spctrl">解得：T(n)=θ(nlogn)  快速排序法最佳情况下执行过程的递归树如下图所示，图中lgn表示以2位底的对数，而本文中用logn表示以2位底的对数.图2快速排序法最佳情况下执行过程的递归树，由于快速排序法也是基于比较的排序法，其运行时间为Ω(nlogn)，所以如果每次划分过程产生的区间大小都为n/2，则运行时间θ(nlogn)就是最好情况运行时间。但是，是否一定要每次平均划分才能达到最好情况呢？要理解这一点就必须理解对称性是如何在描述运行时间的递归式中反映的。我们假设每次划分过程都产生9:1的划分，乍一看该划分很不对称。我们可以得到递归式：</div>
+<div class="spctrl">    T(n)=T(n/10)+T(9n/10)+θ(n),T(1)=θ(1) (4)</div>
+<div class="spctrl"> 这个递归式对应的递归树如下图所示：</div>
+<div class="spctrl"> 图3(4)式对应的递归树</div>
+<div class="spctrl"> 请注意该树的每一层都有代价n，直到在深度log10n=θ(logn)处达到边界条件，以后各层代价至多为n。递归于深度log10/9n=θ(logn)处结束。这样，快速排序的总时间代价为T(n)=θ(nlogn)，从渐进意义上看就和划分是在中间进行的一样。事实上，即使是99:1的划分时间代价也为θ(nlogn)。其原因在于，任何一种按常数比例进行划分所产生的递归树的深度都为θ(nlogn)，其中每一层的代价为O(n)，因而不管常数比例是什么，总的运行时间都为θ(nlogn)，只不过其中隐含的常数因子有所不同。(关于算法复杂性的渐进阶，请参阅<a href="http://baike.baidu.com/view/729372.htm" target="_blank">算法的复杂性</a>)</div>
+<p> </p>
+{% endraw %}

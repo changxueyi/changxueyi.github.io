@@ -1,0 +1,60 @@
+---
+title: "闲谈：java中的值传递和引用传递有什么区别?"
+date: 2021-12-30 19:43:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "值传递： (形式参数类型是基本数据类型和String)：方法调用时，实际参数把它的值传递给对应的形式参数，形式参数只是用实际参数的值初始化自己的存储单元内容，是两个不同的存储单元，所以方法执行中形式参数值的改变不影响实际参数的值。 引用传递： (形式参数类型是引用数据类型参数除去String)：也称"
+read_minutes: 2
+cnblogs_id: 15750291
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15750291.html"
+---
+{% raw %}
+<p><strong>值传递：</strong></p>
+<p>       (形式参数类型是基本数据类型和String)：方法调用时，实际参数把它的值传递给对应的形式参数，形式参数只是用实际参数的值初始化自己的存储单元内容，是两个不同的存储单元，所以方法执行中形式参数值的改变不影响实际参数的值。</p>
+<p><strong>引用传递：</strong></p>
+<p>       (形式参数类型是引用数据类型参数除去String)：也称为传地址。方法调用时，实际参数是对象(或数组)，这时实际参数与形式参数指向同一个地址，在方法执行中，对形式参数的操作实际上就是对实际参数的操作，这个结果在方法结束后被保留了下来，所以方法执行中形式参数的改变将会影响实际参数。</p>
+<p>根据上面的概念，我们一起来写几个demo来真正体会java中的值传递和引用传递区别：</p>
+<p> </p>
+<p><strong>按值传递：指的是在方法调用时，传递的参数是按值的拷贝传递。传递的是值的拷贝，也就是说传递后就互不相关了。demo：</strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TempTest {
+   </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> test1(<span style="color: #0000ff;">int</span><span style="color: #000000;"> a){
+        a </span>= <span style="color: #800080;">5</span><span style="color: #000000;">;
+         System.</span><span style="color: #0000ff;">out</span>.println(<span style="color: #800000;">"</span><span style="color: #800000;">test1方法中的a=</span><span style="color: #800000;">"</span>+<span style="color: #000000;">a);
+      }
+     </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+         TempTest t </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> TempTest();
+         </span><span style="color: #0000ff;">int</span> a = <span style="color: #800080;">3</span><span style="color: #000000;">;
+         t.test1(a);</span><span style="color: #008000;">//</span><span style="color: #008000;">传递后，test1方法对变量值的改变不影响这里的a</span>
+         System.<span style="color: #0000ff;">out</span>.println(”main方法中的a=”+<span style="color: #000000;">a);
+   }
+ }</span></pre>
+</div>
+<p> </p>
+<p>运行结果是：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d3319ee01ab569eb.png"/></p>
+<p>引用传递：指的是在方法调用时，传递的是引用的地址，也就是变量所对应的内存空间的地址。，也就是说传递前和传递后都指向同一个引用（也就是同一个内存空间）。</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TempTest {
+       </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test1(A a){
+           a.age </span>= <span style="color: #800080;">20</span><span style="color: #000000;">;
+           System.</span><span style="color: #0000ff;">out</span>.println(<span style="color: #800000;">"</span><span style="color: #800000;">test1方法中的age=</span><span style="color: #800000;">"</span>+<span style="color: #000000;">a.age);
+      }
+      </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+          TempTest t </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> TempTest();
+          A a </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> A();
+         a.age </span>= <span style="color: #800080;">10</span><span style="color: #000000;">;
+       t.test1(a);
+        System.</span><span style="color: #0000ff;">out</span>.println(”main方法中的age=”+<span style="color: #000000;">a.age);
+      }
+   }
+   </span><span style="color: #0000ff;">class</span><span style="color: #000000;"> A{
+      </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">int</span> age = <span style="color: #800080;">0</span><span style="color: #000000;">;
+   }</span></pre>
+</div>
+<p> </p>
+<p>运行结果是：</p>
+<p><img alt="" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/899cabe89bdfa79b.png"/></p>
+<p>说明：</p>
+<p>（1）在Java里面，当调用方法时，如果传入的数值为基本数据类型（包含String类型），形式参数的改变对实际参数不影响，就是值传递。</p>
+<p>（2）在Java里面，当调用方法时，如果传入的数值为引用数据类型（String类型除外），形式参数的改变对实际参数有影响，就是引用传递。</p>
+{% endraw %}

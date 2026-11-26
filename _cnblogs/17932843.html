@@ -1,0 +1,63 @@
+---
+title: "【golang】怎么在Go语言中实现锁机制"
+date: 2023-12-28 15:38:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "Go语言的锁 在Go语言中，最常用的锁是互斥锁（Mutex）。互斥锁是一种特殊的二进制信号量，用于控制对共享资源的访问。Go语言通过标准库中的\"sync\"包提供了互斥锁的功能。互斥锁的类型定义如下： type Mutex struct { state int32 sema uint32 } 其中st"
+read_minutes: 2
+cnblogs_id: 17932843
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/17932843.html"
+---
+{% raw %}
+<p>Go语言的锁</p>
+<p>在Go语言中，最常用的锁是互斥锁（Mutex）。互斥锁是一种特殊的二进制信号量，用于控制对共享资源的访问。Go语言通过标准库中的"sync"包提供了互斥锁的功能。互斥锁的类型定义如下：</p>
+<pre>type Mutex struct {
+    state int32
+    sema  uint32
+}</pre>
+<p>其中state字段用于记录锁的状态，sema字段是一个信号量。</p>
+<p>在使用互斥锁之前，需要通过调用Lock方法获取锁。如果锁已经被其他协程持有，则当前协程将会被阻塞，等待锁的释放。例如：</p>
+<pre>var mu sync.Mutex
+// ...
+mu.Lock()
+// ...
+mu.Unlock()</pre>
+<p>在这段代码中，mu是一个互斥锁。mu.Lock()用于获取锁，如果锁已经被其他协程持有，则当前协程将会被阻塞。mu.Unlock()用于释放锁。</p>
+<p>这个机制非常简单，但实际上效率并不高。如果有很多协程试图获取同一个互斥锁，那么处理时就很容易产生拥塞，从而使得整个程序的效率降低。</p>
+<p>读写锁</p>
+<p>在一些需要进行读写操作的场景下，互斥锁的效率很低。因为互斥锁只能保证在同一时刻只有一个协程能够访问共享资源，读操作和写操作都需要先等待锁的释放。但是，如果只有读操作，则这种等待并没有必要。因为多个协程可以同时对同一个资源进行读操作，而不会对数据产生破坏性的修改。</p>
+<p>这时候就需要用到读写锁（RWMutex）。读写锁是一种特殊的互斥锁。一个资源可以被多个协程同时进行读操作，但只能被一个协程进行写操作。因此，在写操作时，所有读操作将会被阻塞，等待写操作结束。读写锁的类型定义如下：</p>
+<pre>type RWMutex struct {
+    w           Mutex // 用于写操作的互斥锁
+    writerSem   uint32
+    readerSem   uint32
+    readerCount int32  // 当前进行读操作的协程数量
+    readerWait  int32  // 等待读操作的协程数量
+}</pre>
+<p>读写锁有两种状态：读锁和写锁。读锁状态下，多个协程可以同时进行读操作；写锁状态下，只有一个协程可以进行写操作。同时，读写锁支持协程优先级的机制，这意味着等待时间更长的协程将会首先获取到锁。</p>
+<p>获取读锁的方法是RLock()，释放读锁的方法是RUnlock()；获取写锁的方法是Lock()，释放写锁的方法是Unlock()。举个例子：</p>
+<pre>var rw sync.RWMutex
+// ...
+func read() {
+    rw.RLock()
+    // ...
+    rw.RUnlock()
+}
+// ...
+func write() {
+    rw.Lock()
+    // ...
+    rw.Unlock()
+}</pre>
+<p>这段代码演示了如何在Go语言中使用读写锁。read()函数获取了读锁，同时可以被多个协程同时调用；而write()函数获取了写锁，在同一时刻只能有一个协程调用它。</p>
+<p>sync.Once</p>
+<p>sync.Once是一种非常有用的锁。它只会执行一次初始化操作。Once内部有一个布尔值，如果被锁定了，那么一旦调用失败后，后续调用都将立刻返回，不会重新执行初始化。</p>
+<pre>func singleton() {
+    var once sync.Once
+    once.Do(func() {
+        // 初始化对象
+    })
+    // 使用对象
+}</pre>
+<p>使用sync.Once可以避免在多个协程中重复执行初始化操作。</p>
+<iframe style="display: none !important;"></iframe>
+{% endraw %}

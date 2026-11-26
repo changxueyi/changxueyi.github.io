@@ -1,0 +1,12 @@
+---
+title: "PHP中=>和->以及::的用法"
+date: 2021-01-15 20:29:00 +0800
+tags: ["【PHP】-- PHP基础"]
+excerpt: "1、=>的用法在php中数组默认键名是整数，也可以自己定义任意字符键名（最好是有实际意义），如： $css=array('style'=>'0'，‘color’=>‘green‘)；则$css['style']=='0'，$css['color']=='green'。2、->的用法->用来引用对象的"
+read_minutes: 1
+cnblogs_id: 14284023
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14284023.html"
+---
+{% raw %}
+<p>1、=&gt;的用法<br/><br/>在php中数组默认键名是整数，也可以自己定义任意字符键名（最好是有实际意义），如：　<br/><br/><br/>$css=array('style'=&gt;'0'，‘color’=&gt;‘green‘)；<br/><br/>则$css['style']=='0'，$css['color']=='green'。<br/><br/>2、-&gt;的用法<br/><br/>-&gt;用来引用对象的成员（属性与方法）；<br/><br/>  $arr=['a'=&gt;123,'b'=&gt;456];//数组初始化<br/><br/>  echo $arr['a'];//数组引用<br/><br/>  print_r($arr);//查看数组<br/><br/>  class A{<br/><br/>    public $a=123;<br/><br/>    public $b=456;<br/><br/>  }<br/><br/>  $obj=new A();<br/><br/>  echo $obj-&gt;a;//对象引用<br/><br/>  print_r($obj);//查看对象<br/><br/>?&gt;<br/><br/>输出结果：<br/><br/><br/>123Array(<br/><br/>    [a] =&gt; 123<br/><br/>    [b] =&gt; 456)<br/><br/>123A Object(<br/><br/>    [a] =&gt; 123<br/><br/>    [b] =&gt; 456)<br/><br/>3、::的用法<br/><br/>双冒号操作符即作用域限定操作符Scope Resolution Operator可以访问静态、const和类中重写的属性与方法。</p>
+{% endraw %}

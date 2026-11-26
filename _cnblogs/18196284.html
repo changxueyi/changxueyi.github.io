@@ -1,0 +1,129 @@
+---
+title: "使用 Redis Zset 有序集合实现排行榜功能"
+date: 2024-05-16 16:58:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "一、前言 排行榜功能是非常常见的需求，例如商品售卖排行榜单、游戏中的积分排行榜、配送员完单排行榜等。实现排行榜功能需要高效地对大量数据进行排序和查询，如果直接进行数据库查询对应业务排行榜资源开销会非常大，一般会将对应榜单需要的数据做单独存储记录，查询时只要对榜单数据表进行遍历排序即可，因为榜单数据表"
+read_minutes: 3
+cnblogs_id: 18196284
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/18196284.html"
+---
+{% raw %}
+<p>一、前言<br/>      排行榜功能是非常常见的需求，例如商品售卖排行榜单、游戏中的积分排行榜、配送员完单排行榜等。实现排行榜功能需要高效地对大量数据进行排序和查询，如果直接进行数据库查询对应业务排行榜资源开销会非常大，一般会将对应榜单需要的数据做单独存储记录，查询时只要对榜单数据表进行遍历排序即可，因为榜单数据表的数据是无序的，还要对具体数据进行排序，并且每次数据变动都要更新表中数据，当数据量过大或者高并发时性能一般，要想高效地实现排行榜功能需要使用 Redis Zset 有序集合，可以非常高效方便地实现排行榜功能。</p>
+<p>需要Redis常用命令集文章可以查看：https://blog.csdn.net/weixin_44606481/article/details/133672258</p>
+<p>二、Redis Zset 的基本操作</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;"># 添加以一个过着多个元素，score为评分，集合按照从低到高及进行排序，评分可以重复
+zadd  &lt;key&gt; &lt;score1&gt; &lt;value1&gt; &lt;score2&gt; &lt;value2&gt;
+
+# 获取有序集合中成员的数量
+zcard &lt;key&gt;
+
+# 统计score评分在某个范围内的数据的数量
+zcount &lt;key&gt; &lt;min&gt; &lt;max&gt;
+
+# 查一定范围的元素，end为-1时，查询所有，按照分数从小到大排序,withscores加上他，连着评分一起查出
+zrange &lt;key&gt; &lt;start&gt; &lt;end&gt; [LIMIT offset count] [withscores]
+
+# 查一定范围的元素，end为-1时，查询所有，按照分数从大到小排序,withscores加上他，连着评分一起查出
+zrevrange &lt;key&gt; &lt;start&gt; &lt;end&gt; [LIMIT offset count] [withscores]
+
+# 查询score评分在某个范围内的数据，从小到大排序，min 和 max 可以是 -inf 和 +inf来表示无穷小和无穷大，withscores加上他，连着评分一起查出
+zrangebyscore &lt;key&gt; &lt;min&gt; &lt;max&gt; [withscores] [limit offset count]
+
+# 查询score评分在某个范围内的数据，从大到小排序，min 和 max 可以是 -inf 和 +inf来表示无穷小和无穷大，withscores加上他，连着评分一起查出
+zrevrangebyscore  &lt;key&gt; &lt;max&gt; &lt;min&gt; [withscores] [limit offset count]
+
+# 为元素的score加上指定的增量
+zincrby  &lt;key&gt; &lt;increment&gt; &lt;value&gt;
+
+# 删除数据
+zrem &lt;key&gt; &lt;value1&gt; &lt;value2&gt;
+
+# 返回集合中value的排名，按分数递增排序。分数值最小者排名为0
+zrank  &lt;key&gt; &lt;value&gt;
+
+# 返回集合中value的排名，按分数递减排序。分数值最大者排名为0
+zrevrank  &lt;key&gt; &lt;value&gt;
+</pre>
+</div>
+<p>三、通过Redis 命令模拟排行榜功能<br/>       这里模拟一个商品销量排行榜缓存key为PRODUCT:RANK:SALES，假设有6个商品，商品ID分别为 P001-P006。</p>
+<p>3.1、排行榜生成<br/>1、初始化排行榜数据（为了演示这里先给每个商品销量设置0，一般在业务中会先将数据库中的销量数据查询出来初始化到排行榜中）</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">127.0.0.1:6379&gt; zadd  PRODUCT:RANK:SALES 0 P001 0 P002 0 P003 0 P004 0 P005 0 P006
+(integer) 6
+</pre>
+</div>
+<p>　　</p>
+<ul>
+<li>2、给商品ID为P002、P005、P006的商品分别添加销量7、2、9</li>
+</ul>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">127.0.0.1:6379&gt; zincrby PRODUCT:RANK:SALES 7 P002
+"7"
+127.0.0.1:6379&gt; zincrby PRODUCT:RANK:SALES 2 P005
+"2"
+127.0.0.1:6379&gt; zincrby PRODUCT:RANK:SALES 9 P006
+"9"
+</pre>
+</div>
+<p>　</p>
+<h4>3.2、排行榜查询</h4>
+<ul>
+<li>1、查询排行榜全部数据按照分数从大到小排序
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">127.0.0.1:6379&gt; zrevrange PRODUCT:RANK:SALES 0 -1 withscores
+ 1) "P006"
+ 2) "9"
+ 3) "P002"
+ 4) "7"
+ 5) "P005"
+ 6) "2"
+ 7) "P004"
+ 8) "0"
+ 9) "P003"
+10) "0"
+11) "P001"
+12) "0"
+</pre>
+</div>
+<p>　　</p>
+</li>
+</ul>
+<p>　</p>
+<ul>
+<li>2、查询排行榜销量前三的数据按照分数从大到小排序</li>
+</ul>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">127.0.0.1:6379&gt; zrevrange PRODUCT:RANK:SALES 0 2 withscores
+1) "P006"
+2) "9"
+3) "P002"
+4) "7"
+5) "P005"
+6) "2"
+</pre>
+</div>
+<p>　　</p>
+<ul>
+<li>3、查询排行榜销量大于等于1的数据从小到大排序，并且进行分页，每页2条数据查询第1页</li>
+</ul>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;"># 不分页
+127.0.0.1:6379&gt; zrangebyscore PRODUCT:RANK:SALES 1 +inf withscores
+1) "P005"
+2) "2"
+3) "P002"
+4) "7"
+5) "P006"
+6) "9"
+# 分页 limit 0 2 （0：代表偏移量 2：显示条数）
+127.0.0.1:6379&gt; zrangebyscore PRODUCT:RANK:SALES 1 +inf withscores limit 0 2
+1) "P005"
+2) "2"
+3) "P002"
+4) "7"
+</pre>
+</div>
+<p>　　</p>
+<p>　　</p>
+{% endraw %}

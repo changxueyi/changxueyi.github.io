@@ -1,0 +1,232 @@
+---
+title: "@Configuration和@Component区别"
+date: 2020-11-22 22:35:00 +0800
+tags: ["【框架】-- SpringBoot"]
+excerpt: "@Configuration详解 一、@Configuration @Target({ElementType.TYPE}) @Retention(RetentionPolicy.RUNTIME) @Documented @Component public @interface Configurati"
+read_minutes: 3
+cnblogs_id: 14021985
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14021985.html"
+---
+{% raw %}
+<h2>@Configuration详解</h2>
+<p>一、@Configuration</p>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token annotation punctuation">@Target<span class="token punctuation">(<span class="token punctuation">{ElementType<span class="token punctuation">.TYPE<span class="token punctuation">}<span class="token punctuation">)
+<span class="token annotation punctuation">@Retention<span class="token punctuation">(RetentionPolicy<span class="token punctuation">.RUNTIME<span class="token punctuation">)
+<span class="token annotation punctuation">@Documented
+<span class="token annotation punctuation">@Component
+<span class="token keyword">public @<span class="token keyword">interface <span class="token class-name">Configuration <span class="token punctuation">{
+    <span class="token annotation punctuation">@AliasFor<span class="token punctuation">(
+        annotation <span class="token operator">= Component<span class="token punctuation">.<span class="token keyword">class
+    <span class="token punctuation">)
+    String <span class="token function">value<span class="token punctuation">(<span class="token punctuation">) <span class="token keyword">default <span class="token string">""<span class="token punctuation">;
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>可以看到在<code>@Configuration</code>注解中是包含<code>@Component</code>注解的，被<code>@Configuration</code>修饰的类被定义为一个Spring容器（应用上下文）</p>
+<p><code>@Configuration</code>就相当于Spring配置文件中的<code>&lt;beans /&gt;</code>标签，里面可以配置bean</p>
+<p>二、@Bean<br/>@Bean相当于Spring配置文件中的<code>&lt;bean /&gt;</code>标签可以在Spring容器中注入一个bean</p>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token annotation punctuation">@Configuration
+<span class="token keyword">public <span class="token keyword">class <span class="token class-name">TestConfiguration <span class="token punctuation">{
+
+    <span class="token annotation punctuation">@Bean
+    <span class="token keyword">public TestBean <span class="token function">testBean<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+        <span class="token keyword">return <span class="token keyword">new <span class="token class-name">TestBean<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+    <span class="token punctuation">}
+
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>上述代码相当于实例化一个TestBean并交给Spring容器管理</p>
+<p>ps：</p>
+<p>1、@Bean注解在返回实例的方法上，如果未通过@Bean指定bean的名称，则默认与方法名相同</p>
+<p>2、@Bean注解默认作用域为<code>单例singleton作用域</code>，可通过<code>@Scope(“prototype”)设置为多例</code></p>
+<p>三、依赖注入</p>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token annotation punctuation">@Configuration
+<span class="token keyword">public <span class="token keyword">class <span class="token class-name">TestConfiguration <span class="token punctuation">{
+
+    <span class="token annotation punctuation">@Bean
+    <span class="token keyword">public TestBean <span class="token function">testBean<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+        <span class="token keyword">return <span class="token keyword">new <span class="token class-name">TestBean<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+    <span class="token punctuation">}
+
+    <span class="token annotation punctuation">@Bean
+    <span class="token keyword">public DIBean <span class="token function">diBean<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+        <span class="token keyword">return <span class="token keyword">new <span class="token class-name">DIBean<span class="token punctuation">(<span class="token function">testBean<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">)<span class="token punctuation">;
+    <span class="token punctuation">}  
+
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>如上述代码，通过在@Bean方法中调用其他@Bean注解的方法来实现依赖注入</p>
+<p>ps：</p>
+<p>当需要<code>强制指定实例化bean的顺序</code>，可以<code>通过@Order或@DependsOn注解来实现</code></p>
+<p>除此之外我们还能使用@Component声明Spring Bean</p>
+<h2><a name="t1"></a><a name="t1"></a><a id="ConfigurationComponent_64"></a>@Configuration和@Component区别</h2>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token keyword">public <span class="token keyword">class <span class="token class-name">Car <span class="token punctuation">{
+
+	<span class="token keyword">private <span class="token keyword">int id<span class="token punctuation">;
+
+	<span class="token keyword">private String name<span class="token punctuation">;
+
+	<span class="token keyword">public <span class="token keyword">int <span class="token function">getId<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">return id<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public <span class="token keyword">void <span class="token function">setId<span class="token punctuation">(<span class="token keyword">int id<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">this<span class="token punctuation">.id <span class="token operator">= id<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public String <span class="token function">getName<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">return name<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public <span class="token keyword">void <span class="token function">setName<span class="token punctuation">(String name<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">this<span class="token punctuation">.name <span class="token operator">= name<span class="token punctuation">;
+	<span class="token punctuation">}
+
+<span class="token punctuation">}
+
+<span class="token keyword">public <span class="token keyword">class <span class="token class-name">Driver <span class="token punctuation">{
+
+	<span class="token keyword">private <span class="token keyword">int id<span class="token punctuation">;
+
+	<span class="token keyword">private String name<span class="token punctuation">;
+
+	<span class="token keyword">private Car car<span class="token punctuation">;
+
+	<span class="token keyword">public <span class="token keyword">int <span class="token function">getId<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">return id<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public <span class="token keyword">void <span class="token function">setId<span class="token punctuation">(<span class="token keyword">int id<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">this<span class="token punctuation">.id <span class="token operator">= id<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public String <span class="token function">getName<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">return name<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public <span class="token keyword">void <span class="token function">setName<span class="token punctuation">(String name<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">this<span class="token punctuation">.name <span class="token operator">= name<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public Car <span class="token function">getCar<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">return car<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token keyword">public <span class="token keyword">void <span class="token function">setCar<span class="token punctuation">(Car car<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token keyword">this<span class="token punctuation">.car <span class="token operator">= car<span class="token punctuation">;
+	<span class="token punctuation">}
+
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.annotation<span class="token punctuation">.Bean<span class="token punctuation">;
+<span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.annotation<span class="token punctuation">.Configuration<span class="token punctuation">;
+
+<span class="token annotation punctuation">@Configuration
+<span class="token keyword">public <span class="token keyword">class <span class="token class-name">MyTestConfig <span class="token punctuation">{
+
+	<span class="token annotation punctuation">@Bean
+	<span class="token keyword">public Driver <span class="token function">driver<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		Driver driver <span class="token operator">= <span class="token keyword">new <span class="token class-name">Driver<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setId<span class="token punctuation">(<span class="token number">1<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setName<span class="token punctuation">(<span class="token string">"driver"<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setCar<span class="token punctuation">(<span class="token function">car<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">)<span class="token punctuation">;
+		<span class="token keyword">return driver<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token annotation punctuation">@Bean
+	<span class="token keyword">public Car <span class="token function">car<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		Car car <span class="token operator">= <span class="token keyword">new <span class="token class-name">Car<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+		car<span class="token punctuation">.<span class="token function">setId<span class="token punctuation">(<span class="token number">1<span class="token punctuation">)<span class="token punctuation">;
+		car<span class="token punctuation">.<span class="token function">setName<span class="token punctuation">(<span class="token string">"car"<span class="token punctuation">)<span class="token punctuation">;
+		<span class="token keyword">return car<span class="token punctuation">;
+	<span class="token punctuation">}
+
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.annotation<span class="token punctuation">.Bean<span class="token punctuation">;
+<span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.annotation<span class="token punctuation">.Configuration<span class="token punctuation">;
+
+<span class="token annotation punctuation">@Component
+<span class="token keyword">public <span class="token keyword">class <span class="token class-name">MyTestConfig <span class="token punctuation">{
+
+	<span class="token annotation punctuation">@Bean
+	<span class="token keyword">public Driver <span class="token function">driver<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		Driver driver <span class="token operator">= <span class="token keyword">new <span class="token class-name">Driver<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setId<span class="token punctuation">(<span class="token number">1<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setName<span class="token punctuation">(<span class="token string">"driver"<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setCar<span class="token punctuation">(<span class="token function">car<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">)<span class="token punctuation">;
+		<span class="token keyword">return driver<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token annotation punctuation">@Bean
+	<span class="token keyword">public Car <span class="token function">car<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		Car car <span class="token operator">= <span class="token keyword">new <span class="token class-name">Car<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+		car<span class="token punctuation">.<span class="token function">setId<span class="token punctuation">(<span class="token number">1<span class="token punctuation">)<span class="token punctuation">;
+		car<span class="token punctuation">.<span class="token function">setName<span class="token punctuation">(<span class="token string">"car"<span class="token punctuation">)<span class="token punctuation">;
+		<span class="token keyword">return car<span class="token punctuation">;
+	<span class="token punctuation">}
+
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>上面两段代码除MyTestConfig类上的<code>注解不同之外其他都相同</code>，但Spring对两者的处理方式是完全不一样的。</p>
+<ul>
+<li>
+<p>第一段代码会像我们期望的一样正常运行，因为driver()这段代码中driver.setCar(car())方法会由Spring代理执行，</p>
+<p>Spring发现方法所请求的Bean已经在容器中，那么就直接返回容器中的Bean。所以全局只有一个Car对象的实例。</p>
+</li>
+<li>
+<p>第二段代码在执行driver() 时driver.setCar(car())不会被Spring代理，会直接调用car()方法获取一个全新的Car对象实例，所以全局会有多个Car对象的实例</p>
+</li>
+</ul>
+<p>造成这种差异的原因如下:</p>
+<p>概括就是 @Configuration 中所有带 @Bean 注解的方法都会被动态代理，因此调用该方法返回的都是同一个实例。</p>
+<p>其工作原理是：如果方式是首次被调用那么原始的方法体会被执行并且结果对象会被注册到Spring上下文中，之后所有的对该方法的调用仅仅只是从Spring上下文中取回该对象返回给调用者。</p>
+<p>在上面的第二段代码中，driver.setCar(car())只是纯JAVA方式的调用，多次调用该方法返回的是不同的对象实例。</p>
+<p>要修正第二段代码中的问题，可以使用@Autowired如下所示:</p>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.beans<span class="token punctuation">.factory<span class="token punctuation">.annotation<span class="token punctuation">.Autowired<span class="token punctuation">;
+<span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.annotation<span class="token punctuation">.Bean<span class="token punctuation">;
+<span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.annotation<span class="token punctuation">.Configuration<span class="token punctuation">;
+<span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.stereotype<span class="token punctuation">.Component<span class="token punctuation">;
+
+<span class="token comment">//@Configuration
+<span class="token annotation punctuation">@Component
+<span class="token keyword">public <span class="token keyword">class <span class="token class-name">MyTestConfig2 <span class="token punctuation">{
+
+	<span class="token annotation punctuation">@Autowired
+	Car car<span class="token punctuation">;
+	
+	<span class="token annotation punctuation">@Bean
+	<span class="token keyword">public Driver <span class="token function">driver<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		Driver driver <span class="token operator">= <span class="token keyword">new <span class="token class-name">Driver<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setId<span class="token punctuation">(<span class="token number">1<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setName<span class="token punctuation">(<span class="token string">"driver"<span class="token punctuation">)<span class="token punctuation">;
+		driver<span class="token punctuation">.<span class="token function">setCar<span class="token punctuation">(car<span class="token punctuation">)<span class="token punctuation">;
+		<span class="token keyword">return driver<span class="token punctuation">;
+	<span class="token punctuation">}
+
+	<span class="token annotation punctuation">@Bean
+	<span class="token keyword">public Car <span class="token function">car<span class="token punctuation">(<span class="token punctuation">) <span class="token punctuation">{
+		Car car <span class="token operator">= <span class="token keyword">new <span class="token class-name">Car<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">;
+		car<span class="token punctuation">.<span class="token function">setId<span class="token punctuation">(<span class="token number">1<span class="token punctuation">)<span class="token punctuation">;
+		car<span class="token punctuation">.<span class="token function">setName<span class="token punctuation">(<span class="token string">"car"<span class="token punctuation">)<span class="token punctuation">;
+		<span class="token keyword">return car<span class="token punctuation">;
+	<span class="token punctuation">}
+
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h2><a name="t2"></a><a name="t2"></a><a id="_227"></a>验证</h2>
+<pre class="prettyprint"><code class="prism language-java has-numbering"><span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.ApplicationContext<span class="token punctuation">;
+<span class="token keyword">import org<span class="token punctuation">.springframework<span class="token punctuation">.context<span class="token punctuation">.annotation<span class="token punctuation">.AnnotationConfigApplicationContext<span class="token punctuation">;
+
+<span class="token keyword">public <span class="token keyword">class <span class="token class-name">TestMain <span class="token punctuation">{
+
+	<span class="token keyword">public <span class="token keyword">static <span class="token keyword">void <span class="token function">main<span class="token punctuation">(String<span class="token punctuation">[<span class="token punctuation">] args<span class="token punctuation">) <span class="token punctuation">{
+		<span class="token comment">// TODO Auto-generated method stub
+		<span class="token comment">// @Configuration注解的spring容器加载方式，用AnnotationConfigApplicationContext替换ClassPathXmlApplicationContext
+		ApplicationContext context <span class="token operator">= <span class="token keyword">new <span class="token class-name">AnnotationConfigApplicationContext<span class="token punctuation">(MyTestConfig<span class="token punctuation">.<span class="token keyword">class<span class="token punctuation">)<span class="token punctuation">;
+
+		<span class="token comment">// 获取bean
+		Driver driver <span class="token operator">= <span class="token punctuation">(Driver<span class="token punctuation">) context<span class="token punctuation">.<span class="token function">getBean<span class="token punctuation">(<span class="token string">"driver"<span class="token punctuation">)<span class="token punctuation">;
+
+		<span class="token comment">// 获取bean
+		Car car <span class="token operator">= <span class="token punctuation">(Car<span class="token punctuation">) context<span class="token punctuation">.<span class="token function">getBean<span class="token punctuation">(<span class="token string">"car"<span class="token punctuation">)<span class="token punctuation">;
+
+		<span class="token keyword">boolean result <span class="token operator">= driver<span class="token punctuation">.<span class="token function">getCar<span class="token punctuation">(<span class="token punctuation">) <span class="token operator">== car<span class="token punctuation">;
+		System<span class="token punctuation">.out<span class="token punctuation">.<span class="token function">println<span class="token punctuation">(result <span class="token operator">? <span class="token string">"同一个car" <span class="token operator">: <span class="token string">"不同的car"<span class="token punctuation">)<span class="token punctuation">;
+
+	<span class="token punctuation">}
+
+<span class="token punctuation">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+{% endraw %}

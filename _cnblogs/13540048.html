@@ -1,0 +1,101 @@
+---
+title: "Map对象中的keyset()、entryset()和Map.Entry"
+date: 2020-08-21 11:22:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "一 Map对象中的keySet（）和entrySet（） 1. keySet（） public static void main(String[] args) { Map<String, String> map = new HashMap<String, String>(); map.put(\"01"
+read_minutes: 3
+cnblogs_id: 13540048
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13540048.html"
+tags_inferred: true
+---
+{% raw %}
+<h1>一 Map对象中的keySet（）和entrySet（）</h1>
+<h2><a name="t1"></a><a name="t1"></a>1. keySet（）</h2>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+    Map</span>&lt;String, String&gt; map = <span style="color: #0000ff;">new</span> HashMap&lt;String, String&gt;<span style="color: #000000;">();
+    map.put(</span>"01", "qwe"<span style="color: #000000;">);
+    map.put(</span>"02", "asd"<span style="color: #000000;">);
+    map.put(</span>"03", "zxc"<span style="color: #000000;">);
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 先获取map集合的所有键的set集合，即为map中所有key值得集合</span>
+    Set&lt;String&gt; keySet =<span style="color: #000000;"> map.keySet();
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 有了set集合，就可以获取其迭代器</span>
+    Iterator&lt;String&gt; it =<span style="color: #000000;"> keySet.iterator();
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> (it.hasNext()) {
+        String key </span>=<span style="color: #000000;"> it.next();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 有了键可以通过map集合的get方法获取其对应的值</span>
+        String value =<span style="color: #000000;"> map.get(key);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获得key和value值</span>
+        System.out.println("key:" + key + "--&gt;value:" +<span style="color: #000000;"> value);
+    }
+}</span></pre>
+</div>
+<p> </p>
+<p>keySet（）返回的是map对象的key值的set集合</p>
+<h2><a name="t2"></a><a name="t2"></a>2. entrySet（）</h2>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+        Map</span>&lt;String, String&gt; map = <span style="color: #0000ff;">new</span> HashMap&lt;String, String&gt;<span style="color: #000000;">();
+        map.put(</span>"01", "qwe"<span style="color: #000000;">);
+        map.put(</span>"02", "asd"<span style="color: #000000;">);
+        map.put(</span>"03", "zxc"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 通过entrySet()方法将map集合中的映射关系取出（这个关系就是Map.Entry类型）</span>
+        Set&lt;Map.Entry&lt;String, String&gt;&gt; entrySet =<span style="color: #000000;"> map.entrySet();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 将关系集合entryset进行迭代，存放到迭代器中</span>
+        Iterator&lt;Map.Entry&lt;String, String&gt;&gt; it2 =<span style="color: #000000;"> entrySet.iterator();
+        </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> (it2.hasNext()) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取Map.Entry关系对象me</span>
+            Map.Entry&lt;String, String&gt; me =<span style="color: #000000;"> it2.next();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 通过关系对像获取key</span>
+            String key2 =<span style="color: #000000;"> me.getKey();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 通过关系对像获取value</span>
+            String value2 =<span style="color: #000000;"> me.getValue();
+            System.out.println(</span>"key:" + key2 + "--&gt;value:" +<span style="color: #000000;"> value2);
+        }
+    }</span></pre>
+</div>
+<p> </p>
+<p>entrySet()返回映射所包含的映射关系的Set集合（一个关系就是一个键-值对），就是把(key-value)作为一个整体一对一对地存放到Set集合当中的。</p>
+<h2><a name="t3"></a><a name="t3"></a>3.总结</h2>
+<p>虽然使用keyset及entryset来进行遍历能取得相同的结果，但两者的遍历速度是有差别的。<br/>               keySet():迭代后只能通过get()取key；再根据key值取value。<br/>               entrySet()：迭代后可以e.getKey()，e.getValue()取key和value。</p>
+<p>同时，keySet()的速度比entrySet()慢了很多，也就是keySet方式遍历Map的性能不如entrySet性能好<br/>为了提高性能，以后多考虑用entrySet()方式来进行遍历。</p>
+<p> </p>
+<h1><a name="t4"></a><a name="t4"></a>二 Map.Entry</h1>
+<p> Map是java中的接口，Map.Entry是Map的一个内部接口。</p>
+<p>Map提供了一些常用方法，如keySet()、entrySet()等方法，keySet()方法返回值是Map中key值的集合；entrySet()的返回值也是返回一个Set集合，此集合的类型为Map.Entry。</p>
+<p>Map.Entry是Map声明的一个内部接口，此接口为泛型，定义为Entry&lt;K,V&gt;。它表示Map中的一个实体（一个key-value对）。接口中有getKey(),getValue方法。</p>
+<p>遍历Map对象的常用方法除了以上两种外，还有一种是单纯的遍历value值。Map有一个values方法，返回的是value的Collection集合。通过遍历Collection也可以遍历value。</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+        Map</span>&lt;String, String&gt; map = <span style="color: #0000ff;">new</span> HashMap&lt;String, String&gt;<span style="color: #000000;">();
+        map.put(</span>"01", "qwe"<span style="color: #000000;">);
+        map.put(</span>"02", "asd"<span style="color: #000000;">);
+        map.put(</span>"03", "zxc"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 创建一个Collection集合，存放map的value值</span>
+        Collection&lt;String&gt; c =<span style="color: #000000;"> map.values();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 通过遍历Collection也可以遍历value</span>
+        Iterator&lt;String&gt; it =<span style="color: #000000;"> c.iterator();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 该方法只能遍历value值，不能遍历key值</span>
+        <span style="color: #0000ff;">while</span><span style="color: #000000;"> (it.hasNext()) {
+            Object value </span>=<span style="color: #000000;"> it.next();
+            System.out.println(</span>"value:" +<span style="color: #000000;"> value);
+        }
+    }</span></pre>
+</div>
+<p> </p>
+<p>在遍历Map对象时，先从Map对象中取出key值之后，还必须每次重复返回到Map中取得相对的值，这是很繁琐和费时的。</p>
+<p>幸运的是，Map类提供了一个称为entrySet()的方法，这个方法返回一个Map.Entry实例化后的对象集。 接着，Map.Entry类提供了一个getKey()方法和一个getValue()方法。</p>
+<div class="cnblogs_code">
+<pre>Set entries =<span style="color: #000000;"> map.entrySet( );
+    </span><span style="color: #0000ff;">if</span>(entries != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+    Iterator iterator </span>=<span style="color: #000000;"> entries.iterator( );
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;">(iterator.hasNext( )) {
+        Map.Entry entry </span>=<span style="color: #000000;">iterator.next( );
+        Object key </span>=<span style="color: #000000;"> entry.getKey( );
+        Object value </span>=<span style="color: #000000;"> entry.getValue();
+        </span><span style="color: #008000;">//
+</span><span style="color: #000000;">}
+}</span></pre>
+</div>
+<p>尽管增加了一行代码，我们却省略了许多对Map不必要的“get”调用。同时，提供给开发人员一个同时保持了关键字和其对应的值的类。Map.Entry同时也提供了一个setValue（）方法，程序员可以使用它修改map里面的值。</p>
+{% endraw %}

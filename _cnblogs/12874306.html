@@ -1,0 +1,378 @@
+---
+title: "Spring中Bean的生命周期"
+date: 2020-05-12 09:40:00 +0800
+tags: ["【框架】-- Spring"]
+excerpt: "前言 这其实是一道面试题，是我在面试百度的时候被问到的，当时没有答出来(因为自己真的很菜)，后来在网上寻找答案，看到也是一头雾水，直到看到了《Spring in action》这本书，书上有对Bean声明周期的大致解释，但是没有代码分析，所以就自己上网寻找资料，一定要把这个Bean生命周期弄明白！"
+read_minutes: 8
+cnblogs_id: 12874306
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12874306.html"
+---
+{% raw %}
+<h2>前言</h2>
+<p>这其实是一道面试题，是我在面试百度的时候被问到的，当时没有答出来(因为自己真的很菜)，后来在网上寻找答案，看到也是一头雾水，直到看到了《Spring in action》这本书，书上有对Bean声明周期的大致解释，但是没有代码分析，所以就自己上网寻找资料，一定要把这个Bean生命周期弄明白！</p>
+<p>网上大部分都是验证的Bean 在面试问的生命周期，其实查阅JDK还有一个完整的Bean生命周期，这同时也验证了书是具有片面性的，最fresh 的资料还是查阅原始JDK!!!</p>
+<h2>一、Bean 的完整生命周期</h2>
+<p>在传统的Java应用中，bean的生命周期很简单，使用Java关键字 new 进行Bean 的实例化，然后该Bean 就能够使用了。一旦bean不再被使用，则由Java自动进行垃圾回收。</p>
+<p>相比之下，Spring管理Bean的生命周期就复杂多了，正确理解Bean 的生命周期非常重要，因为Spring对Bean的管理可扩展性非常强，下面展示了一个Bean的构造过程</p>
+<p><img alt="深究Spring中Bean的生命周期" class="rich_pages" loading="lazy" referrerpolicy="no-referrer" src="https://www.javazhiyin.com/wp-content/uploads/2019/05/java0-1558500658.jpg" title="深究Spring中Bean的生命周期"/></p>
+<p><strong>Bean 的生命周期</strong></p>
+<p>如上图所示，Bean 的生命周期还是比较复杂的，下面来对上图每一个步骤做文字描述:</p>
+<ol class="list-paddingleft-2">
+<li>
+<p>Spring启动，查找并加载需要被Spring管理的bean，进行Bean的实例化</p>
+</li>
+<li>
+<p>Bean实例化后对将Bean的引入和值注入到Bean的属性中</p>
+</li>
+<li>
+<p>如果Bean实现了BeanNameAware接口的话，Spring将Bean的Id传递给setBeanName()方法</p>
+</li>
+<li>
+<p>如果Bean实现了BeanFactoryAware接口的话，Spring将调用setBeanFactory()方法，将BeanFactory容器实例传入</p>
+</li>
+<li>
+<p>如果Bean实现了ApplicationContextAware接口的话，Spring将调用Bean的setApplicationContext()方法，将bean所在应用上下文引用传入进来。</p>
+</li>
+<li>
+<p>如果Bean实现了BeanPostProcessor接口，Spring就将调用他们的postProcessBeforeInitialization()方法。</p>
+</li>
+<li>
+<p>如果Bean 实现了InitializingBean接口，Spring将调用他们的afterPropertiesSet()方法。类似的，如果bean使用init-method声明了初始化方法，该方法也会被调用</p>
+</li>
+<li>
+<p>如果Bean 实现了BeanPostProcessor接口，Spring就将调用他们的postProcessAfterInitialization()方法。</p>
+</li>
+<li>
+<p>此时，Bean已经准备就绪，可以被应用程序使用了。他们将一直驻留在应用上下文中，直到应用上下文被销毁。</p>
+</li>
+<li>
+<p>如果bean实现了DisposableBean接口，Spring将调用它的destory()接口方法，同样，如果bean使用了destory-method 声明销毁方法，该方法也会被调用。</p>
+</li>
+</ol>
+<blockquote>
+<p><strong>上面是Spring 中Bean的核心接口和生命周期，面试回答上述过程已经足够了。但是翻阅JavaDoc文档发现除了以上接口外，还有另外的初始化过程涉及的接口：</strong></p>
+<p><strong>摘自org.springframework.beans.factory.BeanFactory， 全部相关接口如下，上述已有的就不用着重标注，把额外的相关接口着重标注下</strong></p>
+</blockquote>
+<p><img alt="深究Spring中Bean的生命周期" class="rich_pages" loading="lazy" referrerpolicy="no-referrer" src="https://www.javazhiyin.com/wp-content/uploads/2019/05/java10-1558500659.jpg" title="深究Spring中Bean的生命周期"/></p>
+<p><strong>Bean 完整的生命周期</strong></p>
+<p>文字解释如下：</p>
+<p>————————————初始化————————————</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>BeanNameAware.setBeanName() 在创建此bean的bean工厂中设置bean的名称，在普通属性设置之后调用，在InitializinngBean.afterPropertiesSet()方法之前调用</p>
+</li>
+<li>
+<p><code>BeanClassLoaderAware.setBeanClassLoader()</code>: 在普通属性设置之后，InitializingBean.afterPropertiesSet()之前调用</p>
+</li>
+<li>
+<p>BeanFactoryAware.setBeanFactory() : 回调提供了自己的bean实例工厂，在普通属性设置之后，在InitializingBean.afterPropertiesSet()或者自定义初始化方法之前调用</p>
+</li>
+<li>
+<p><code>EnvironmentAware.setEnvironment()</code>: 设置environment在组件使用时调用</p>
+</li>
+<li>
+<p><code>EmbeddedValueResolverAware.setEmbeddedValueResolver()</code>: 设置StringValueResolver 用来解决嵌入式的值域问题</p>
+</li>
+<li>
+<p><code>ResourceLoaderAware.setResourceLoader()</code>: 在普通bean对象之后调用，在afterPropertiesSet 或者自定义的init-method 之前调用，在 ApplicationContextAware 之前调用。</p>
+</li>
+<li>
+<p><code>ApplicationEventPublisherAware.setApplicationEventPublisher()</code>: 在普通bean属性之后调用，在初始化调用afterPropertiesSet 或者自定义初始化方法之前调用。在 ApplicationContextAware 之前调用。</p>
+</li>
+<li>
+<p><code>MessageSourceAware.setMessageSource()</code>: 在普通bean属性之后调用，在初始化调用afterPropertiesSet 或者自定义初始化方法之前调用，在 ApplicationContextAware 之前调用。</p>
+</li>
+<li>
+<p>ApplicationContextAware.setApplicationContext(): 在普通Bean对象生成之后调用，在InitializingBean.afterPropertiesSet之前调用或者用户自定义初始化方法之前。在ResourceLoaderAware.setResourceLoader，ApplicationEventPublisherAware.setApplicationEventPublisher，MessageSourceAware之后调用。</p>
+</li>
+<li>
+<p><code>ServletContextAware.setServletContext()</code>: 运行时设置ServletContext，在普通bean初始化后调用，在InitializingBean.afterPropertiesSet之前调用，在 ApplicationContextAware 之后调用<strong>注：是在WebApplicationContext 运行时</strong></p>
+</li>
+<li>
+<p>BeanPostProcessor.postProcessBeforeInitialization() : 将此BeanPostProcessor 应用于给定的新bean实例 在任何bean初始化回调方法(像是InitializingBean.afterPropertiesSet或者自定义的初始化方法）之前调用。这个bean将要准备填充属性的值。返回的bean示例可能被普通对象包装，默认实现返回是一个bean。</p>
+</li>
+<li>
+<p>BeanPostProcessor.postProcessAfterInitialization() : 将此BeanPostProcessor 应用于给定的新bean实例 在任何bean初始化回调方法(像是InitializingBean.afterPropertiesSet或者自定义的初始化方法)之后调用。这个bean将要准备填充属性的值。返回的bean示例可能被普通对象包装</p>
+</li>
+<li>
+<p>InitializingBean.afterPropertiesSet(): 被BeanFactory在设置所有bean属性之后调用(并且满足BeanFactory 和 ApplicationContextAware)。</p>
+</li>
+</ul>
+<p>————————————销毁————————————</p>
+<p>在BeanFactory 关闭的时候，Bean的生命周期会调用如下方法:</p>
+<ul class="list-paddingleft-2">
+<li>
+<p><code>DestructionAwareBeanPostProcessor.postProcessBeforeDestruction()</code>: 在销毁之前将此BeanPostProcessor 应用于给定的bean实例。能够调用自定义回调，像是DisposableBean 的销毁和自定义销毁方法，这个回调仅仅适用于工厂中的单例bean(包括内部bean)</p>
+</li>
+<li>
+<p>实现了自定义的destory()方法</p>
+</li>
+</ul>
+<h2>二、Bean 的生命周期验证</h2>
+<p>为了验证Bean生命周期的过程，有两种形式：一种是为面试而准备的，一种是为了解全过程而准备的，下面来看代码：</p>
+<p>Book.class</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> Book <span style="color: #0000ff;">implements</span><span style="color: #000000;"> BeanNameAware,BeanFactoryAware,
+        ApplicationContextAware,InitializingBean,DisposableBean {
+
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String bookName;
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Book(){
+        System.out.println(</span>"Book Initializing "<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setBeanFactory(BeanFactory beanFactory) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> BeansException {
+        System.out.println(</span>"Book.setBeanFactory invoke"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setBeanName(String name) {
+        System.out.println(</span>"Book.setBeanName invoke"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> destroy() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        System.out.println(</span>"Book.destory invoke"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> afterPropertiesSet() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        System.out.println(</span>"Book.afterPropertiesSet invoke"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setApplicationContext(ApplicationContext applicationContext) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> BeansException {
+        System.out.println(</span>"Book.setApplicationContext invoke"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String getBookName() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> bookName;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setBookName(String bookName) {
+        </span><span style="color: #0000ff;">this</span>.bookName =<span style="color: #000000;"> bookName;
+        System.out.println(</span>"setBookName: Book name has set."<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> myPostConstruct(){
+        System.out.println(</span>"Book.myPostConstruct invoke"<span style="color: #000000;">);
+    }
+
+     </span><span style="color: #008000;">//</span><span style="color: #008000;"> 自定义初始化方法</span>
+<span style="color: #000000;">    @PostConstruct
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> springPostConstruct(){
+        System.out.println(</span>"@PostConstruct"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> myPreDestory(){
+        System.out.println(</span>"Book.myPreDestory invoke"<span style="color: #000000;">);
+        System.out.println(</span>"---------------destroy-----------------"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 自定义销毁方法</span>
+<span style="color: #000000;">    @PreDestroy
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> springPreDestory(){
+        System.out.println(</span>"@PreDestory"<span style="color: #000000;">);
+    }
+
+    @Override
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">void</span> finalize() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Throwable {
+        System.out.println(</span>"------inside finalize-----"<span style="color: #000000;">);
+    }
+}</span></pre>
+</div>
+<p>自定义实现BeanPostProcessor 的MyBeanPostProcessor：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> MyBeanPostProcessor <span style="color: #0000ff;">implements</span><span style="color: #000000;"> BeanPostProcessor {
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 容器加载的时候会加载一些其他的bean，会调用初始化前和初始化后方法
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 这次只关注book(bean)的生命周期</span>
+    <span style="color: #0000ff;">public</span> Object postProcessBeforeInitialization(Object bean, String beanName) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> BeansException {
+        </span><span style="color: #0000ff;">if</span>(bean <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> Book){
+            System.out.println(</span>"MyBeanPostProcessor.postProcessBeforeInitialization"<span style="color: #000000;">);
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> bean;
+    }
+
+    </span><span style="color: #0000ff;">public</span> Object postProcessAfterInitialization(Object bean, String beanName) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> BeansException {
+        </span><span style="color: #0000ff;">if</span>(bean <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> Book){
+            System.out.println(</span>"MyBeanPostProcessor.postProcessAfterInitialization"<span style="color: #000000;">);
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> bean;
+    }
+}</span></pre>
+</div>
+<p>在resources 目录下新建Bean-Lifecycle.xml</p>
+<div class="cnblogs_code">
+<pre>&lt;beans xmlns="http://www.springframework.org/schema/beans"<span style="color: #000000;">
+       xmlns:xsi</span>="http://www.w3.org/2001/XMLSchema-instance"<span style="color: #000000;">
+       xmlns:context</span>="http://www.springframework.org/schema/context"<span style="color: #000000;">
+       xsi:schemaLocation</span>="http://www.springframework.org/schema/beans
+http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/beans/spring-beans-2.5.xsd </span><span style="color: #008000; text-decoration: underline;">http://www.springframework.org/schema/context</span> <span style="color: #008000; text-decoration: underline;">http://www.springframework.org/schema/context/spring-context.xsd</span><span style="color: #008000;">"&gt;</span>
+
+      &lt;!-- 扫描bean --&gt;
+    &lt;context:component-scan base-<span style="color: #0000ff;">package</span>="com.bean.lifecycle"/&gt;
+
+    &lt;!-- 实现了用户自定义初始化和销毁方法 --&gt;
+    &lt;bean id="book" <span style="color: #0000ff;">class</span>="com.bean.lifecycle.Book" init-method="myPostConstruct" destroy-method="myPreDestory"&gt;
+          &lt;!-- 注入bean 属性名称 --&gt;
+        &lt;property name="bookName" value="thingking in java" /&gt;
+    &lt;/bean&gt;
+
+      &lt;!--引入自定义的BeanPostProcessor--&gt;
+    &lt;bean <span style="color: #0000ff;">class</span>="com.bean.lifecycle.MyBeanPostProcessor"/&gt;
+
+&lt;/beans&gt;</pre>
+</div>
+<p>做一个启动类的测试，新建SpringBeanLifecycleApplication</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> SpringBeanLifecycleApplication {
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] args) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> InterruptedException {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 为面试而准备的Bean生命周期加载过程</span>
+        ApplicationContext context = <span style="color: #0000ff;">new</span> ClassPathXmlApplicationContext("Bean-Lifecycle.xml"<span style="color: #000000;">);
+        Book book </span>= (Book)context.getBean("book"<span style="color: #000000;">);
+        System.out.println(</span>"Book name = " +<span style="color: #000000;"> book.getBookName());
+        ((ClassPathXmlApplicationContext) context).destroy();
+
+    }
+
+}</span></pre>
+</div>
+<p>启动测试，输出结果如下：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">Book Initializing 
+setBookName: Book name has set.
+Book.setBeanName invoke
+Book.setBeanFactory invoke
+Book.setApplicationContext invoke
+MyBeanPostProcessor.postProcessBeforeInitialization
+@PostConstruct
+Book.afterPropertiesSet invoke
+Book.myPostConstruct invoke
+MyBeanPostProcessor.postProcessAfterInitialization
+Book name </span>=<span style="color: #000000;"> thingking in java
+
+@PreDestory
+Book.destory invoke
+Book.myPreDestory invoke
+</span>---------------destroy-----------------</pre>
+</div>
+<p>为了验证Bean完整的生命周期，需要新建一个SubBookClass 继承Book类</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> SubBookClass <span style="color: #0000ff;">extends</span> Book <span style="color: #0000ff;">implements</span><span style="color: #000000;"> BeanClassLoaderAware,
+        EnvironmentAware,EmbeddedValueResolverAware,ResourceLoaderAware,
+        ApplicationEventPublisherAware,MessageSourceAware{
+
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String bookSystem;
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String getBookSystem() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> bookSystem;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setBookSystem(String bookSystem) {
+        System.out.println(</span>"设置BookSystem 的属性值"<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">this</span>.bookSystem =<span style="color: #000000;"> bookSystem;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setBeanClassLoader(ClassLoader classLoader) {
+        System.out.println(</span>"SubBookClass.setBeanClassLoader() 方法被调用了"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
+        System.out.println(</span>"SubBookClass.setApplicationEventPublisher() 方法被调用了"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setEmbeddedValueResolver(StringValueResolver resolver) {
+        System.out.println(</span>"SubBookClass.setEmbeddedValueResolver() 方法被调用了"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setEnvironment(Environment environment) {
+        System.out.println(</span>"SubBookClass.setEnvironment() 方法被调用了"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setMessageSource(MessageSource messageSource) {
+        System.out.println(</span>"SubBookClass.setMessageSource() 方法被调用了"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setResourceLoader(ResourceLoader resourceLoader) {
+        System.out.println(</span>"SubBookClass.setResourceLoader() 方法被调用了"<span style="color: #000000;">);
+    }
+
+}</span></pre>
+</div>
+<blockquote style="background-color: #eeeeee; border-width: 0px 0px 0px 18px; border-top-style: initial; border-right-style: initial; border-bottom-style: initial; border-top-color: initial; border-right-color: initial; border-bottom-color: initial; border-left-color: #cccccc; padding: 4px; margin: 0px; width: 886.064px; color: #000000; font-family: Verdana, Arial, Helvetica, sans-serif;">
+<p>上述SubBookClass类与Book是<code>互补</code>关系。</p>
+</blockquote>
+<p style="font-family: Verdana, Arial, Helvetica, sans-serif;">新建一个SubBean-Lifecycle.xml，注入SubBookClass</p>
+<div class="cnblogs_code">
+<pre>&lt;beans xmlns="http://www.springframework.org/schema/beans"<span style="color: #000000;">
+       xmlns:xsi</span>="http://www.w3.org/2001/XMLSchema-instance"<span style="color: #000000;">
+       xmlns:context</span>="http://www.springframework.org/schema/context"<span style="color: #000000;">
+       xsi:schemaLocation</span>="http://www.springframework.org/schema/beans
+http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/beans/spring-beans-2.5.xsd </span><span style="color: #008000; text-decoration: underline;">http://www.springframework.org/schema/context</span> <span style="color: #008000; text-decoration: underline;">http://www.springframework.org/schema/context/spring-context.xsd</span><span style="color: #008000;">"&gt;</span>
+
+
+    &lt;bean id="bookClass" <span style="color: #0000ff;">class</span>="com.bean.lifecycle.SubBookClass" init-method="myPostConstruct" destroy-method="myPreDestory"&gt;
+        &lt;property name="bookSystem" value="Java System" /&gt;
+    &lt;/bean&gt;
+
+    &lt;bean <span style="color: #0000ff;">class</span>="com.bean.lifecycle.MyBeanPostProcessor"/&gt;
+
+&lt;/beans&gt;</pre>
+</div>
+<p><span style="font-family: Verdana, Arial, Helvetica, sans-serif;">完整的SpringBeanLifecycleApplication 如下：</span></p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> SpringBeanLifecycleApplication {
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] args) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> InterruptedException {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 为面试而准备的Bean生命周期加载过程</span>
+        ApplicationContext context = <span style="color: #0000ff;">new</span> ClassPathXmlApplicationContext("Bean-Lifecycle.xml"<span style="color: #000000;">);
+        Book book </span>= (Book)context.getBean("book"<span style="color: #000000;">);
+        System.out.println(</span>"Book name = " +<span style="color: #000000;"> book.getBookName());
+        ((ClassPathXmlApplicationContext) context).destroy();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 完整的加载过程，当然了解的越多越好</span>
+        ApplicationContext applicationContext = <span style="color: #0000ff;">new</span> ClassPathXmlApplicationContext("SubBean-Lifecycle.xml"<span style="color: #000000;">);
+        SubBookClass subBookClass </span>= (SubBookClass) applicationContext.getBean("bookClass"<span style="color: #000000;">);
+        System.out.println(</span>"BookSystemName = " +<span style="color: #000000;"> subBookClass.getBookSystem());
+        ((ClassPathXmlApplicationContext) applicationContext).registerShutdownHook();
+    }
+
+}</span></pre>
+</div>
+<p><span style="font-family: Verdana, Arial, Helvetica, sans-serif;">输出完整的结果：</span></p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">Book Initializing 
+setBookName: Book name has set.
+Book.setBeanName invoke
+Book.setBeanFactory invoke
+Book.setApplicationContext invoke
+MyBeanPostProcessor.postProcessBeforeInitialization
+@PostConstruct
+Book.afterPropertiesSet invoke
+Book.myPostConstruct invoke
+MyBeanPostProcessor.postProcessAfterInitialization
+Book name </span>=<span style="color: #000000;"> thingking in java
+@PreDestory
+Book.destory invoke
+Book.myPreDestory invoke
+</span>---------------destroy-----------------<span style="color: #000000;">
+
+Book Initializing 
+设置BookSystem 的属性值
+Book.setBeanName invoke
+SubBookClass.setBeanClassLoader() 方法被调用了
+Book.setBeanFactory invoke
+SubBookClass.setEnvironment() 方法被调用了
+SubBookClass.setEmbeddedValueResolver() 方法被调用了
+SubBookClass.setResourceLoader() 方法被调用了
+SubBookClass.setApplicationEventPublisher() 方法被调用了
+SubBookClass.setMessageSource() 方法被调用了
+Book.setApplicationContext invoke
+MyBeanPostProcessor.postProcessBeforeInitialization
+Book.afterPropertiesSet invoke
+Book.myPostConstruct invoke
+MyBeanPostProcessor.postProcessAfterInitialization
+BookSystemName </span>=<span style="color: #000000;"> Java System
+Book.destory invoke
+Book.myPreDestory invoke
+</span>---------------destroy-----------------</pre>
+</div>
+<p><span style="font-size: 14px;">public class SubBookClass extends Book implements BeanClassLoaderAware,</span><span style="font-size: 14px;">        EnvironmentAware,EmbeddedValueResolverAware,ResourceLoaderAware,</span><span style="font-size: 14px;">        ApplicationEventPublisherAware,MessageSourceAware{</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    private String bookSystem;</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public String getBookSystem() {</span><span style="font-size: 14px;">        return bookSystem;</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public void setBookSystem(String bookSystem) {</span><span style="font-size: 14px;">        System.out.println("设置BookSystem 的属性值");</span><span style="font-size: 14px;">        this.bookSystem = bookSystem;</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public void setBeanClassLoader(ClassLoader classLoader) {</span><span style="font-size: 14px;">        System.out.println("SubBookClass.setBeanClassLoader() 方法被调用了");</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public void setApplicationEventPublisher(ApplicationEventPublisher applicationEventPublisher) {</span><span style="font-size: 14px;">        System.out.println("SubBookClass.setApplicationEventPublisher() 方法被调用了");</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public void setEmbeddedValueResolver(StringValueResolver resolver) {</span><span style="font-size: 14px;">        System.out.println("SubBookClass.setEmbeddedValueResolver() 方法被调用了");</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public void setEnvironment(Environment environment) {</span><span style="font-size: 14px;">        System.out.println("SubBookClass.setEnvironment() 方法被调用了");</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public void setMessageSource(MessageSource messageSource) {</span><span style="font-size: 14px;">        System.out.println("SubBookClass.setMessageSource() 方法被调用了");</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">    public void setResourceLoader(ResourceLoader resourceLoader) {</span><span style="font-size: 14px;">        System.out.println("SubBookClass.setResourceLoader() 方法被调用了");</span><span style="font-size: 14px;">    }</span><span style="font-size: 14px;"><br/></span><span style="font-size: 14px;">}</span></p>
+{% endraw %}

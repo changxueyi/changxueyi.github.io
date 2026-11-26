@@ -1,0 +1,24 @@
+---
+title: "开发中遇到的问题：push to origin/master was rejected错误解决方案"
+date: 2020-12-07 17:20:00 +0800
+tags: ["【Git】-- 工具"]
+excerpt: "原因：在github中初始化创建一个项目库，加入了README.md初始化文件，自己的项目中没有这个readme.md文件，导致push的时候，报push to origin/master was rejected 错误 大概原因是：初始化项目时，远程仓库我建了README.md文件，而本地仓库与远"
+read_minutes: 1
+cnblogs_id: 14098203
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14098203.html"
+---
+{% raw %}
+<h3>原因：在github中初始化创建一个项目库，加入了README.md初始化文件，自己的项目中没有这个readme.md文件，导致push的时候，报push to origin/master was rejected 错误</h3>
+<p><img alt="" class="has" loading="lazy" src="/images/cnblogs/535bebe5052ce8e1.png"/></p>
+<p><img alt="" class="has" loading="lazy" src="/images/cnblogs/32cf82341ce271ee.png"/></p>
+<p> </p>
+<p>大概原因是：初始化项目时，远程仓库我建了README.md文件，而本地仓库与远程仓库尚未进行文件关联，因此需要将两个仓库的文件进行关联后提交。</p>
+<p>解决方案如下：</p>
+<p>1.切换到自己项目所在的目录，右键选择<strong>GIT BASH Here</strong>，Idea中可使用Alt+F12</p>
+<p>2.在terminl窗口中依次输入命令：</p>
+<p><strong>git pull</strong></p>
+<p><strong>git pull origin master</strong></p>
+<p><strong>git pull origin master --allow-unrelated-histories</strong></p>
+<p>3.在idea中重新push自己的项目，成功！！！</p>
+<p>注：有部分朋友如果没有成功的话，请删除自己本地项目下.git的隐藏目录，重新尝试关联项目推送即可！</p>
+{% endraw %}

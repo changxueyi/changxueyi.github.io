@@ -1,0 +1,20 @@
+---
+title: "@Consumes @Produces的作用"
+date: 2020-06-30 14:51:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "consumes： 指定处理请求的提交内容类型（Content-Type），例如application/json, text/html; produces: 指定返回的内容类型，仅当request请求头中的(Accept)类型中包含该指定类型才返回； 起限制作用类似于filter @Consumes"
+read_minutes: 1
+cnblogs_id: 13213743
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13213743.html"
+tags_inferred: true
+---
+{% raw %}
+<p>consumes： 指定处理<strong>请求</strong>的提交内容类型（Content-Type），例如application/json, text/html;</p>
+<p>produces: 指定<strong>返回</strong>的内容类型，仅当request请求头中的(Accept)类型中包含该指定类型才返回；</p>
+<p>起限制作用类似于filter</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">@Consumes({ MediaType.APPLICATION_JSON, MediaType.TEXT_XML })
+@Produces({ ContentType.APPLICATION_JSON_UTF_8, ContentType.TEXT_XML_UTF_8 })<br/></span></pre>
+</div>
+<p> </p>
+{% endraw %}

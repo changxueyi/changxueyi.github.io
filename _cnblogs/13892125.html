@@ -1,0 +1,345 @@
+---
+title: "记录一下自己对项目中异常的处理封装，通用组件"
+date: 2020-10-28 17:11:00 +0800
+tags: ["【茶话心得】"]
+excerpt: "总的exception包含三个类 1. BaseAppException public class BaseAppException extends BaseException { public BaseAppException() { super(); } public BaseAppExcept"
+read_minutes: 3
+cnblogs_id: 13892125
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13892125.html"
+---
+{% raw %}
+<p>总的exception包含三个类</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/18b5cc0d5d1c3789.png"/></p>
+<p> </p>
+<p> </p>
+<p><strong> 1. BaseAppException</strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> BaseAppException <span style="color: #0000ff;">extends</span><span style="color: #000000;"> BaseException {
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseAppException() {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">();
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseAppException(String errorMessage) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(errorMessage);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseAppException(ResponseStatus responseStatus) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(responseStatus);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseAppException(ResponseStatus responseStatus, Throwable cause) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(responseStatus, cause);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseAppException(String errorMessage, BaseAppException e) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(errorMessage, e);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseAppException(Throwable cause) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(cause);
+    }
+
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseAppException(String errorCode, String errorMessage) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(errorCode,errorMessage);
+    }</span></pre>
+</div>
+<p><strong>2. BaseErrException</strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> BaseErrException <span style="color: #0000ff;">extends</span><span style="color: #000000;"> BaseException {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">long</span> serialVersionUID = 1L<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseErrException(String errorMessage) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(errorMessage);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseErrException(String errorMessage, BaseErrException e) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(errorMessage, e);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseErrException(Throwable cause) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(cause);
+    }
+}</span></pre>
+</div>
+<p><strong>3.BaseException</strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">abstract</span> <span style="color: #0000ff;">class</span> BaseException <span style="color: #0000ff;">extends</span><span style="color: #000000;"> RuntimeException {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">long</span> serialVersionUID = 1L<span style="color: #000000;">;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 错误码
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> String errorCode;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 错误描述
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> String errorMessage;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 异常触发原因
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> Throwable cause;
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseException() {
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseException(String errorMessage) {
+        </span><span style="color: #0000ff;">this</span>.cause = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Throwable(errorMessage);
+        </span><span style="color: #0000ff;">this</span>.errorMessage =<span style="color: #000000;"> errorMessage;
+        </span><span style="color: #0000ff;">this</span>.errorCode =<span style="color: #000000;"> ResponseStatus.FAIL_COMMOM.code;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseException(ResponseStatus responseStatus) {
+        </span><span style="color: #0000ff;">this</span>.errorCode =<span style="color: #000000;"> responseStatus.code;
+        </span><span style="color: #0000ff;">this</span>.errorMessage =<span style="color: #000000;"> responseStatus.msg;
+        </span><span style="color: #0000ff;">this</span>.cause = <span style="color: #0000ff;">new</span> Throwable(responseStatus.msg + ". [errCode:" + responseStatus.code + "]"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseException(ResponseStatus responseStatus, Throwable cause) {
+        </span><span style="color: #0000ff;">this</span>.errorCode =<span style="color: #000000;"> responseStatus.code;
+        </span><span style="color: #0000ff;">this</span>.errorMessage =<span style="color: #000000;"> responseStatus.msg;
+        </span><span style="color: #0000ff;">this</span>.cause =<span style="color: #000000;"> cause;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseException(String errorMessage, BaseException e) {
+        String causeErrMsg </span>= ""<span style="color: #000000;">;
+        </span><span style="color: #0000ff;">if</span>(<span style="color: #0000ff;">null</span> !=<span style="color: #000000;"> e) {
+            </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">null</span> !=<span style="color: #000000;"> e.getCause()) {
+                causeErrMsg </span>= " Caused by :" +<span style="color: #000000;"> e.getCause().getMessage();
+            }
+            </span><span style="color: #0000ff;">this</span>.errorCode =<span style="color: #000000;"> e.getErrorCode();
+            </span><span style="color: #0000ff;">this</span>.errorMessage = errorMessage +<span style="color: #000000;"> causeErrMsg;
+            </span><span style="color: #0000ff;">this</span>.cause =<span style="color: #000000;"> e.getCause();
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #0000ff;">this</span>.errorMessage =<span style="color: #000000;"> errorMessage;
+            </span><span style="color: #0000ff;">this</span>.errorCode =<span style="color: #000000;"> ResponseStatus.FAIL_COMMOM.code;
+            </span><span style="color: #0000ff;">this</span>.cause = <span style="color: #0000ff;">new</span> Throwable(errorMessage + "[errCode:" + ResponseStatus.FAIL_COMMOM.code + "]"<span style="color: #000000;">);
+        }
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseException(Throwable cause) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(cause);
+    }
+
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseException(String errorCode, String errorMessage) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> super(showMessage);</span>
+        <span style="color: #0000ff;">this</span>.errorMessage =<span style="color: #000000;"> errorMessage;
+        </span><span style="color: #0000ff;">this</span>.errorCode =<span style="color: #000000;"> errorCode;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String getErrorCode() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> errorCode;
+    }
+
+    @Override
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Throwable getCause() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> cause;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setCause(Throwable cause) {
+        </span><span style="color: #0000ff;">this</span>.cause =<span style="color: #000000;"> cause;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String getErrorMessage() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> errorMessage;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setErrorMessage(String errorMessage) {
+        </span><span style="color: #0000ff;">this</span>.errorMessage =<span style="color: #000000;"> errorMessage;
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Description:获取异常信息
+     *
+     * </span><span style="color: #808080;">@return</span>
+     <span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Override
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String getMessage() {
+        String msg </span>= <span style="color: #0000ff;">super</span><span style="color: #000000;">.getMessage();
+        String causeMsg </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">this</span>.cause != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            causeMsg </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.cause.getMessage();
+        }
+        </span><span style="color: #0000ff;">if</span> (msg != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">if</span> (causeMsg != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                </span><span style="color: #0000ff;">return</span> msg + " caused by: " +<span style="color: #000000;"> causeMsg;
+            }
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> msg;
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> causeMsg;
+    }
+
+}</span></pre>
+</div>
+<p><strong>3. ResponseStatus 枚举</strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">enum</span><span style="color: #000000;"> ResponseStatus {
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 成功</span>
+    SUCCESS("S0001","成功"<span style="color: #000000;">),
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 成功，结果为空</span>
+    SUCCESS_RESULT_IS_NULL("S0002","结果为空"<span style="color: #000000;">),
+ </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 编码
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span><span style="color: #000000;"> String code;
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 信息
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span><span style="color: #000000;"> String msg;
+
+    ResponseStatus(String code, String msg) {
+        </span><span style="color: #0000ff;">this</span>.code =<span style="color: #000000;"> code;
+        </span><span style="color: #0000ff;">this</span>.msg =<span style="color: #000000;"> msg;
+    }</span></pre>
+</div>
+<p> </p>
+<h2>2. 上面的异常，在service、dao、一直向上层抛出，到web中，返回接住</h2>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;"> @Override
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> CategoryRes insertory(CateyReq req) {
+       XXXXX
+        logger.info(</span>"新增类目，param={}"<span style="color: #000000;">, req);
+
+        CategoryRes res </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> CategoryRes();
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            CategoryVo vo </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.handleInsertParam(req);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 保存数据</span>
+<span style="color: #000000;">            categoryService.insertCategory(vo);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 返回保存后数据 的id</span>
+            res.setCategoryExVo(<span style="color: #0000ff;">new</span><span style="color: #000000;"> CategoryExVo(vo.getId()));
+        } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Exception e) {
+            res </span>= <span style="color: #0000ff;">new</span> CategoryRes(ExceptionUtils.handleException(<span style="color: #0000ff;">new</span><span style="color: #000000;"> Exception(e), info));
+        } </span><span style="color: #0000ff;">finally</span><span style="color: #000000;"> {
+            Profiler.registerInfoEnd(info);
+        }
+
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> res;
+    }</span></pre>
+</div>
+<pre><strong>ExceptionUtils.handleException 的信息</strong></pre>
+<pre>public CategoryRes(Result result) {<br/>    this.result = result;<br/>}</pre>
+<p>统一的返回结果Result</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> Result <span style="color: #0000ff;">implements</span><span style="color: #000000;"> Serializable{
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 结果标志
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> isSuccess;
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 结果码
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> String code;
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 结果信息描述
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> String msg;
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Result(){
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 未发生异常
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> rpcStatus
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span><span style="color: #000000;"> Result(RpcStatus rpcStatus) {
+        </span><span style="color: #0000ff;">this</span>.code =<span style="color: #000000;"> rpcStatus.getCode();
+        </span><span style="color: #0000ff;">this</span>.msg =<span style="color: #000000;"> rpcStatus.getMsg();
+        </span><span style="color: #0000ff;">this</span>.setSuccess(RpcStatus.FAIL !=<span style="color: #000000;"> rpcStatus);
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 发生程序补获并处理的异常（RpcException）时，errCode, errMessage
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> e
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span><span style="color: #000000;"> Result(RpcException e) {
+        </span><span style="color: #0000ff;">this</span>.code =<span style="color: #000000;"> e.getErrorCode();
+        </span><span style="color: #0000ff;">this</span>.msg =<span style="color: #000000;"> e.getErrorMessage();
+        </span><span style="color: #0000ff;">this</span>.setSuccess(<span style="color: #0000ff;">false</span><span style="color: #000000;">);
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 自定义
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> code
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> msg
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span><span style="color: #000000;"> Result(String code, String msg) {
+        </span><span style="color: #0000ff;">this</span>.code =<span style="color: #000000;"> code;
+        </span><span style="color: #0000ff;">this</span>.msg =<span style="color: #000000;"> msg;
+        </span><span style="color: #0000ff;">this</span>.setSuccess(<span style="color: #0000ff;">false</span><span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> isSuccess() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> isSuccess;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setSuccess(<span style="color: #0000ff;">boolean</span><span style="color: #000000;"> success) {
+        isSuccess </span>=<span style="color: #000000;"> success;
+    }
+
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String getCode() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> code;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setCode(String code) {
+        </span><span style="color: #0000ff;">this</span>.code =<span style="color: #000000;"> code;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String getMsg() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> msg;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setMsg(String msg) {
+        </span><span style="color: #0000ff;">this</span>.msg =<span style="color: #000000;"> msg;
+    }
+
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> ExceptionUtils {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> Logger logger = LoggerFactory.getLogger(ExceptionUtils.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 分析处理RpcException
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> e
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> info
+     * </span><span style="color: #808080;">@return</span>
+     <span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> Result handleException(Exception e, CallerInfo info) {
+        Throwable cause </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">if</span> (e.getCause() != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            cause </span>=<span style="color: #000000;"> e.getCause();
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            cause </span>=<span style="color: #000000;"> e;
+        }
+
+        </span><span style="color: #0000ff;">if</span> (cause.getClass().equals(BaseAppException.<span style="color: #0000ff;">class</span><span style="color: #000000;">)) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> BaseAppException 逻辑判断不通过</span>
+            BaseAppException e1 =<span style="color: #000000;"> (BaseAppException) e.getCause();
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span> Result(<span style="color: #0000ff;">new</span><span style="color: #000000;"> RpcException(e1.getErrorCode(), e1.getErrorMessage()));
+        } </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (cause.getClass().equals(BaseErrException.<span style="color: #0000ff;">class</span><span style="color: #000000;">)) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> BaseErrException 捕获到的异常</span>
+            BaseErrException e1 =<span style="color: #000000;"> (BaseErrException) e.getCause();
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> Result(e1.getErrorCode(), e1.getErrorMessage());
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 未知异常</span>
+            <span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">null</span> !=<span style="color: #000000;"> info) {
+                Profiler.functionError(info);
+            }
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span> Result(<span style="color: #0000ff;">new</span><span style="color: #000000;"> RpcException(RpcStatus.FAIL.code, RpcStatus.FAIL.msg));
+        }
+    }
+}</span></pre>
+</div>
+<p> </p>
+{% endraw %}

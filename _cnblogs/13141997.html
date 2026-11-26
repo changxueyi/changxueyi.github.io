@@ -1,0 +1,47 @@
+---
+title: "Mybatis配置useGeneratedKeys=\"true\" keyProperty=\"id\"的作用"
+date: 2020-06-16 17:02:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "有时候在开发中需要向表中插入自增ID，这个时候领域模型如果想要获取该ID的值，就需要在相应的mapper文件中添加useGeneratedKeys=\"true\" keyProperty=\"id\"。 MyBatis如何获取插入记录的自增长字段值: 第一步： 在Mybatis Mapper文件中添加属性"
+read_minutes: 1
+cnblogs_id: 13141997
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13141997.html"
+tags_inferred: true
+---
+{% raw %}
+<p>有时候在开发中需要向表中插入自增ID，这个时候领域模型如果想要获取该ID的值，就需要在相应的mapper文件中添加useGeneratedKeys="true" keyProperty="id"。</p>
+<h1 class="title-article">MyBatis如何获取插入记录的自增长字段值:</h1>
+<p> </p>
+<p>第一步：</p>
+<p> </p>
+<p>    在Mybatis Mapper文件中添加属性“useGeneratedKeys”和“keyProperty”，其中keyProperty是Java对象的属性名！</p>
+<div class="cnblogs_code">
+<pre>&lt;insert id="insert" parameterType="Spares" 
+        useGeneratedKeys="true" keyProperty="id"&gt;
+        insert into spares(spares_id,spares_name,
+            spares_type_id,spares_spec)
+        values(#{id},#{name},#{typeId},#{spec})
+    &lt;/insert&gt;</pre>
+</div>
+<p> </p>
+<p>第二步：</p>
+<p> <strong>   Mybatis执行完插入语句后，自动将自增长值赋值给对象Spares的属性id。因此，可通过Spares对应的getter方法获取！</strong></p>
+<div class="cnblogs_code">
+
+<pre>    /**
+     * 新增备件
+     * @author hellostory
+     * @param spares
+     * @return
+     */
+    @RequestMapping(value = "/insert")
+    @ResponseBody
+    public JsonResponse insert(Spares spares) {
+        int count = sparesService.insert(spares);      //count&gt;0 表示成功
+        System.out.println( "刚刚插入记录的主键自增长值为：" + spares.getId());</pre>
+
+</div>
+<p> </p>
+<p><strong> 如果没有useGeneratedKeys="true"和keyProperty="id",下面 insert 之后的 user.getId() 是无法获取 id 值的public void insert(User user) {      int count = userMapper.insert(user);     System.out.println("共插入" + count + "条记录！"  + "\n刚刚插入记录的主键自增长值为：" + user.getId()); }</strong></p>
+<p><strong> </strong></p>
+{% endraw %}

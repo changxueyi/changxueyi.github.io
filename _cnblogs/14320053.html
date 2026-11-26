@@ -1,0 +1,29 @@
+---
+title: "memcached与redis区别"
+date: 2021-01-24 09:04:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "周末学习相关技术站，看到了memcched，那就看下和redis区别吧 redis和memcached的区别 Redis和Memcached都是将数据存放在内存中，都是内存数据库，不过memcache还用于缓存其他东西，例如：图片、视频等等 Redis不仅仅支持简单的k/v类型的数据，同时还提供li"
+read_minutes: 1
+cnblogs_id: 14320053
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14320053.html"
+---
+{% raw %}
+<p>周末学习相关技术站，看到了memcched，那就看下和redis区别吧</p>
+<div>
+<h1>redis和memcached的区别</h1>
+<ul>
+<li>Redis和Memcached都是将数据存放在内存中，都是内存数据库，不过memcache还用于缓存其他东西，例如：图片、视频等等</li>
+<li>Redis不仅仅支持简单的k/v类型的数据，同时还提供list、set、hash等数据结构的存储</li>
+<li>虚拟内存--Redis当物理内存用完时，可以将一些很久没用到的value交换到磁盘</li>
+<li>过期策略--memcache在set时就指定，例如set key1 0 0 8，即永不过期。Redis可以通过例如expire设定，例如expire name 10；</li>
+<li>分布式--设定memcached集群，利用magent做一主多从；redis可以做一主多从。都可以一主一从</li>
+<li>存储数据安全--memcache挂掉后，数据没了；redis可以定期保存到磁盘（持久化）</li>
+<li>灾难恢复--memcached挂掉后，数据不可恢复；redis数据丢失后可以通过aof恢复</li>
+<li>Redis支持数据的备份，即master-slave模式的数据备份</li>
+<li>memcached是高性能的分布式内存缓存服务器。<em id="__mceDel">一般使用目的是，通过缓存数据库查询结果，减少数据库访问次数，以提高动态web应用的速度、提高可扩展性。</em></li>
+<li>
+<div>redis是一个开源的内存<a href="http://lib.csdn.net/base/mysql" rel="nofollow" target="_blank">数据库</a>，它以键值对的形式存储数据。由于数据存储在内存中，因此Redis的速度很快，但是每次重启Redis服务时，其中的数据也会丢失，因此，Redis也提供了持久化存储机制，将数据以某种形式保存在文件中，每次重启时，可以自动从文件加载数据到内存当中。</div>
+</li>
+</ul>
+</div>
+{% endraw %}

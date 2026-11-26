@@ -1,0 +1,17 @@
+---
+title: "Go 切片"
+date: 2021-01-11 23:06:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "Go 切片： · func main() { //声明切片类型 a := []int{1, 2, 3, 4, 5} //s := a[0:3:5] /*fmt.Println(\"s=\", s) //3 fmt.Println(\"len(s)=\", len(s)) //3-0 fmt.Println("
+read_minutes: 1
+cnblogs_id: 14264885
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14264885.html"
+---
+{% raw %}
+<p><img alt="" loading="lazy" src="/images/cnblogs/98b73cc46ce625d8.png"/></p>
+<p> </p>
+<h3>Go 切片：</h3>
+<p>·</p>
+<pre>func main() {<br/>   //声明切片类型<br/>   a := []int{1, 2, 3, 4, 5}<br/>   //s := a[0:3:5]<br/>   /*fmt.Println("s=", s) //3<br/>   fmt.Println("len(s)=", len(s)) //3-0<br/>   fmt.Println("cap(s)=", cap(s)) //容量为 5-0*/<br/><br/>   s := a[1:4:5]<br/>   fmt.Println("s=",s) //3<br/>   fmt.Println("len(s)=", len(s)) //4-1  长度是：4-1<br/>   fmt.Println("cap(s)=", cap(s)) //5-1  容量为最后一个5-第一个1 = 4<br/>}</pre>
+<p> </p>
+{% endraw %}

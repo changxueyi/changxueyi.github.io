@@ -1,0 +1,105 @@
+---
+title: "Restful API 接口设计标准以及规范"
+date: 2021-11-23 21:04:00 +0800
+tags: ["【开发规范】编码规范"]
+excerpt: "RESTful概念 理解和评估以网络为基础的应用软件的架构设计，得到一个功能强、性能好、适宜通信的架构。REST指的是一组架构约束条件和原则。\" 如果一个架构符合REST的约束条件和原则，我们就称它为RESTful架构。 REST本身并没有创造新的技术、组件或服务，而隐藏在RESTful背后的理念就"
+read_minutes: 4
+cnblogs_id: 15595297
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15595297.html"
+---
+{% raw %}
+<h2 id="restful概念">RESTful概念</h2>
+<p>理解和评估以网络为基础的应用软件的架构设计，得到一个功能强、性能好、适宜通信的架构。REST指的是一组架构约束条件和原则。" 如果一个架构符合REST的约束条件和原则，我们就称它为RESTful架构。</p>
+<p>REST本身并没有创造新的技术、组件或服务，而隐藏在RESTful背后的理念就是使用Web的现有特征和能力， 更好地使用现有Web标准中的一些准则和约束。虽然REST本身受Web技术的影响很深， 但是理论上REST架构风格并不是绑定在HTTP上，只不过目前HTTP是唯一与REST相关的实例。 所以我们这里描述的REST也是通过HTTP实现的REST。</p>
+<h2 id="restfulapi-导图">RestfulAPI 导图</h2>
+<p><img alt="Restful导图" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/23d03b9a56f95503.webp"/></p>
+<h2 id="理解restful">理解RESTful</h2>
+<p>要理解RESTful架构，需要理解Representational State Transfer这个词组到底是什么意思，它的每一个词都有些什么涵义。我们围绕资源展开讨论，从资源的定义、获取、表述、关联、状态变迁等角度，列举一些关键概念并加以解释。</p>
+<ul>
+<li>资源与URI</li>
+<li>统一资源接口</li>
+<li>资源的表述</li>
+<li>资源的链接</li>
+<li>状态的转移</li>
+</ul>
+<h2 id="资源与uri">资源与URI</h2>
+<p>URI 表示资源，资源一般对应服务器端领域模型中的实体类</p>
+<ul>
+<li>URI 是地址也是资源</li>
+<li>URI里边带上版本号、后缀来区分表述格式</li>
+<li>必备约定
+<ul>
+<li>用名词、不用动词</li>
+<li>层级结构明确、用/来表示</li>
+<li>用?用来过滤资源</li>
+</ul>
+</li>
+</ul>
+<h2 id="统一资源接口">统一资源接口</h2>
+<p>标准HTTP方法包含：GET、POST、PUT、DELETE、Patch，他们的使用功能如下列表所示</p>
+<center>
+<p><img alt="方法作用列表" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/3dcfb0b97c4f7357.webp"/></p>
+</center>
+<p>Get方法执行流程原理如下所示</p>
+<center>
+<p><img alt="Get方法执行流程图" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/2ab281a9167a08e0.webp"/></p>
+</center>
+<p>Put 方法执行流程图如下所示</p>
+<center>
+<p><img alt="Put方法执行流程图" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/ea8c42cb092b860e.webp"/></p>
+</center>
+<h3 id="安全性和幂等性">安全性和幂等性</h3>
+<ul>
+<li>1、安全性：不会改变资源状态，可以理解为只读的；</li>
+<li>2、幂等性：执行1次和执行N次，对资源状态改变的效果是等价的。</li>
+</ul>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th>接口</th><th>安全性</th><th>幂等性</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td>√</td>
+<td>√</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>×</td>
+<td>×</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>×</td>
+<td>√</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td>×</td>
+<td>√</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>安全性和幂等性均不保证反复请求能拿到相同的response。以 DELETE 为例，第一次DELETE返回200表示删除成功，第二次返回404提示资源不存在，这是允许的。</p>
+<h2 id="资源的表述">资源的表述</h2>
+<h3 id="什么是资源？什么是表述？">什么是资源？什么是表述？</h3>
+<p>就本质而言，任何足够重要并被引用的事物都可以是资源。如果你的用户“想要建立指向它的超文本链接，指出或者反对关于它的断言，获取或者缓存它的表述，共另外的表述引用它的全部或者部分，给它增加注释信息，或者对它执行某些操作”，（源自《万维网的架构》），你都应该将它定义为资源。</p>
+<p>每个资源必须拥有URL，在web上，我们使用URL来为每个资源提供一个全球唯一的地址，将一个事物赋以URL，它就会成为一个资源。</p>
+<p>石榴可以是一个资源，但是你不可能通过互联网传输它，数据库中的一条记录可以是一个资源，并且可以通过互联网传输。</p>
+<p>当客户端对一个资源发起一个Get请求的时候，服务器会以一种有效的方式提供一个采集了资源信息的文档作为回应。这种资源信息的文档就是一种表述，一种以机器可读的方式对资源当前的状态进行说明</p>
+<h3 id="资源有多重表述">资源有多重表述</h3>
+<p>一个资源可以有多种表述。比如，有的资源可以有整体概括性的表述，也可以有面面俱到的详细表述，又或者可能以JSON格式或者XML格式来表述同一个资源。</p>
+<h2 id="资源的连接">资源的连接</h2>
+<p>我们知道REST是使用标准的HTTP方法来操作资源的，但仅仅因此就理解成带CURD的Web数据库架构就太过于简单了。</p>
+<p>这种反模式忽略了一个核心概念："超媒体即应用状态引擎（hypermedia as the engine of application state）"。 超媒体是什么?</p>
+<p>当你浏览Web网页时，从一个连接跳到一个页面，再从另一个连接跳到另外一个页面，就是利用了超媒体的概念：把一个个把资源链接起来.</p>
+<p>要达到这个目的，就要求在表述格式里边加入链接来引导客户端。在《RESTful Web Services》一书中，作者把这种具有链接的特性成为连通性。下面我们具体来看一些例子。</p>
+<p>下面展示的是github获取某个组织下的项目列表的请求，可以看到在响应头里边增加Link头告诉客户端怎么访问下一页和最后一页的记录。 而在响应体里边，用url来链接项目所有者和项目地址。</p>
+<p>上面的例子展示了如何使用超媒体来增强资源的连通性。很多人在设计RESTful架构时，使用很多时间来寻找漂亮的URI，而忽略了超媒体。所以，应该多花一些时间来给资源的表述提供链接，而不是专注于"资源的CRUD"。</p>
+<h2 id="状态的转移">状态的转移</h2>
+<p>访问一个网站，就代表了客户端和服务器的一个互动过程。在这个过程中，势必涉及到数据和状态的变化；</p>
+<p>互联网通信协议HTTP协议，是一个无状态协议。这意味着，所有的状态都保存在服务器端。因此，如果客户端想要操作服务器，必须通过某种手段，让服务器端发生"状态转化"（State Transfer）。而这种转化是建立在表现层之上的，所以就是"表现层状态转化"；</p>
+<p>客户端用到的手段，只能是HTTP协议。具体来说，就是HTTP协议里面，四个表示操作方式的动词：GET、POST、PUT、DELETE。它们分别对应四种基本操作：GET用来获取资源，POST用来新建资源（也可以用于更新资源），PUT用来更新资源，DELETE用来删除资源；</p>
+{% endraw %}

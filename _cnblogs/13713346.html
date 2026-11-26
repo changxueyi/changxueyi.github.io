@@ -1,0 +1,472 @@
+---
+title: "Postman教程大全"
+date: 2020-09-22 17:11:00 +0800
+tags: ["【测试】--单元测试"]
+excerpt: "推荐一款接口测试工具！POSTMAN！ 简单来说，四个词，简单实用大方美观！ Postman是一款功能强大的网页调试与发送网页HTTP请求的Chrome插件 Postman背景介绍 用户在开发或者调试网络程序或者是网页B/S模式的程序的时候是需要一些方法来跟踪网页请求的，用户可以使用一些网络的监视工"
+read_minutes: 9
+cnblogs_id: 13713346
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13713346.html"
+---
+{% raw %}
+<div>
+<div>
+<blockquote>
+<p><strong>推荐一款接口测试工具！POSTMAN！ 简单来说，四个词，简单实用大方美观！</strong></p>
+</blockquote>
+<p>Postman是一款功能强大的网页调试与发送网页HTTP请求的Chrome插件</p>
+<p><strong>Postman背景介绍<br/></strong></p>
+<p>用户在开发或者调试网络程序或者是网页B/S模式的程序的时候是需要一些方法来跟踪网页请求的，用户可以使用一些网络的监视工具比如著名的Firebug等网页调试工具。今天给大家介绍的这款网页调试工具不仅可以调试简单的css、html、脚本等简单的网页基本信息，它还可以发送几乎所有类型的HTTP请求！<strong>Postman</strong>在发送网络HTTP请求方面可以说是Chrome插件类产品中的代表产品之一。</p>
+<p><strong>Postman的操作环境</strong></p>
+<p>postman适用于不同的操作系统，Postman Mac、Windows X32、Windows X64、Linux系统，还支持postman 浏览器扩展程序、postman chrome应用程序等。</p>
+<p><strong>Postman重要提示：<br/></strong></p>
+<p>由于2018年初chrome停止对chrome应用程序的支持，你的<strong>postman插件可能无法正常</strong>使用了。目前chrome应用商店能使用的就是chrome扩展程序和主题背景。</p>
+<p>在这里建议大家直接下载它的应用程序进行使用</p>
+<p>贴上官网下载地址：<a href="https://links.jianshu.com/go?to=https%3A%2F%2Fwww.getpostman.com%2Fdownloads%2F" target="_blank">Postman | Download Postman App</a></p>
+<p>记得选择下载的版本</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="784" data-width="994"><img data-image-index="0" data-original-filesize="184497" data-original-format="image/png" data-original-height="784" data-original-src="//upload-images.jianshu.io/upload_images/12861759-08d9fe1e38434356.png" data-original-width="994" loading="lazy" src="/images/cnblogs/bc255d8ae4716c5d.webp"/></div>
+</div>
+<div class="image-caption">这里我选择的是windows64位系统</div>
+</div>
+<p>下载完成后双击安装吧，安装过程极其简单，无需任何操作</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="158" data-width="605"><img data-image-index="1" data-original-filesize="10481" data-original-format="image/png" data-original-height="158" data-original-src="//upload-images.jianshu.io/upload_images/12861759-ecfe5c98a2e0f1bb.png" data-original-width="605" loading="lazy" src="/images/cnblogs/e6238df5375c43ad.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="256" data-width="455"><img data-image-index="2" data-original-filesize="11275" data-original-format="image/png" data-original-height="256" data-original-src="//upload-images.jianshu.io/upload_images/12861759-482b58584ca0667f.png" data-original-width="455" loading="lazy" src="/images/cnblogs/a23cafac363e17e5.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="341" data-width="636"><img data-image-index="3" data-original-filesize="47068" data-original-format="image/png" data-original-height="341" data-original-src="//upload-images.jianshu.io/upload_images/12861759-b91ab4d014f1ea3a.png" data-original-width="636" loading="lazy" src="/images/cnblogs/2e8bb47afa6842ea.webp"/></div>
+</div>
+<div class="image-caption">ok！</div>
+</div>
+<hr/>
+<blockquote>
+<p>成功进入postman页面后，接下来我们正式进行postman的系统教程吧</p>
+</blockquote>
+<hr/>
+<h2>设置postman主题</h2>
+<p>右上角的设置里可以设置postman的主题</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="389" data-width="570"><img data-image-index="4" data-original-filesize="20936" data-original-format="image/png" data-original-height="389" data-original-src="//upload-images.jianshu.io/upload_images/12861759-004a56e30c538ad1.png" data-original-width="570" loading="lazy" src="/images/cnblogs/8e236e9c6948a060.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>这里，出于个人习惯，我把它设置成了黑色</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="597" data-width="714"><img data-image-index="5" data-original-filesize="29751" data-original-format="image/png" data-original-height="597" data-original-src="//upload-images.jianshu.io/upload_images/12861759-52d6af265c858054.png" data-original-width="714" loading="lazy" src="/images/cnblogs/35dc8da7aef13d96.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<hr/>
+<h2>postman基础功能介绍</h2>
+<p>首先，看一下它的基础功能：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="497" data-width="951"><img data-image-index="6" data-original-filesize="151803" data-original-format="image/png" data-original-height="497" data-original-src="//upload-images.jianshu.io/upload_images/12861759-341ccb840173811a.png" data-original-width="951" loading="lazy" src="/images/cnblogs/b1b8189d791ca35c.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>collection在postman里面相当于一个文件夹，可以把同一个项目的请求放在一个Collection里方便管理和分享，Collection里面也可以再建文件夹。这里我们做一个普通接口的简单的示例：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="84" data-width="297"><img data-image-index="7" data-original-filesize="4826" data-original-format="image/png" data-original-height="84" data-original-src="//upload-images.jianshu.io/upload_images/12861759-cafa069a9344cb3c.png" data-original-width="297" loading="lazy" src="/images/cnblogs/4e78110166fb99ed.webp"/></div>
+</div>
+<div class="image-caption">新建一个文件夹</div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="873" data-width="806"><img data-image-index="8" data-original-filesize="40204" data-original-format="image/png" data-original-height="873" data-original-src="//upload-images.jianshu.io/upload_images/12861759-617791d6f0844020.png" data-original-width="806" loading="lazy" src="/images/cnblogs/a90b70819f84efac.webp"/></div>
+</div>
+<div class="image-caption">创建一个文件集</div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="412" data-width="290"><img data-image-index="9" data-original-filesize="16472" data-original-format="image/png" data-original-height="412" data-original-src="//upload-images.jianshu.io/upload_images/12861759-7e2a3268fee5e9d3.png" data-original-width="290" loading="lazy" src="/images/cnblogs/c2a7a58539107d37.webp"/></div>
+</div>
+<div class="image-caption">新建一个请求</div>
+</div>
+<p> </p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="678" data-width="485"><img data-image-index="10" data-original-filesize="33715" data-original-format="image/png" data-original-height="678" data-original-src="//upload-images.jianshu.io/upload_images/12861759-964487219c9b3be9.png" data-original-width="485" loading="lazy" src="/images/cnblogs/222d2068fc5fc7c7.webp"/></div>
+</div>
+<div class="image-caption">给这接口明明为查询上海天气并保存</div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="560" data-width="874"><img data-image-index="11" data-original-filesize="31920" data-original-format="image/png" data-original-height="560" data-original-src="//upload-images.jianshu.io/upload_images/12861759-3c4386585fae2c1c.png" data-original-width="874" loading="lazy" src="/images/cnblogs/a7d17ec1a8dfafd2.webp"/></div>
+</div>
+<div class="image-caption">点击该请求，现在是空白的</div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="450" data-width="1343"><img data-image-index="12" data-original-filesize="39116" data-original-format="image/png" data-original-height="450" data-original-src="//upload-images.jianshu.io/upload_images/12861759-e3ef30bd64f250d6.png" data-original-width="1343" loading="lazy" src="/images/cnblogs/b1c1194aed0ba940.webp"/></div>
+</div>
+<div class="image-caption">输入一个get请求，params里会自动显示参数</div>
+</div>
+<p>该请求是聚合数据提供的一个查询天气的接口，大概还有几百次的次数可以用：</p>
+<p>http://v.juhe.cn/weather/index?format=2&amp;cityname=南京&amp;key=64aa04d276d1ed4fd5a147d97e16b87e</p>
+<p>点击send，查询成功</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="891" data-width="1602"><img data-image-index="13" data-original-filesize="124048" data-original-format="image/png" data-original-height="891" data-original-src="//upload-images.jianshu.io/upload_images/12861759-61dc8f6082da124c.png" data-original-width="1602" loading="lazy" src="/images/cnblogs/9408cbd17f5881cf.webp"/></div>
+</div>
+<div class="image-caption">成功查询到上海天气</div>
+</div>
+<p>这样就完成了一次简单的天气查询接口的请求</p>
+<p> </p>
+<hr/>
+<h2>请求区域介绍</h2>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="193" data-width="946"><img data-image-index="14" data-original-filesize="23392" data-original-format="image/png" data-original-height="193" data-original-src="//upload-images.jianshu.io/upload_images/12861759-b918f54add3c22f4.png" data-original-width="946" loading="lazy" src="/images/cnblogs/1a0afec802057e7f.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p><strong>1 </strong>    <strong>Authorization：</strong>身份验证，主要用来填写用户名密码，以及一些验签字段,postman有一个helpers可以帮助我们简化一些重复和复杂的任务。当前的一套helpers可以帮助你解决一些authentication protocols的问题。；</p>
+<p><strong>2</strong>    <strong>Headers：</strong>请求的头部信息</p>
+<p><strong>3</strong>    <strong>Body：</strong>post请求时必须要带的参数，里面放一些key-value键值对</p>
+<p><strong>4</strong>    <strong>Pre-requerst Script:</strong>可以让你在 请求之前自定义请求数据，这个运行在请求之前，语法使用JavaScript语句。</p>
+<p><strong>5</strong>    <strong>tests：</strong>tests标签功能比较强大，通常用来写测试，它是运行在请求之后。支持JavaScript语法。postman每次执行request的时候，会执行tests。测试结果会在tests的tab上面显示一个通过的数量以及对错情况。这个后面会进行详解，它也可以用来设计用例，比如要测试返回结果是否含有某一字符串</p>
+<p><strong>6</strong>    <strong>form-data</strong>：,它将表单数据处理为一条消息，以标签为单元，用分隔符分开。既可以单独上传键值对，也可以直接上传文件（当上传字段是文件时，会有Content-Type来说明文件类型,但该文件不会作为历史保存，只能在每次需要发送请求的时候，重新添加文件。）；post请求里<strong>较常用的一种</strong></p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="189" data-width="571"><img data-image-index="15" data-original-filesize="12627" data-original-format="image/png" data-original-height="189" data-original-src="//upload-images.jianshu.io/upload_images/12861759-7edf32a0b3239f7d.png" data-original-width="571" loading="lazy" src="/images/cnblogs/51ebac47786e5d55.webp"/></div>
+</div>
+<div class="image-caption">上传文件</div>
+</div>
+<p><strong>7</strong>    <strong>x-www-form-urlencoded</strong>：对应信息头-application/x-www-from-urlencoded，会将表单内的数据转换为键值对；</p>
+<p><strong>8</strong>    <strong>raw</strong>：可以上传任意类型的文本，比如text、json、xml等,所有填写的text都会随着请求发送；</p>
+<p><strong>9</strong>    <strong>binary</strong>：对应信息头-Content-Type:application/octet-stream，只能上传二进制文件，且没有键值对，一次只能上传一个文件, 也不能保存历史，每次选择文件，提交；</p>
+<hr/>
+<h2>导出和导入接口集：</h2>
+<p>postman支持非常方便的导入和导出接口集，继续操作如下：</p>
+<p> </p>
+<p>导出</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="432" data-width="298"><img data-image-index="16" data-original-filesize="17706" data-original-format="image/png" data-original-height="432" data-original-src="//upload-images.jianshu.io/upload_images/12861759-2d2abdf06d73c547.png" data-original-width="298" loading="lazy" src="/images/cnblogs/3342e49953a683c7.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="301" data-width="483"><img data-image-index="17" data-original-filesize="17649" data-original-format="image/png" data-original-height="301" data-original-src="//upload-images.jianshu.io/upload_images/12861759-60f7ba70af0ffc16.png" data-original-width="483" loading="lazy" src="/images/cnblogs/d64adbcbaadca9d1.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="540" data-width="960"><img data-image-index="18" data-original-filesize="136697" data-original-format="image/png" data-original-height="540" data-original-src="//upload-images.jianshu.io/upload_images/12861759-f28bfd15d0958f52.png" data-original-width="960" loading="lazy" src="/images/cnblogs/086e86ee5c4426e4.webp"/></div>
+</div>
+<div class="image-caption">数据一般以postman_collection.json结尾</div>
+</div>
+<p> </p>
+<p>导入：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="175" data-width="310"><img data-image-index="19" data-original-filesize="10321" data-original-format="image/png" data-original-height="175" data-original-src="//upload-images.jianshu.io/upload_images/12861759-c61d4bb9a3e30f81.png" data-original-width="310" loading="lazy" src="/images/cnblogs/a902864d2630bb8f.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="910" data-width="989"><img data-image-index="20" data-original-filesize="146719" data-original-format="image/png" data-original-height="910" data-original-src="//upload-images.jianshu.io/upload_images/12861759-bba59c849e43c9a1.png" data-original-width="989" loading="lazy" src="/images/cnblogs/70d03bf004c33bb6.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="351" data-width="300"><img data-image-index="21" data-original-filesize="7621" data-original-format="image/png" data-original-height="351" data-original-src="//upload-images.jianshu.io/upload_images/12861759-af9e0c2dde697b51.png" data-original-width="300" loading="lazy" src="/images/cnblogs/eabc3f6e618df19f.webp"/></div>
+</div>
+<div class="image-caption">为了区分，我把他们名称改了</div>
+</div>
+<p>ok，这样就是简单的导入导出collection集合</p>
+<p> </p>
+<hr/>
+<h2>关于设置环境变量：</h2>
+<p> </p>
+<p>1. Global---全局</p>
+<p>2. Enviroment --- 环境变量</p>
+<p>3. Local --- 局部</p>
+<p>4. Data ---- 数据</p>
+<p>优先级从高到底		Data ---- &gt; Local ---- &gt; Enviroment ---- &gt; Global</p>
+<p> </p>
+<p>postman支持很方便的设置环境变量以及全局变量，并可以一键切换不同环境</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="317" data-width="348"><img data-image-index="22" data-original-filesize="16277" data-original-format="image/png" data-original-height="317" data-original-src="//upload-images.jianshu.io/upload_images/12861759-6d873402aadcf586.png" data-original-width="348" loading="lazy" src="/images/cnblogs/d5b661259c61865a.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>1：可以一键切换环境，选择No Environment则不使用环境变量，仅适用全局变量</p>
+<p>2：可以查看当前环境中的变量和全局变量（Globals）的值</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="561" data-width="728"><img data-image-index="23" data-original-filesize="40593" data-original-format="image/png" data-original-height="561" data-original-src="//upload-images.jianshu.io/upload_images/12861759-c4da51517d4c2055.png" data-original-width="728" loading="lazy" src="/images/cnblogs/c2f912d4c1558c12.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>3.进入设置页面</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="685" data-width="732"><img data-image-index="24" data-original-filesize="52472" data-original-format="image/png" data-original-height="685" data-original-src="//upload-images.jianshu.io/upload_images/12861759-6d23501a3c045d04.png" data-original-width="732" loading="lazy" src="/images/cnblogs/9e4a1a6d3d6a06b1.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>如新建一套环境dome</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="692" data-width="708"><img data-image-index="25" data-original-filesize="46784" data-original-format="image/png" data-original-height="692" data-original-src="//upload-images.jianshu.io/upload_images/12861759-073797eada8bbaeb.png" data-original-width="708" loading="lazy" src="/images/cnblogs/39233c41b5ed2fbb.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>选择我们刚才创建的环境，点击眼睛可以看到我们设置的变量值</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="172" data-width="725"><img data-image-index="26" data-original-filesize="10943" data-original-format="image/png" data-original-height="172" data-original-src="//upload-images.jianshu.io/upload_images/12861759-84b8f029e1658560.png" data-original-width="725" loading="lazy" src="/images/cnblogs/20a011ebbc691dc8.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>创建环境变量能够很方便的调取我们所需的数据</p>
+<p> </p>
+<hr/>
+<h2>将返回值的某个数据设置为环境变量</h2>
+<p>在某些时候，我们需要获取到一个变量，并保存下来，因为在后面我们会使用到。比如token，sign等信息</p>
+<p>这时候就需要用到tests区域了，使用其强大的js语法</p>
+<p>下面是一个简单的将返回值的某个数据设置为环境变量或者全局变量的介绍：</p>
+<p> </p>
+<p>定义一个xxx，获取body中返回的所有参数,并转化为JSON格式						var xxx = JSON.parse(responseBody);</p>
+<p>//把json字符串转化为对象。parse()会进行json格式的检查是一个安全的函数， 如：检查json中某个数组元素的个数(这里检测programs的长度)</p>
+<p>var data = JSON.parse(responseBody);tests["program's lenght"] = data.programs.length === 5;</p>
+<p> </p>
+<p>将返回中的值设置为一个环境变量												pm.environment.set("key",xxx.data.value);或者postman.setEnvironmentVariable("key", "value");</p>
+<p>将返回中的值设置为一个全局变量，        pm.globals.set("key",xxx.data.value);或者postman.setGlobalVariable("key", "value");</p>
+<p>//注意：Global后面不能加S，value值一定要指定到某个具体节点</p>
+<p> </p>
+<p>实际操作一下：</p>
+<p>一个微信登录的接口token值获取</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="537" data-width="1496"><img data-image-index="27" data-original-filesize="55709" data-original-format="image/png" data-original-height="537" data-original-src="//upload-images.jianshu.io/upload_images/12861759-a3b1692d64073520.png" data-original-width="1496" loading="lazy" src="/images/cnblogs/54d047c5ef4b7feb.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>这是一个微信登录的接口，属于post方法，里面的必须参数是unionid，这里我已经把unionid填在body里了，点击send下面可以得到一个token</p>
+<p>该登录token每次请求的值都是不一样的，属于一个动态值。而后面我们的所有接口请求都需要这个token,现在就可以使用tests将它放置在环境变量里</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="656" data-width="1503"><img data-image-index="28" data-original-filesize="76762" data-original-format="image/png" data-original-height="656" data-original-src="//upload-images.jianshu.io/upload_images/12861759-f9fe6ccac8a5b214.png" data-original-width="1503" loading="lazy" src="/images/cnblogs/509fb809ae94fafd.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>var acquiretoken = JSON.parse(responseBody);</p>
+<p>//定义一个acquiretoken方法(获取token)，把responseBody转为json字符串</p>
+<p>pm.environment.set("token",acquiretoken.data.token);</p>
+<p>//将token变量放置到当前环境变量里去</p>
+<p> </p>
+<p>再次执行send后，点击右上角小眼睛</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="859" data-width="1612"><img data-image-index="29" data-original-filesize="113730" data-original-format="image/png" data-original-height="859" data-original-src="//upload-images.jianshu.io/upload_images/12861759-273379e1c70ac449.png" data-original-width="1612" loading="lazy" src="/images/cnblogs/ee0adbc535cdea05.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>发现变量就储存在了dome的环境变量里，每次点击send进行请求，发现环境变量里token都会随着结果变化而变化。</p>
+<p>同理，全局变量统一可以这样设置</p>
+<p>在设置过变量后，调用变量的时候，在postman里也比较方便，直接使用{{变量名}}就可以了，</p>
+<p>加入我们在body里需要一个token值，那么我们可以直接在引用在环境变量里储存的token，例如：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="562" data-width="1088"><img data-image-index="30" data-original-filesize="58048" data-original-format="image/png" data-original-height="562" data-original-src="//upload-images.jianshu.io/upload_images/12861759-cfdece7488cfc327.png" data-original-width="1088" loading="lazy" src="/images/cnblogs/68956a849382e036.webp"/></div>
+</div>
+<div class="image-caption">引用变量的时候会有一定的提示</div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="547" data-width="979"><img data-image-index="31" data-original-filesize="42860" data-original-format="image/png" data-original-height="547" data-original-src="//upload-images.jianshu.io/upload_images/12861759-c461b6c9562878cb.png" data-original-width="979" loading="lazy" src="/images/cnblogs/d9fa2ebd017fcf51.webp"/></div>
+</div>
+<div class="image-caption">变颜色代表引入变量成功</div>
+</div>
+<p>上面的效果和下面这种把一点点输入的的效果是一样的！</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="526" data-width="850"><img data-image-index="32" data-original-filesize="42404" data-original-format="image/png" data-original-height="526" data-original-src="//upload-images.jianshu.io/upload_images/12861759-23083f1c2b4897ec.png" data-original-width="850" loading="lazy" src="/images/cnblogs/40a741f0175f9a1f.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<hr/>
+<h2>其他的常用tests方法：</h2>
+<p>在postman里，内置了一些常用的方法：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="324" data-width="265"><img data-image-index="33" data-original-filesize="11179" data-original-format="image/png" data-original-height="324" data-original-src="//upload-images.jianshu.io/upload_images/12861759-ca42867538587521.png" data-original-width="265" loading="lazy" src="/images/cnblogs/5c3ab4ecda4d7c7c.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>可以很方便的调用</p>
+<p>下面我也整理了一些常用的tests方法，分享给大家</p>
+<p> </p>
+<p> </p>
+<p>测试response Headers中的某个元素是否存在					tests["元素Content-Type是否存在"] = postman.getResponseHeader("Content-Type");</p>
+<p>//getResponseHeader()方法会返回header的值；</p>
+<p> </p>
+<p>定义一个xxx，获取headers值									var.xxx = postman.getResponseHeader("key");</p>
+<p>将Headers中的值设置为一个环境变量 							postman.setEnvironmentVariable("key",xxx);或者pm.environment.set("key",xxx);</p>
+<p> </p>
+<p> </p>
+<p>检查response的code值是否为200								tests["Status code is 200"] = responseCode.code === 200;</p>
+<p>//	tests["Status code is 200"]中的tests是一个内置对象，</p>
+<p>	tests["Status code is 200"]是指为这个断言起个名称叫”Status code is 200”，这个名称可以自行修改。</p>
+<p>	responseCode.code === 200中的responseCode是内置对象，responseCode对象中有个属性是code，是指HTTP状态码的code，判断code是否为200.</p>
+<p>	综合起来，这句代码的意思是：名称为”Status code is 200”的断言中，判断responseCode对象的code属性值（HTTP状态码）是否为200。</p>
+<p> </p>
+<p>检查response的body中是否包含字符串							tests["Body matches string"] = responseBody.has("type");</p>
+<p>//	tests["Body matches string"]中的tests是一个内置对象，</p>
+<p>	tests["Body matches string"]是指为这个断言起个名称叫”Body matches string”，这个名称可以自行修改。</p>
+<p>	这句代码的意思是：名称为”Body matches string”的断言中判断响应正文中是否包含：type这个字段。type无论是key或者value，只要匹配就可以。多个类型可用“，”分割。</p>
+<p> </p>
+<p>检查Response Body是否等于字符串								tests["测试点"] = responseBody === "Response Body返回的内容";</p>
+<p>//这个可以用在接口返回内容为纯字符串时，直接检查整个返回结果的正确性</p>
+<p> </p>
+<p>检查Response time 是否小于200ms								tests["Response time 小于200毫秒"] = responseTime &lt; 200;</p>
+<p> </p>
+<p>检查Response time 是否大于200ms								tests["Response time 大于200毫秒"] = responseTime &gt; 200;</p>
+<p> </p>
+<p>postman.setNextRequest('Request 4')</p>
+<p>//	postman.setNextRequest()是一个带有一个参数的函数，它是接下来要运行的请求的名称或ID。往往用来跳转至某个接口，只在运行该集合时有用，单独运行无效</p>
+<p> </p>
+<p> var jsonObject = xml2Json(responseBody);</p>
+<p>//转换XML body为JSON对象</p>
+<p> </p>
+<p>设置一个随机数变量											pm.globals.set("type",parseInt(4*Math.random())+1);</p>
+<p>//针对不同类型的课程类型，设置一个1到4的随机整数，字段名是type,parselnt 是强制转换为整数</p>
+<p> </p>
+<p>校验接口返回是否有数据										tests["获取第一个结果"] = xxx.content.jieguo[0];</p>
+<p>//我的程序设置的是如果当前没有数据，则只返回content[]，所以这句断言可以校验，如果content里还有数据，则视为返回不为空</p>
+<p> </p>
+<hr/>
+<h2>使用postman进行接口自动化测试</h2>
+<p>没错，使用postman也可以进行接口自动化的，是不是很神奇</p>
+<p>首先，既然是自动化测试，那么我们肯定需要工具 (Postman) 或者代码能帮我们直接判断结果是否符合预期。那么在接口测试上，大体就两个思路：</p>
+<p>判断请求返回的 code 是否符合预期</p>
+<p>判断请求返回的内容中是否包含预期的内容（关键字）</p>
+<p>接下来我们看看如何利用 Postman 来解决上述的问题</p>
+<p>--------------------</p>
+<p> </p>
+<p>这是三个模拟天气的接口集合，点击扩展按钮，找到RUN，进入</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="908" data-width="670"><img data-image-index="34" data-original-filesize="37160" data-original-format="image/png" data-original-height="908" data-original-src="//upload-images.jianshu.io/upload_images/12861759-540953cfa57211d5.png" data-original-width="670" loading="lazy" src="/images/cnblogs/15e329240e44b1b1.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="800" data-width="1280"><img data-image-index="35" data-original-filesize="145462" data-original-format="image/png" data-original-height="800" data-original-src="//upload-images.jianshu.io/upload_images/12861759-9ae6c0623518c5e6.png" data-original-width="1280" loading="lazy" src="/images/cnblogs/b416d282bff2ba99.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>这里我们先简单运行一次：</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="800" data-width="1280"><img data-image-index="36" data-original-filesize="96759" data-original-format="image/png" data-original-height="800" data-original-src="//upload-images.jianshu.io/upload_images/12861759-513e94fce134fae4.png" data-original-width="1280" loading="lazy" src="/images/cnblogs/6d382dec984ff795.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>发现，运行成功。里面我每个接口都写了两个tests进行校验字段，所以上面一共有6条tests测试点被测试到，并且是成功的</p>
+<p>每个接口里的tests数据如下：</p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="288" data-width="949"><img data-image-index="37" data-original-filesize="24448" data-original-format="image/png" data-original-height="288" data-original-src="//upload-images.jianshu.io/upload_images/12861759-6d2dc37463f24792.png" data-original-width="949" loading="lazy" src="/images/cnblogs/546d4ab27fe9b00d.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>当然，如果想要每次运行不一样的数据，我们需要其他的方法，比如，使用pre-requestScprit功能，导入或者生成随机数据进行测试，这个后续我再进行讲解</p>
+<p> </p>
+<hr/>
+<p>未完待续！</p>
+</div>
+<br/><br/>作者：依北辰<br/>链接：https://www.jianshu.com/p/97ba64888894<br/>来源：简书<br/>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</div>
+{% endraw %}

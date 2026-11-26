@@ -1,0 +1,23 @@
+---
+title: "java中如何将 string 转化成 long"
+date: 2020-07-02 16:15:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "1、java中如何将 string 转化成 long 方法1： long l = Long.valueOf(\"String\"); 方法2： long l = Long.parseLong(“String”); 或 long l = Long.parseLong(“String”, int radix"
+read_minutes: 1
+cnblogs_id: 13225422
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13225422.html"
+tags_inferred: true
+---
+{% raw %}
+<p><span style="background-color: #ff0000;"><strong>1、java中如何将 string 转化成 long</strong></span><br/><span style="background-color: #ff0000;"><strong>     方法1：  long l = Long.valueOf("String");</strong></span></p>
+<p><span style="background-color: #ff0000;"><strong>     方法2： long l = Long.parseLong(“String”);     或    long l = Long.parseLong(“String”, int radix); </strong></span></p>
+<p> </p>
+<p>2、Long.ValueOf("String") 与 Long.parseLong("String")  区别：</p>
+<p>      Long.ValueOf("String")返回Long包装类型</p>
+<p>     Long.parseLong("String")返回long基本数据类型</p>
+<p>源码如下：</p>
+<p>    public static Long valueOf(String s) throws NumberFormatException<br/>    {<br/>        return Long.valueOf(parseLong(s, 10));<br/>    }<br/>    public static long parseLong(String s) throws NumberFormatException {<br/>        return parseLong(s, 10);<br/>    }<br/> </p>
+<p>3、另外，代码检测工具 FindBugs 或 sonarQube，也会提示最好不用Long.ValueOf(“String”)，如下两图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/3232ec8e3b97e76f.png"/></p>
+<p> </p>
+{% endraw %}

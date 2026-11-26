@@ -1,0 +1,95 @@
+---
+title: "【Go】sync.WaitGroup的用法"
+date: 2022-01-12 21:12:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "介绍 经常会看到以下了代码： package main import ( \"fmt\" \"time\" ) func main(){ for i := 0; i < 100 ; i++{ go fmt.Println(i) } time.Sleep(time.Second) } 主线程为了等待gorou"
+read_minutes: 2
+cnblogs_id: 15795337
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15795337.html"
+---
+{% raw %}
+<h1>介绍</h1>
+<p>经常会看到以下了代码：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> main
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> (
+    </span>"fmt"
+    "time"<span style="color: #000000;">
+)
+
+func main(){
+    </span><span style="color: #0000ff;">for</span> i := 0; i &lt; 100 ; i++<span style="color: #000000;">{
+        go fmt.Println(i)
+    }
+    time.Sleep(time.Second)
+}</span></pre>
+</div>
+<p>主线程为了等待goroutine都运行完毕，不得不在程序的末尾使用<code>time.Sleep()</code> 来睡眠一段时间，等待其他线程充分运行。对于简单的代码，100个for循环可以在1秒之内运行完毕，<code>time.Sleep()</code> 也可以达到想要的效果。</p>
+<p>但是对于实际生活的大多数场景来说，1秒是不够的，并且大部分时候我们都无法预知for循环内代码运行时间的长短。这时候就不能使用<code>time.Sleep()</code> 来完成等待操作了。</p>
+<p>可以考虑使用管道来完成上述操作：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">func main() {
+    c :</span>= make(chan bool, 100<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">for</span> i := 0; i &lt; 100; i++<span style="color: #000000;"> {
+        go func(i </span><span style="color: #0000ff;">int</span><span style="color: #000000;">) {
+            fmt.Println(i)
+            c </span>&lt;- <span style="color: #0000ff;">true</span><span style="color: #000000;">
+        }(i)
+    }
+
+    </span><span style="color: #0000ff;">for</span> i := 0; i &lt; 100; i++<span style="color: #000000;"> {
+        </span>&lt;-<span style="color: #000000;">c
+    }
+}</span></pre>
+</div>
+<p>首先可以肯定的是使用管道是能达到我们的目的的，而且不但能达到目的，还能十分完美的达到目的。</p>
+<p>但是管道在这里显得有些大材小用，因为它被设计出来不仅仅只是在这里用作简单的同步处理，在这里使用管道实际上是不合适的。而且假设我们有一万、十万甚至更多的<code>for</code>循环，也要申请同样数量大小的管道出来，对内存也是不小的开销。</p>
+<p>对于这种情况，go语言中有一个其他的工具<code>sync.WaitGroup</code> 能更加方便的帮助我们达到这个目的。</p>
+<p><code>WaitGroup</code> 对象内部有一个计数器，最初从0开始，它有三个方法：<code>Add(), Done(), Wait()</code> 用来控制计数器的数量。<code>Add(n)</code> 把计数器设置为<code>n</code> ，<code>Done()</code> 每次把计数器<code>-1</code> ，<code>wait()</code> 会阻塞代码的运行，直到计数器地值减为<code>0</code>。</p>
+<p>使用<code>WaitGroup</code> 将上述代码可以修改为：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">func main() {
+    wg :</span>=<span style="color: #000000;"> sync.WaitGroup{}
+    wg.Add(</span>100<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">for</span> i := 0; i &lt; 100; i++<span style="color: #000000;"> {
+        go func(i </span><span style="color: #0000ff;">int</span><span style="color: #000000;">) {
+            fmt.Println(i)
+            wg.Done()
+        }(i)
+    }
+    wg.Wait()
+}</span></pre>
+</div>
+<p>这里首先把<code>wg</code> 计数设置为<code>100</code>， 每个<code>for</code>循环运行完毕都把计数器减一，主函数中使用<code>Wait()</code> 一直阻塞，直到<code>wg</code>为零——也就是所有的<code>100</code>个<code>for</code>循环都运行完毕。相对于使用管道来说，<code>WaitGroup</code> 轻巧了许多。</p>
+<h1><a name="t1"></a><a id="_65"></a>注意事项</h1>
+<h2><a name="t2"></a><a id="1__66"></a>1. 计数器不能为负值</h2>
+<p>我们不能使用<code>Add()</code> 给<code>wg</code> 设置一个负值，否则代码将会报错：</p>
+<pre class="prettyprint"><code class="has-numbering">panic: sync: negative WaitGroup counter
+
+goroutine 1 [running]:
+sync.(*WaitGroup).Add(0xc042008230, 0xffffffffffffff9c)
+    D:/Go/src/sync/waitgroup.go:75 +0x1d0
+main.main()
+    D:/code/go/src/test-src/2-Package/sync/waitgroup/main.go:10 +0x54</code></pre>
+<p>同样使用<code>Done()</code> 也要特别注意不要把计数器设置成负数了。</p>
+<h2><a name="t3"></a><a id="2_WaitGroup_80"></a>2. WaitGroup对象不是一个引用类型</h2>
+<p><code>WaitGroup</code>对象不是一个引用类型，在通过函数传值的时候需要使用地址：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">func main() {
+    wg :</span>=<span style="color: #000000;"> sync.WaitGroup{}
+    wg.Add(</span>100<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">for</span> i := 0; i &lt; 100; i++<span style="color: #000000;"> {
+        go f(i, </span>&amp;<span style="color: #000000;">wg)
+    }
+    wg.Wait()
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 一定要通过指针传值，不然进程会进入死锁状态</span>
+func f(i <span style="color: #0000ff;">int</span>, wg *<span style="color: #000000;">sync.WaitGroup) { 
+    fmt.Println(i)
+    wg.Done()
+}</span></pre>
+</div>
+<div id="gtx-trans" style="position: absolute; left: -69px; top: 1667.52px;"> </div>
+{% endraw %}

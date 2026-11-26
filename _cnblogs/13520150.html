@@ -1,0 +1,165 @@
+---
+title: "Mybatis执行sql（insert、update、delete）返回值问题"
+date: 2020-08-17 21:17:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "数据库：Mysql 在使用mybatis的过程中对执行sql的返回值产生疑问，顺手记录一下。 结论： insert： 插入n条记录，返回影响行数n。（n>=1，n为0时实际为插入失败） update：更新n条记录，返回影响行数n。（n>=0） delete： 删除n条记录，返回影响行数n。（n>=0"
+read_minutes: 3
+cnblogs_id: 13520150
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13520150.html"
+tags_inferred: true
+---
+{% raw %}
+<p><strong>数据库：Mysql</strong></p>
+<p>在使用mybatis的过程中对执行sql的返回值产生疑问，顺手记录一下。</p>
+<p><strong>结论：</strong></p>
+<p>insert：   插入n条记录，返回影响行数n。（n&gt;=1，n为0时实际为插入失败）</p>
+<p>update：更新n条记录，返回影响行数n。（n&gt;=0）</p>
+<p>delete： 删除n条记录，返回影响行数n。（n&gt;=0）</p>
+<p> </p>
+<p><strong>验证：</strong></p>
+<p>插入多条数据，mysql中可以使用如下sql：</p>
+<div class="cnblogs_code">
+<pre>insert into bill (TX_TYP,REMARK,NO) VALUES (?,?,?) , (?,?,?) , (?,?,?) ；</pre>
+</div>
+<p>而对oracle的操作略有不同（两种方式 以及对应的mapper配置）：</p>
+<div class="cnblogs_code">
+<pre>INSERT INTO BILL(NO,TX_TYP,REMARK) (SELECT ?,?,? FROM dual) UNION ALL (SELECT ?,?,? FROM dual);
+--或者
+INSERT ALL INTO bill(NO,TX_TYP,REMARK) values ( ?,?,? ) INTO bill(NO,TX_TYP,REMARK) values ( ?,?,? ) SELECT 1 FROM dual;</pre>
+</div>
+<div class="cnblogs_code">
+
+<pre>   &lt;!--对应的mapper 此处必须设置useGeneratedKeys=false才能批量插入成功--&gt;
+   &lt;insert id="mulAddOracle" parameterType="java.util.ArrayList" useGeneratedKeys="false"&gt;
+      insert into bill (TX_TYP,REMARK,NO)
+      &lt;foreach collection="list" item="bill"  separator="UNION ALL"&gt;
+         (SELECT #{bill.txTyp},#{bill.remark},#{bill.no} from dual)
+      &lt;/foreach&gt;
+   &lt;/insert&gt;
+   &lt;!-- 第二种--&gt;
+   &lt;insert id="mulAddOracle2" parameterType="java.util.ArrayList" useGeneratedKeys="false"&gt;
+      insert ALL
+      &lt;foreach collection="list" item="bill" &gt;
+         into bill (TX_TYP,REMARK,NO) values
+         (#{bill.txTyp},#{bill.remark},#{bill.no})
+      &lt;/foreach&gt;
+      select 1 from dual
+   &lt;/insert&gt;</pre>
+
+</div>
+<p>为了更直观的查看sql运行情况，在mybatis-config.xml中配置加一个setting配置，将执行的sql打印到控制台。</p>
+<div class="cnblogs_code">
+<pre>&lt;setting name="logImpl" value="STDOUT_LOGGING" /&gt;</pre>
+</div>
+<p>定义实体类Bill，属性no，txTyp，remark，其中no为mysql数据库表bill自增主键。</p>
+<p>Mapper接口</p>
+<div class="cnblogs_code">
+
+<pre>    //单条插入
+    int add(Bill bill);
+    //多条插入
+    int mulAdd(List list);
+    //更新
+    int upt(Bill bill);
+    //删除
+    int del(Bill bill);</pre>
+
+</div>
+<p>Mapper.xml</p>
+<div class="cnblogs_code">
+
+<pre>   &lt;!-- 插入单条记录--&gt;
+   &lt;insert id="add" parameterType="com.demo.bill1.domain.Bill"  &gt;
+      insert into bill(TX_TYP,REMARK) values(#{txTyp},#{remark})
+   &lt;/insert&gt;
+   &lt;!--一次插入多条记录  将所有信息插入bill表里面，传入参数为list,通过&lt;foreach&gt;来遍历list--&gt;
+   &lt;insert id="mulAdd" parameterType="java.util.ArrayList"&gt;
+      insert into bill (TX_TYP,REMARK,NO) VALUES
+      &lt;foreach collection="list" item="bill"  separator=","&gt;
+         (#{bill.txTyp},#{bill.remark},#{bill.no})
+      &lt;/foreach&gt;
+   &lt;/insert&gt;
+
+   &lt;!-- 更新记录--&gt;
+   &lt;update id="upt" parameterType="com.demo.bill1.domain.Bill"&gt;
+      update bill set REMARK=#{remark} where NO=#{no}
+   &lt;/update&gt;
+
+   &lt;!-- 删除记录--&gt;
+   &lt;delete id="del" parameterType="com.demo.bill1.domain.Bill"&gt;
+      delete from bill where TX_TYP=#{txTyp}
+   &lt;/delete&gt;</pre>
+
+</div>
+<p> </p>
+<p><strong>开始测试：</strong></p>
+<p><strong>①插入单条记录：</strong></p>
+<div class="cnblogs_code">
+
+<pre>    @Test
+    public void add(){
+        Bill bill=new Bill();
+        bill.setTxTyp("1");
+        bill.setRemark("试试影响行数");
+        System.out.println(billMapper.add(bill));
+    }</pre>
+
+</div>
+<p>sql执行结果与返回值：成功插入一条数据，返回影响行数：1。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/64fbaf8f95aade57.png"/></p>
+<p><strong>②插入多条记录</strong></p>
+<div class="cnblogs_code">
+
+<pre>    @Test //测试一次性插入多条记录
+    public void mulAdd(){
+        List list =new ArrayList&lt;Bill&gt;();
+        Bill bill1=new Bill();
+        bill1.setTxTyp("1");
+        bill1.setRemark("bill1");
+        Bill bill2=new Bill();
+        bill2.setTxTyp("1");
+        bill2.setRemark("bill2");
+        Bill bill3=new Bill();
+        bill3.setTxTyp("1");
+        bill3.setRemark("bill3");
+        list.add(bill1);
+        list.add(bill2);
+        list.add(bill3);
+        System.out.println(billMapper.mulAdd(list));
+    }</pre>
+
+</div>
+<p>sql执行结果与返回值：成功插入三条数据，返回影响行数：3。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/fd3e160678a684a1.png"/></p>
+<p>插入多条记录时，如果有记录主键冲突，则sql执行出错，抛出异常，此时未成功插入记录。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/38eb5742a94435c1.png"/></p>
+<p><strong>③更新语句</strong></p>
+<div class="cnblogs_code">
+
+<pre>    @Test //根据no进行更新
+    public void upt(){
+        Bill bill=new Bill();
+        bill.setTxTyp("1");
+        bill.setRemark("修改一下");
+        bill.setNo(1);
+        System.out.println(billMapper.upt(bill));
+    }</pre>
+
+</div>
+<p>sql执行结果与返回值：根据NO字段进行更新，数据库表中没有NO=1的行，返回影响行数：0。修改成表中有的值后，成功返回影响行数。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/c6a4d30557b7b855.png"/></p>
+<p><strong>④删除语句</strong></p>
+<div class="cnblogs_code">
+
+<pre>    @Test //根据txTyp进行删除
+    public void del(){
+        Bill bill=new Bill();
+        bill.setTxTyp("1");
+        System.out.println(billMapper.del(bill));
+    }</pre>
+
+</div>
+<p>sql执行结果与返回值：先将txTyp设置成数据库中没有的值txTyp=a，执行后返回影响行数为0；设置为有4条记录的txTyp=1，执行后返回影响结果为4，成功删除4条记录。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d5c43a6bf91bcd73.png"/><img alt="" height="86" loading="lazy" src="/images/cnblogs/f03b142337ff5da8.png" width="593"/></p>
+<p> </p>
+{% endraw %}

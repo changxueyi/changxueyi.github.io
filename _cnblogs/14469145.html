@@ -1,0 +1,38 @@
+---
+title: "查看Linux端口占用，并kill掉相关进程"
+date: 2021-03-02 15:24:00 +0800
+tags: ["【Linux】Linux基础"]
+excerpt: "话不多说，本文介绍Linux常规操作：查看端口占用进程，根据PID kill掉相关进程。另外补充：根据程序名查看进程PID。 首先，两条命令，lsof命令和netstat命令。 方式一：lsof命令1、查看占用端口进程的PID： lsof -i:{端口号} 2、根据PID kill掉相关进程： ki"
+read_minutes: 1
+cnblogs_id: 14469145
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14469145.html"
+---
+{% raw %}
+<p>话不多说，本文介绍Linux常规操作：查看端口占用进程，根据PID kill掉相关进程。另外补充：根据程序名查看进程PID。</p>
+<p>    首先，两条命令，lsof命令和netstat命令。</p>
+<p> </p>
+<p>方式一：lsof命令<br/>1、查看占用端口进程的PID：</p>
+<p>lsof -i:{端口号}</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/21eea3ccb45dc2b5.png"/></p>
+<p> </p>
+<p> </p>
+<p><br/>2、根据PID kill掉相关进程：</p>
+<p>kill -9 {PID}</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/f827203de6b85f65.png"/></p>
+<p> </p>
+<p> </p>
+<p><br/> </p>
+<p>方式二：netstat命令<br/>1、查看占用端口进程的PID：</p>
+<p>netstat -tunlp|grep {port}</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/454215a56be29210.png"/></p>
+<p> </p>
+<p> </p>
+<p><br/>2、kill方法如上。</p>
+<p> </p>
+<p>kill -9 {PID}<br/> </p>
+<p> </p>
+<p>补充1：根据程序名查看对应的PID<br/>1、用ps命令（zb专用）：</p>
+<p>ps -ef | grep {programName}<br/>kill -9 {PID}<br/> <br/># 查看详细内存占用<br/>ps aux -u root | grep {programName}<br/>2、用pgrep命令：</p>
+<p>pgrep命令的p表明了这个命令是专门用于进程查询的grep。</p>
+<p>pgrep {programName}<br/>kill -9 {PID}<br/>补充2：根据PID查看对应的进程<br/>ps -aux |grep -v grep|grep {$PID}<br/>隔很长时间不用，就忘了，故记下！</p>
+{% endraw %}

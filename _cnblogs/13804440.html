@@ -1,0 +1,316 @@
+---
+title: "BigDecimal.setScale()方法用于商业计算的精度设置问题详解"
+date: 2020-10-12 18:28:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "BigDecimal.setScale()方法用于商业计算的精度设置问题详解 网上的说法繁杂，看起来诸多不便，并且有的说法也不太准确，在这里 做一下求证。用的较多的4个参数：BigDecimal.ROUND_UP 这个方法做直接进位处理，但是有个特殊情况需要考虑，如果将要舍弃的位上的值是0，不做进位"
+read_minutes: 2
+cnblogs_id: 13804440
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13804440.html"
+---
+{% raw %}
+<p>BigDecimal.setScale()方法用于商业计算的精度设置问题详解<br/><br/><br/>    网上的说法繁杂，看起来诸多不便，并且有的说法也不太准确，在这里 做一下求证。用的较多的4个参数：<br/>BigDecimal.ROUND_UP 这个方法做直接进位处理，但是有个特殊情况需要考虑，如果将要舍弃的位上的值是0，不做进位处理。<br/>BigDecimal.ROUND_DOWN 这个方法做直接舍弃处理<br/>BigDecimal.ROUND_HALF_UP 这个方法就是大名鼎鼎的四舍五入</p>
+<p>BigDecimal.ROUND_HALF_DOWN 这个方法准确来说，是五舍六入</p>
+<p> </p>
+<p> </p>
+<ol class="hljs-ln">
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">import java.math.BigDecimal;</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-comment">/**</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-comment"> * </span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-comment"> * <span class="hljs-doctag">@author yangcq</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-comment"> * Java常用商业计算工具类BigDecimal的精度设置方法setScale()详解</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-comment"> *</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-comment"> */</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">BigDecimalTest {</span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args) {</span></span></span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		bigDecimalTest();</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">	}</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-function"><span class="hljs-keyword">private <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">bigDecimalTest<span class="hljs-params">(){</span></span></span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		BigDecimal bigDecimal_01 = <span class="hljs-keyword">new BigDecimal(<span class="hljs-string">"918.845"); </span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		BigDecimal bigDecimal_02 = <span class="hljs-keyword">new BigDecimal(<span class="hljs-string">"918.844");</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		BigDecimal bigDecimal_03 = <span class="hljs-keyword">new BigDecimal(<span class="hljs-string">"918.846"); </span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		bigDecimal_01.setScale(<span class="hljs-number">3);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_UP);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_DOWN);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_UP);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_DOWN);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"测试数据：" + bigDecimal_01);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_UP = " + bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_DOWN = " + bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_UP = " + bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_DOWN = " + bigDecimal_01.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"测试数据：" + bigDecimal_02);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_UP = " + bigDecimal_02.setScale(<span class="hljs-number">2,BigDecimal.ROUND_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_DOWN = " + bigDecimal_02.setScale(<span class="hljs-number">2,BigDecimal.ROUND_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_UP = " + bigDecimal_02.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_DOWN = " + bigDecimal_02.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"测试数据：" + bigDecimal_03);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_UP = " + bigDecimal_03.setScale(<span class="hljs-number">2,BigDecimal.ROUND_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_DOWN = " + bigDecimal_03.setScale(<span class="hljs-number">2,BigDecimal.ROUND_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_UP = " + bigDecimal_03.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_DOWN = " + bigDecimal_03.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-comment">// BigDecimal.ROUND_UP 这个方法做直接进位处理，但是有个特殊情况需要考虑，如果将要舍弃的位上的值是0，不做进位处理。</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		BigDecimal bigDecimal_04 = <span class="hljs-keyword">new BigDecimal(<span class="hljs-string">"918.850");</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"测试数据：" + bigDecimal_04);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_UP = " + bigDecimal_04.setScale(<span class="hljs-number">2,BigDecimal.ROUND_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_DOWN = " + bigDecimal_04.setScale(<span class="hljs-number">2,BigDecimal.ROUND_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_UP = " + bigDecimal_04.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_UP));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		System.out.println(<span class="hljs-string">"BigDecimal.ROUND_HALF_DOWN = " + bigDecimal_04.setScale(<span class="hljs-number">2,BigDecimal.ROUND_HALF_DOWN));</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">	}</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">}</div>
+</div>
+</li>
+</ol>
+<p><br/>-------------------------------------控制台输出：----------------------------------------------</p>
+<p> </p>
+<p>测试数据：918.845<br/>BigDecimal.ROUND_UP = 918.85<br/>BigDecimal.ROUND_DOWN = 918.84<br/>BigDecimal.ROUND_HALF_UP = 918.85<br/>BigDecimal.ROUND_HALF_DOWN = 918.84<br/>测试数据：918.844<br/>BigDecimal.ROUND_UP = 918.85<br/>BigDecimal.ROUND_DOWN = 918.84<br/>BigDecimal.ROUND_HALF_UP = 918.84<br/>BigDecimal.ROUND_HALF_DOWN = 918.84<br/>测试数据：918.846<br/>BigDecimal.ROUND_UP = 918.85<br/>BigDecimal.ROUND_DOWN = 918.84<br/>BigDecimal.ROUND_HALF_UP = 918.85<br/>BigDecimal.ROUND_HALF_DOWN = 918.85<br/>测试数据：918.850<br/>BigDecimal.ROUND_UP = 918.85<br/>BigDecimal.ROUND_DOWN = 918.85<br/>BigDecimal.ROUND_HALF_UP = 918.85<br/>BigDecimal.ROUND_HALF_DOWN = 918.85</p>
+{% endraw %}

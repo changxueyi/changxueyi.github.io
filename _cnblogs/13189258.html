@@ -1,0 +1,126 @@
+---
+title: "<%@ include file=\"\"%>与<jsp:include page=\"\"/>区别"
+date: 2020-06-24 18:53:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "我们都知道在jsp中include有两种形式,分别是Include指令：<%@ include file=\"\"%>和include动作：<jsp:include page=\"\" flush=\"true\"/> 前者是指令元素、后者是行为元素。具体它们将在何处用？如何用及它们有什么区别？这应该是很多人看"
+read_minutes: 6
+cnblogs_id: 13189258
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13189258.html"
+tags_inferred: true
+---
+{% raw %}
+<p>    我们都知道在jsp中include有两种形式,分别是Include指令：&lt;%@ include file=""%&gt;和include动作：&lt;jsp:include page="" flush="true"/&gt;<span class="Apple-converted-space">      前者是指令元素、后者是行为元素。具体它们将在何处用？如何用及它们有什么区别？这应该是很多人看到它都会想到的问题。下面一起来看看吧。<span class="Apple-converted-space">      通常当应用程序中所有的页面的某些部分（例如标题、页脚和导航栏）都相同的时候，我们就可以考虑用include。具体在哪些时候用&lt;%@ include file=""%&gt;，哪些时候用&lt;jsp:include page="" flush="true"/&gt;。这种形式。首先要明白的是它们之间的区别。只有了解了它们用法的不同才理解该在何时去用以及如何选择。</span></span></p>
+<p>    两者最重要的区别：JSP指令&lt;%@ include file=""%&gt;，是将被引入的JSP与原JSP融合到一起，而这个融合过程是在翻译阶段进行的。</p>
+<p>    为什么需要翻译阶段？我们知道，jsp页面并不是原封不动的发送到客户端的，因为浏览JSP页面的客户端并不需要安装Java虚拟机，客户端机器并不能读懂JSP，它能读懂的只有HTML、JavaScript (当然还有其他，例如：Applet、Flex、AxtiveX等等，但那些都需要下载相应的客户端解析器)，这样就需要Servlet Engine （例如：Tomcat） 将所有的JSP元素进行处理。这是通过将jsp页面转化成Servlet，然后执行这个Servlet来完成的。服务器需要一个jsp容器来处理jsp页面。jsp容器通常以Servlet的形式实现，这个servlet经过配置，可以处理对jsp页面的所有请求。</p>
+<p>    JSP容器负责将jsp页面转化成servlet，并编译这个servlet。这两个步骤就构成了翻译阶段。</p>
+<p>    而jsp翻译之后的servlet输出的内容才是客户端浏览器能够识别的东西，HTML、JavaScript之类的，servlet是使用JspWriter对象输出输出这些HTML、JavaScript的。如果你去翻看翻看jsp编译后的servlet代码，你会发现很有意思的东西，比如Struts的&lt;logic:iterator&gt;标签，被翻译成do{}while()语句实现循环。如果我们把&lt;bean:write&gt;写在&lt;logic:iterator&gt;内部，则在do的内部会出现类似_jspx_meth_bean_write_2(_jspx_th_logic_iterate_0, _jspx_page_context)的方法调用。这些说明了一切。</p>
+<p>    由此我们知道：jsp页面是把include指令元素（&lt;%@ include file=""%&gt;）所指定的页面的实际内容（也就是代码段）加入到引入它的jsp页面中,合成一个文件后被jsp容器将它转化成servlet。可以看到这时会产生一个临时class文件和一个servlet源文件。而动作元素（&lt;jsp:include page=""/&gt;）是在请求处理阶段引入的，会被JSP容器生成两个临时class文件和两个servlet原文件。而引入的只是servlet的输出结果，即JspWriter对象的输出结果，而不是jsp的源代码。</p>
+<p>    举个例子：</p>
+<p>    main.jsp</p>
+<div class="dp-highlighter">
+<div class="bar">
+<div class="tools">Html代码<span class="Apple-converted-space">  <a title="收藏这段代码"><img alt="收藏代码" class="star" loading="lazy" src="/images/cnblogs/ae3dd6003a53eb8b.png"/></a></span></div>
+</div>
+<ol class="dp-xml" start="1">
+<li><span class="tag">&lt;%@ page <span class="attribute">language=<span class="attribute-value">"java" <span class="attribute">pageEncoding=<span class="attribute-value">"GBK"%<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li>  </li>
+<li><span class="tag">&lt;%@ taglib <span class="attribute">uri=<span class="attribute-value">"http://struts.apache.org/tags-bean" <span class="attribute">prefix=<span class="attribute-value">"bean" %<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%@ taglib <span class="attribute">uri=<span class="attribute-value">"http://struts.apache.org/tags-html" <span class="attribute">prefix=<span class="attribute-value">"html" %<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%@ taglib <span class="attribute">uri=<span class="attribute-value">"http://struts.apache.org/tags-logic" <span class="attribute">prefix=<span class="attribute-value">"logic" %<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%@ taglib <span class="attribute">uri=<span class="attribute-value">"http://struts.apache.org/tags-tiles" <span class="attribute">prefix=<span class="attribute-value">"tiles" %<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li>  </li>
+<li>  </li>
+<li>&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"<span class="tag">&gt;  </span></li>
+<li><span class="tag">&lt;<span class="tag-name">html:html <span class="attribute">lang=<span class="attribute-value">"true"<span class="tag">&gt;  </span></span></span></span></span></li>
+<li>  <span class="tag">&lt;<span class="tag-name">head<span class="tag">&gt;  </span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">html:base <span class="tag">/&gt;  </span></span></span></li>
+<li>      </li>
+<li>    <span class="tag">&lt;<span class="tag-name">title<span class="tag">&gt;index.jsp<span class="tag">&lt;/<span class="tag-name">title<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">meta <span class="attribute">http-equiv=<span class="attribute-value">"Content-Type" <span class="attribute">content=<span class="attribute-value">"text/html; charset=GBK" <span class="tag">/&gt;  </span></span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">meta <span class="attribute">http-equiv=<span class="attribute-value">"pragma" <span class="attribute">content=<span class="attribute-value">"no-cache"<span class="tag">&gt;  </span></span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">meta <span class="attribute">http-equiv=<span class="attribute-value">"cache-control" <span class="attribute">content=<span class="attribute-value">"no-cache"<span class="tag">&gt;  </span></span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">meta <span class="attribute">http-equiv=<span class="attribute-value">"expires" <span class="attribute">content=<span class="attribute-value">"0"<span class="tag">&gt;      </span></span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">meta <span class="attribute">http-equiv=<span class="attribute-value">"keywords" <span class="attribute">content=<span class="attribute-value">"keyword1,keyword2,keyword3"<span class="tag">&gt;  </span></span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">meta <span class="attribute">http-equiv=<span class="attribute-value">"description" <span class="attribute">content=<span class="attribute-value">"This is my page"<span class="tag">&gt;  </span></span></span></span></span></span></span></li>
+<li>    <span class="comments">&lt;!-- </span></li>
+<li><span class="comments">    &lt;link rel="stylesheet" type="text/css" href="styles.css"&gt; </span></li>
+<li><span class="comments">    --&gt;  </span></li>
+<li>  </li>
+<li>  <span class="tag">&lt;/<span class="tag-name">head<span class="tag">&gt;  </span></span></span></li>
+<li>    </li>
+<li>  <span class="tag">&lt;<span class="tag-name">body<span class="tag">&gt;  </span></span></span></li>
+<li>    <span class="comments">&lt;!-- Header Page Information --&gt;  </span></li>
+<li><span class="tag">&lt;%-- <span class="tag">&lt;%@ include <span class="attribute">file=<span class="attribute-value">"include/head.jsp"%<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">jsp:include <span class="attribute">page=<span class="attribute-value">"include/head.jsp"<span class="tag">&gt;<span class="tag">&lt;/<span class="tag-name">jsp:include<span class="tag">&gt;  </span></span></span></span></span></span></span></span></li>
+<li>    <span class="comments">&lt;!-- Nav Bar --&gt;  </span></li>
+<li><span class="tag">&lt;%-- <span class="tag">&lt;%@ include <span class="attribute">file=<span class="attribute-value">"include/menubar.jsp"%<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">jsp:include <span class="attribute">page=<span class="attribute-value">"include/menubar.jsp"<span class="tag">&gt;<span class="tag">&lt;/<span class="tag-name">jsp:include<span class="tag">&gt;  </span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li>    我是主体<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">br<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%--        <span class="tag">&lt;%@ include <span class="attribute">file=<span class="attribute-value">"include/copyright.jsp"%<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%--        <span class="tag">&lt;<span class="tag-name">jsp:include <span class="attribute">page=<span class="attribute-value">"/includeSample_copyright.do"<span class="tag">&gt;<span class="tag">&lt;/<span class="tag-name">jsp:include<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%-- <span class="tag">&lt;<span class="tag-name">jsp:include <span class="attribute">flush=<span class="attribute-value">"true" <span class="attribute">page=<span class="attribute-value">"include/copyright.jsp"<span class="tag">&gt;<span class="tag">&lt;/<span class="tag-name">jsp:include<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></span></span></span></span></span></span></li>
+<li>  <span class="tag">&lt;/<span class="tag-name">body<span class="tag">&gt;  </span></span></span></li>
+<li><span class="tag">&lt;/<span class="tag-name">html:html<span class="tag">&gt;  </span></span></span></li>
+</ol></div>
+<p> head.jsp</p>
+<div class="dp-highlighter">
+<div class="bar">
+<div class="tools">Html代码<span class="Apple-converted-space">  <a title="收藏这段代码"><img alt="收藏代码" class="star" loading="lazy" src="/images/cnblogs/ae3dd6003a53eb8b.png"/></a></span></div>
+</div>
+<ol class="dp-xml" start="1">
+<li><span class="tag">&lt;%--<span class="tag">&lt;%@ page <span class="attribute">language=<span class="attribute-value">"java" <span class="attribute">pageEncoding=<span class="attribute-value">"GBK"%<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></span></span></li>
+<li>  </li>
+<li><span class="tag">&lt;%--<span class="tag">&lt;%@ taglib <span class="attribute">uri=<span class="attribute-value">"/WEB-INF/struts-html.tld" <span class="attribute">prefix=<span class="attribute-value">"html" %<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%--<span class="tag">&lt;%@ taglib <span class="attribute">uri=<span class="attribute-value">"/WEB-INF/struts-logic.tld" <span class="attribute">prefix=<span class="attribute-value">"logic" %<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></span></span></li>
+<li><span class="tag">&lt;%--<span class="tag">&lt;%@ taglib <span class="attribute">uri=<span class="attribute-value">"/WEB-INF/struts-bean.tld" <span class="attribute">prefix=<span class="attribute-value">"bean" %<span class="tag">&gt;--%<span class="tag">&gt;  </span></span></span></span></span></span></span></span></li>
+<li>  </li>
+<li><span class="tag">&lt;<span class="tag-name">table<span class="tag">&gt;  </span></span></span></li>
+<li>    <span class="tag">&lt;<span class="tag-name">tr<span class="tag">&gt;  </span></span></span></li>
+<li>        <span class="tag">&lt;<span class="tag-name">td<span class="tag">&gt;<span class="tag">&lt;<span class="tag-name">bean:message <span class="attribute">key=<span class="attribute-value">"copyright.inc.copyright"<span class="tag">/&gt;  </span></span></span></span></span></span></span></span></li>
+<li>                       我是Head 我是Head我是Head我是Head我是Head我是Head我是Head<span class="tag">&lt;/<span class="tag-name">td<span class="tag">&gt;  </span></span></span></li>
+<li>    <span class="tag">&lt;/<span class="tag-name">tr<span class="tag">&gt;  </span></span></span></li>
+<li><span class="tag">&lt;/<span class="tag-name">table<span class="tag">&gt;   </span></span></span></li>
+</ol></div>
+<p> </p>
+<p> 以head.jsp为例：</p>
+<p> 1、如果我是用&lt;%@ include file="include/head.jsp"%&gt;引入，注意，head.jsp被我注释掉的字符集和Struts标签的引入，如果打开注释，会怎么样呢？？会抛出500异常，/main.jsp(44,4) /include/head.jsp(3,56) Attempt to redefine the prefix html to /WEB-INF/struts-html.tld, when it was already defined as http://struts.apache.org/tags-html in the current scope.这时因为在翻译阶段main.jsp和head.jsp被原封不动的合称为一个jsp，察看Tomcat工作目录只有一个servlet类文件。</p>
+<p>           \work\Catalina\localhost\IncludeAction\org\apache\jsp\main_jsp.java</p>
+<p>           \work\Catalina\localhost\IncludeAction\org\apache\jsp\main_jsp.class 试想，在一个类文件中两次引入相同的Struts标签，编译时当然回抛出异常了。</p>
+<p>2、那么如果我是以&lt;jsp:include page="include/head.jsp"/&gt;方式引入呢？首先先将head.jap中注释的Struts标签的部分打开，而字符集部分仍然注释。结果出现乱码：</p>
+<p> </p>
+<div class="dp-highlighter">
+<div class="bar">
+<div class="tools">Java代码<span class="Apple-converted-space">  <a title="收藏这段代码"><img alt="收藏代码" class="star" loading="lazy" src="/images/cnblogs/ae3dd6003a53eb8b.png"/></a></span></div>
+</div>
+<ol class="dp-j" start="1">
+<li>结果：  </li>
+<li><span class="number">2004-<span class="number">2006 版权所有   </span></span></li>
+<li>????Head ????Head????Head????Head????Head????Head????Head   </li>
+<li>????MenuBar       </li>
+<li>我是主体...  </li>
+</ol></div>
+<p>   什么原因？include动作元素是在请求阶段执行引入的，所以它引入的只是head.jsp被翻译成servlet文件中_jspService这个方法中JspWriter这个对象的输出（out.write()方法的输出流）。该输出的执行是在head.jsp被引入main.jsp之前就进行了，所以main.jsp页面中的字符集设置当然对head.jsp不起作用了。</p>
+<p>    如果Struts标签部分也注释掉呢？"2004-2006 版权所有"这一行不会输出，因为这一行是由Struts标签输出的，没有输出的原因和字符集相同，我想大家应该明白了。</p>
+<p>   最后观察Tomcat工作目录下，会有两个Servlet：</p>
+<p>       第一个：\work\Catalina\localhost\IncludeAction\org\apache\jsp\main_jsp.java</p>
+<p>                   \work\Catalina\localhost\IncludeAction\org\apache\jsp\main_jsp.class</p>
+<p>       第二个：\work\Catalina\localhost\IncludeAction\org\apache\jsp\include\head_jsp.java</p>
+<p>                   \work\Catalina\localhost\IncludeAction\org\apache\jsp\include\head_jsp.class    另外，如果希望通过修改后缀的方法表示哪些是被引入的文件，例如：将head.jsp改名为head.inc的话，JSP容器不能识别*.inc。所以不能翻译head.inc，所以此时只能使用&lt;%@ include file="head.inc"%&gt;方法引入一个文件了。</p>
+<p> </p>
+<p>我们来总结一下两种include 两种用法的区别，主要有两个方面的不同：<span class="Apple-converted-space"> </span></p>
+<p>一、执行时间上:<span class="Apple-converted-space"> </span></p>
+<p>&lt;%@ include file=”relativeURI”%&gt; 是在翻译阶段执行<span class="Apple-converted-space"> </span></p>
+<p>&lt;jsp:include page=”relativeURI” flush=”true” /&gt; 在请求处理阶段执行。<span class="Apple-converted-space"> </span></p>
+<p> 二:引入内容的不同:<span class="Apple-converted-space"> </span></p>
+<p>&lt;%@ include file=”relativeURI”%&gt; 引入静态文本(html,jsp),在JSP页面被转化成servlet之前和它融和到一起。</p>
+<p><span class="Apple-converted-space">  &lt;jsp:include page=”relativeURI” flush=”true” /&gt; 引入执行页面或servlet所生成的应答文本。</span></p>
+{% endraw %}

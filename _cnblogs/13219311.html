@@ -1,0 +1,310 @@
+---
+title: "静态代理和动态代理"
+date: 2020-07-01 15:02:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "学习 Spring 的过程中，不可避免要掌握代理模式。这篇文章总结一下代理模式。顾名思义，代理，就是你委托别人帮你办事，所以代理模式也有人称作委托模式的。比如领导要做什么事，可以委托他的秘书去帮忙做，这时就可以把秘书看做领导的代理。下面将以这个例子来讲解。代理模式又分为静态代理和动态代理。 一、静态"
+read_minutes: 7
+cnblogs_id: 13219311
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13219311.html"
+tags_inferred: true
+---
+{% raw %}
+<p>学习 Spring 的过程中，不可避免要掌握代理模式。这篇文章总结一下代理模式。顾名思义，代理，就是你委托别人帮你办事，所以代理模式也有人称作委托模式的。比如领导要做什么事，可以委托他的秘书去帮忙做，这时就可以把秘书看做领导的代理。下面将以这个例子来讲解。<br/>代理模式又分为静态代理和动态代理。</p>
+<h1 id="esa_index_0">一、静态代理</h1>
+<h2 id="esa_index_1">静态代理的使用</h2>
+<p>静态代理，代理类和被代理的类实现了同样的接口，代理类同时持有被代理类的引用，这样，当我们需要调用被代理类的方法时，可以通过调用代理类的方法来做到。举例如下：<br/>假设领导的工作是开会和给员工考评。<br/>先定义一个接口：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">IWork {
+    <span class="hljs-function"><span class="hljs-keyword">void <span class="hljs-title">meeting<span class="hljs-params">();
+
+    <span class="hljs-function"><span class="hljs-keyword">int <span class="hljs-title">evaluate<span class="hljs-params">(String name);
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>然后定义领导类：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj;
+
+<span class="hljs-keyword">import java.util.Random;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Leader <span class="hljs-keyword">implements <span class="hljs-title">IWork {
+
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">meeting<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"领导早上要组织会议");
+    }
+
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">int <span class="hljs-title">evaluate<span class="hljs-params">(String name) {
+        <span class="hljs-keyword">int score = <span class="hljs-keyword">new Random(System.currentTimeMillis()).nextInt(<span class="hljs-number">20) + <span class="hljs-number">80;
+        System.out.println(String.format(<span class="hljs-string">"领导给%s的考评为%s分", name, score));
+        <span class="hljs-keyword">return score;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>秘书类：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Secretary <span class="hljs-keyword">implements <span class="hljs-title">IWork {
+    <span class="hljs-keyword">private Leader mLeader;
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-title">Secretary<span class="hljs-params">(Leader mLeader) {
+        <span class="hljs-keyword">this.mLeader = mLeader;
+    }
+
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">meeting<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"秘书先给老板准备材料");
+        mLeader.metting();
+    }
+
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">int <span class="hljs-title">evaluate<span class="hljs-params">(String name) {
+        <span class="hljs-keyword">return mLeader.evaluate(name);
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>测试类：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestApp {
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args) {
+        Leader leader = <span class="hljs-keyword">new Leader();
+        Secretary secretary = <span class="hljs-keyword">new Secretary(leader);
+        secretary.meeting();
+        secretary.evaluate(<span class="hljs-string">"Joy");
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>执行结果：<br/><img alt="" loading="lazy" src="/images/cnblogs/a7282bc48b21fccc.gif"/></p>
+<p>这个代码很简单，注意在调用<code>Secretary</code>类的 meeting 方法时，我们调用了<code>Leader</code>类的 meeting 的方法，在此之前，我们还扩充了该方法。这时有的人可能有疑惑了，这看起来有点是装饰者模式了。这到底怎么回事？</p>
+<h2 id="esa_index_2">与装饰者模式的区别</h2>
+<p>实际上，在装饰器模式和代理模式之间还是有很多差别的。装饰器模式关注于在一个对象上动态的添加方法，然而代理模式关注于控制对对象的访问。换句话说，用代理模式，代理类（proxy class）可以对它的客户隐藏一个对象的具体信息。因此，当使用代理模式的时候，我们常常在一个代理类中创建一个对象的实例。并且，当我们使用装饰器模式的时候，我们通常的做法是将原始对象作为一个参数传给装饰者的构造器。</p>
+<blockquote>
+<p>我们可以用另外一句话来总结这些差别：使用代理模式，代理和真实对象之间的的关系通常在编译时就已经确定了，而装饰者能够在运行时递归地被构造。</p>
+</blockquote>
+<p>先看看两者的 UML 类图区别：<br/><code>代理模式</code><br/><img alt="" loading="lazy" src="/images/cnblogs/038197b8154addf3.gif"/></p>
+<p><code>装饰者模式</code><br/><img alt="" loading="lazy" src="/images/cnblogs/7943dc5370b5973e.gif"/></p>
+<p>两者伪代码：<br/>代理模式:</p>
+<pre><code class="hljs groovy">Interface Subject {
+    <span class="hljs-keyword">void doAction()
+}
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">RealSubject <span class="hljs-keyword">implements <span class="hljs-title">Subject{
+    <span class="hljs-meta">@Override
+    <span class="hljs-keyword">public <span class="hljs-keyword">void doAction() {};
+}
+
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Proxy <span class="hljs-keyword">implements <span class="hljs-title">Subject{
+       <span class="hljs-keyword">private RealSubject realSubject;
+
+       <span class="hljs-keyword">public Proxy(RealSubject realSubject) {
+             <span class="hljs-comment">//关系在编译时确定
+            <span class="hljs-keyword">this.realSubject = realSubject;
+       }
+
+       <span class="hljs-meta">@Override
+       <span class="hljs-keyword">public <span class="hljs-keyword">void doAction() {
+             ….
+             realSubject.doAction();
+             ….
+       }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>// 装饰者模式</p>
+<pre><code class="hljs java">Interface Component {
+    <span class="hljs-function"><span class="hljs-keyword">void <span class="hljs-title">doAction<span class="hljs-params">()
+}
+
+<span class="hljs-keyword">public class ConcreteComponent implement Component {
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">doAction<span class="hljs-params">() {};
+}
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Decorator <span class="hljs-keyword">implements <span class="hljs-title">Component {
+       <span class="hljs-keyword">private Component component;
+
+       <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-title">Decorator<span class="hljs-params">(Component component) {
+             <span class="hljs-comment">//关系在编译时确定
+            <span class="hljs-keyword">this.component = <span class="hljs-keyword">new component;
+       }
+       <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">doAction<span class="hljs-params">() {
+             ….
+             component.doAction();
+             ….
+       }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>其实代理模式和装饰者模式侧重点不一样，代理模式重点在于明确了被代理的类。如上例中，秘书很明确要代理的是的领导。而装饰者模式侧重于拓展类的方法，装饰类持有的实现Component接口的类的对象不是固定的，也就是说，装饰类可以根据在调用时传入的参数，装饰任意一个实现了 Component 接口的类。</p>
+<h1 id="esa_index_3">二、动态代理</h1>
+<p>动态代理的根据实现方式的不同可以分为 JDK 动态代理和 CGlib 动态代理。<br/>JDK 动态代理：利用反射机制生成一个实现代理接口的类，在调用具体方法前调用InvokeHandler来处理。<br/>CGlib 动态代理：利用ASM（开源的Java字节码编辑库，操作字节码）开源包，将代理对象类的class文件加载进来，通过修改其字节码生成子类来处理。<br/>区别：JDK代理只能对实现接口的类生成代理；CGlib是针对类实现代理，对指定的类生成一个子类，并覆盖其中的方法，这种通过继承类的实现方式，不能代理final修饰的类。</p>
+<h2 id="esa_index_4">JDK 动态代理</h2>
+<p>还是以上面的例子为例：<br/>首先，定一个类实现 <code>InvocationHandler</code> 接口，并实现 invoke 方法：</p>
+<pre><code class="hljs cs">package com.sharpcj;
+
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+
+<span class="hljs-keyword">public <span class="hljs-keyword">class <span class="hljs-title">WorkInvocationHandler <span class="hljs-title">implements <span class="hljs-title">InvocationHandler {
+    <span class="hljs-keyword">private Object <span class="hljs-keyword">object;
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-title">WorkInvocationHandler(<span class="hljs-params">Object <span class="hljs-keyword">object) {
+        <span class="hljs-keyword">this.<span class="hljs-keyword">object = <span class="hljs-keyword">object;
+    }
+
+    @<span class="hljs-function">Override
+    <span class="hljs-keyword">public Object <span class="hljs-title">invoke(<span class="hljs-params">Object proxy, Method method, Object[] args) throws Throwable {
+        System.<span class="hljs-keyword">out.println(<span class="hljs-string">"object: " + <span class="hljs-keyword">object.getClass().getSimpleName());
+        System.<span class="hljs-keyword">out.println(<span class="hljs-string">"proxy: " + proxy.getClass().getSimpleName());
+
+        <span class="hljs-keyword">if (<span class="hljs-string">"meeting".<span class="hljs-keyword">equals(method.getName())) {
+            System.<span class="hljs-keyword">out.println(<span class="hljs-string">"代理先准备会议材料...");
+            <span class="hljs-keyword">return method.invoke(<span class="hljs-keyword">object, args);
+        } <span class="hljs-keyword">else <span class="hljs-keyword">if (<span class="hljs-string">"evaluate".<span class="hljs-keyword">equals(method.getName())) {
+            <span class="hljs-keyword">if(args[<span class="hljs-number">0] instanceof String) {
+                <span class="hljs-keyword">if (<span class="hljs-string">"James".<span class="hljs-keyword">equals(args[<span class="hljs-number">0])) {
+                    System.<span class="hljs-keyword">out.println(<span class="hljs-string">"James 犯过错误，所以考评分数较低...");
+                    <span class="hljs-keyword">return <span class="hljs-number">70;
+                }
+            }
+            <span class="hljs-keyword">return method.invoke(<span class="hljs-keyword">object, args);
+        }
+        <span class="hljs-keyword">return <span class="hljs-literal">null;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>然后通过 <code>Proxy.newProxyInstance()</code> 方法创建代理对象：</p>
+<pre><code class="hljs groovy"><span class="hljs-keyword">package com.sharpcj;
+
+<span class="hljs-keyword">import java.lang.reflect.Proxy;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestApp {
+    <span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void main(String[] args) {
+        <span class="hljs-comment">/*Leader leader = new Leader();
+        Secretary secretary = new Secretary(leader);
+        secretary.meeting();
+        secretary.evaluate("Joy");*/
+
+        Leader leader = <span class="hljs-keyword">new Leader();
+        IWork proxy = (IWork) Proxy.newProxyInstance(Leader.<span class="hljs-keyword">class.getClassLoader(),
+                <span class="hljs-keyword">new Class[]{IWork.<span class="hljs-keyword">class}, <span class="hljs-keyword">new WorkInvocationHandler(leader));
+        proxy.meeting();
+        proxy.evaluate(<span class="hljs-string">"Joy");
+        proxy.evaluate(<span class="hljs-string">"James");
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>输出结果：<br/><img alt="" loading="lazy" src="/images/cnblogs/d93a675c98ed067c.gif"/></p>
+<p>我们看到，通过 WorkInvocationHandler 类，我们同样可以代理 Leader 类的方法的实现，实际上我们实现的是任意的方法的实现，只是我们在创建代理对象的时候传入的是 Iwork 接口以及 Leader 类对象。<br/>这里需要注意的是：在 InvocationHandler 接口的 invoke 方法中第一个参数 proxy, 并不是我们调用方法的对象，那这个参数是什么呢？代码中，我特别增加相应打印，打印出了 proxy 的类名，实际上 proxy 是代理对象本身，它的意义在于，我们可以在 invoke 方法中，返回该代理对象，然后进行连续调用。<br/>看如下例子：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.proxytest;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">IWork {
+    <span class="hljs-function">IWork <span class="hljs-title">work<span class="hljs-params">(String subject);
+}
+</span></span></span></span></span></span></span></span></code></pre>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.proxytest;
+
+<span class="hljs-keyword">import java.lang.reflect.InvocationHandler;
+<span class="hljs-keyword">import java.lang.reflect.Method;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">WorkInvocationHandler <span class="hljs-keyword">implements <span class="hljs-title">InvocationHandler {
+    <span class="hljs-keyword">private Object object;
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-title">WorkInvocationHandler<span class="hljs-params">(Object object) {
+        <span class="hljs-keyword">this.object = object;
+    }
+
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public Object <span class="hljs-title">invoke<span class="hljs-params">(Object proxy, Method method, Object[] args) <span class="hljs-keyword">throws Throwable {
+        <span class="hljs-keyword">if (<span class="hljs-string">"work".equals(method.getName())){
+            System.out.println(<span class="hljs-string">"--- work: " + args[<span class="hljs-number">0]);
+            <span class="hljs-keyword">return proxy;
+        }
+        <span class="hljs-keyword">return <span class="hljs-keyword">null;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<pre><code class="hljs groovy"><span class="hljs-keyword">package com.sharpcj.proxytest;
+
+<span class="hljs-keyword">import java.lang.reflect.Proxy;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestApp {
+    <span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void main(String[] args) {
+        IWork worker = (IWork) Proxy.newProxyInstance(IWork.<span class="hljs-keyword">class.getClassLoader(), <span class="hljs-keyword">new Class[]{IWork.<span class="hljs-keyword">class},
+                <span class="hljs-keyword">new WorkInvocationHandler(<span class="hljs-keyword">new IWork() {
+                    <span class="hljs-meta">@Override
+                    <span class="hljs-keyword">public IWork work(String subject) {
+                        <span class="hljs-keyword">return <span class="hljs-literal">null;
+                    }
+                }));
+        worker.work(<span class="hljs-string">"AAA").work(<span class="hljs-string">"BBB").work(<span class="hljs-string">"CCC");
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>结果如下：<br/><img alt="" loading="lazy" src="/images/cnblogs/af67448ec8ae43c9.gif"/></p>
+<h2 id="esa_index_5">CGlib 动态代理实现</h2>
+<p>首先添加 cglib 依赖<br/>build.gradle 文件：</p>
+<pre><code class="hljs groovy">... 
+
+dependencies {
+    <span class="hljs-comment">// 引入 cglib 库
+    compile <span class="hljs-string">'cglib:cglib:3.1'
+    testCompile <span class="hljs-string">group: <span class="hljs-string">'junit', <span class="hljs-string">name: <span class="hljs-string">'junit', <span class="hljs-string">version: <span class="hljs-string">'4.12'
+}
+...
+</span></span></span></span></span></span></span></span></code></pre>
+<p>前面说了，cglib 针对类进行代理，我们以上面的 Leader 类为例，先创建一个类实现 <code>MethodInterceptor</code>接口：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj;
+
+<span class="hljs-keyword">import net.sf.cglib.proxy.MethodInterceptor;
+<span class="hljs-keyword">import net.sf.cglib.proxy.MethodProxy;
+
+<span class="hljs-keyword">import java.lang.reflect.Method;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">LeaderMethodInterceptor <span class="hljs-keyword">implements <span class="hljs-title">MethodInterceptor {
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public Object <span class="hljs-title">intercept<span class="hljs-params">(Object o, Method method, Object[] objects, MethodProxy methodProxy) <span class="hljs-keyword">throws Throwable {
+        <span class="hljs-keyword">if (<span class="hljs-string">"meeting".equals(method.getName())) {
+            System.out.println(<span class="hljs-string">"代理先准备会议材料...");
+            <span class="hljs-keyword">return methodProxy.invokeSuper(o, objects);
+        } <span class="hljs-keyword">else <span class="hljs-keyword">if (<span class="hljs-string">"evaluate".equals(method.getName())) {
+            <span class="hljs-keyword">if(objects[<span class="hljs-number">0] <span class="hljs-keyword">instanceof String) {
+                <span class="hljs-keyword">if (<span class="hljs-string">"James".equals(objects[<span class="hljs-number">0])) {
+                    System.out.println(<span class="hljs-string">"James 犯过错误，所以考评分数较低...");
+                    <span class="hljs-keyword">return <span class="hljs-number">70;
+                }
+            }
+            <span class="hljs-keyword">return methodProxy.invokeSuper(o, objects);
+        }
+        <span class="hljs-keyword">return <span class="hljs-keyword">null;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>测试代码：</p>
+<pre><code class="hljs groovy"><span class="hljs-keyword">package com.sharpcj;
+
+<span class="hljs-keyword">import net.sf.cglib.core.DebuggingClassWriter;
+<span class="hljs-keyword">import net.sf.cglib.proxy.Enhancer;
+
+<span class="hljs-keyword">import java.lang.reflect.Proxy;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestApp {
+    <span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void main(String[] args) {
+        <span class="hljs-comment">// System.setProperty(DebuggingClassWriter.DEBUG_LOCATION_PROPERTY, "D:\\temp\\code");  //保存生成的 class 文件
+        Enhancer enhancer = <span class="hljs-keyword">new Enhancer(); <span class="hljs-comment">// 通过CGLIB动态代理获取代理对象的过程
+        enhancer.setSuperclass(Leader.<span class="hljs-keyword">class); <span class="hljs-comment">// 设置enhancer对象的父类
+        enhancer.setCallback(<span class="hljs-keyword">new LeaderMethodInterceptor()); <span class="hljs-comment">// 设置enhancer的回调对象
+        Leader proxy= (Leader)enhancer.create(); <span class="hljs-comment">// 创建代理对象
+
+        <span class="hljs-comment">// 通过代理对象调用目标方法
+        proxy.meeting();
+        proxy.evaluate(<span class="hljs-string">"Joy");
+        proxy.evaluate(<span class="hljs-string">"James");
+    }
+}
+
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>结果如下：<br/><img alt="" loading="lazy" src="/images/cnblogs/fd8d1e97ab6934a4.gif"/></p>
+<p><code>MethodInterceptor</code> 接口只有一个 <code>intercept</code> 方法，这个方法有4个参数：<br/>1）obj表示增强的对象，即实现这个接口类的一个对象；<br/>2）method表示要被拦截的方法；<br/>3）args表示要被拦截方法的参数；<br/>4）proxy表示要触发父类的方法对象；</p>
+<p>需要注意的是，实际调用是 <code>methodProxy.invokeSuper()</code>, 如果使用 <code>invoke()</code> 方法，则需要传入被代理的类对象，否则出现死循环，造成 stackOverflow 。<br/>详情参考： <a href="https://blog.csdn.net/kingmax54212008/article/details/83902535">聊聊cglib动态代理遇到的坑: https://blog.csdn.net/kingmax54212008/article/details/83902535</a></p>
+{% endraw %}

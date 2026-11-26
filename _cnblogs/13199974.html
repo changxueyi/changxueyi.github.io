@@ -1,0 +1,62 @@
+---
+title: "Mybatis 开启控制台打印sql语句"
+date: 2020-06-27 21:33:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "springboot+mybatis整合过程中，开启控制台sql语句打印的多种方式：附：mybatis官方文档 方法一： 1.在mybatis的配置文件中添加： <settings> <!-- 打印sql日志 --> <setting name=\"logImpl\" value=\"STDOUT_LOG"
+read_minutes: 1
+cnblogs_id: 13199974
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13199974.html"
+tags_inferred: true
+---
+{% raw %}
+<p>springboot+mybatis整合过程中，开启控制台sql语句打印的多种方式：<br/>附：mybatis官方文档</p>
+<p>方法一：</p>
+<div class="cnblogs_code">
+<pre>1<span style="color: #000000;">.在mybatis的配置文件中添加：
+
+</span>&lt;settings&gt;
+&lt;!-- 打印sql日志 --&gt;
+&lt;setting name="logImpl" value="STDOUT_LOGGING" /&gt;
+&lt;/settings&gt;<span style="color: #000000;">
+mybatis的配置文件</span>----mybatis-<span style="color: #000000;">config.xml如下：
+
+</span>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;!<span style="color: #000000;">DOCTYPE configuration
+PUBLIC </span>"-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd"&gt;
+&lt;configuration&gt;
+&lt;settings&gt;
+&lt;!-- 打印sql日志 --&gt;
+&lt;setting name="logImpl" value="STDOUT_LOGGING" /&gt;
+&lt;/settings&gt;
+&lt;/configuration&gt;</pre>
+</div>
+<p> </p>
+<p>2.在springboot的配置文件----appcation.yml中添加：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">mybatis:
+   configuration:
+      log-impl: org.apache.ibatis.logging.stdout.StdOutImpl</span></pre>
+</div>
+<p> </p>
+<p><br/>ps：</p>
+<p>          IDEA中，springboot默认配置文件是application.properties文件，但是yml文件在语法上更加简洁，更有层次感，所以此处是用yml语法，properties中好像是这么写的：mybatis.configuration.log-impl= org.apache.ibatis.logging.stdout.StdOutImpl</p>
+<p>控制台可以打印了。。。。。</p>
+<p> </p>
+<p>方法二：<br/>在springboot+mybatis整合中，可以将springboot的配置文件添加如下一段也可：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">logging:
+   level:
+      com.lucifer.springboot.cache.mapper: debug</span></pre>
+</div>
+<p>ps:  com.lucifer.springboot.cache.mapper是包名</p>
+<p>方法三：<br/>如果你使用的是springboot+mybatis-plus的话：</p>
+<p>  &lt;dependency&gt;<br/>       &lt;groupId&gt;com.baomidou&lt;/groupId&gt;<br/>       &lt;artifactId&gt;mybatis-plus-boot-starter&lt;/artifactId&gt;<br/>       &lt;version&gt;3.3.1&lt;/version&gt;<br/>  &lt;/dependency&gt;<br/>application.yml: </p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">mybatis-plus:
+   configuration:
+       log-impl: org.apache.ibatis.logging.stdout.StdOutImpl</span></pre>
+</div>
+<p>控制台打印： </p>
+<p>JDBC Connection [HikariProxyConnection@1006460161 wrapping com.mysql.cj.jdbc.ConnectionImpl@37cccae8] will not be managed by Spring<br/>==&gt;  Preparing: SELECT id,user_name,age FROM user WHERE (user_name = ?) <br/>==&gt; Parameters: 张三(String)<br/>&lt;==    Columns: id, user_name, age<br/>&lt;==        Row: 1, 张三, 18<br/>&lt;==      Total: 1<br/> <br/><br/></p>
+{% endraw %}

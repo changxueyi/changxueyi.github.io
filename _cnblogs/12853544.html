@@ -1,0 +1,84 @@
+---
+title: "如何理解BIO NIO AIO？"
+date: 2020-05-08 22:41:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "先说结论 今天阅读了很多关于BIO NIO AIO的文章，举了各种奇怪的例子，都没把问题讲清楚，简单问题复杂化。我先下结论，最后再把那些博客的例子来品一品。 这里只考虑两个实体（客户端、服务端），一个事件（客户端向服务端请求数据） 同步、异步描述的是：客户端在请求数据的过程中，能否做其他事情。 阻塞"
+read_minutes: 7
+cnblogs_id: 12853544
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12853544.html"
+tags_inferred: true
+---
+{% raw %}
+<h2>先说结论</h2>
+<p>今天阅读了很多关于BIO NIO AIO的文章，举了各种奇怪的例子，都没把问题讲清楚，简单问题复杂化。我先下结论，最后再把那些博客的例子来品一品。</p>
+<p>这里只考虑两个实体（客户端、服务端），一个事件（客户端向服务端请求数据）</p>
+<p>同步、异步描述的是：客户端在请求数据的过程中，能否做其他事情。</p>
+<p>阻塞、非阻塞描述的是：客户端与服务端是否从头到尾始终都有一个持续连接，以至于占用了通道，不让其他客户端成功连接。</p>
+<p>那么BIO NIO AIO就可以简单的理解为：</p>
+<ul>
+<li>BIO（同步阻塞）：客户端在请求数据的过程中，保持一个连接，不能做其他事情。</li>
+<li>NIO（同步非阻塞）：客户端在请求数据的过程中，不用保持一个连接，不能做其他事情。（不用保持一个连接，而是用许多个小连接，也就是轮询）</li>
+<li>AIO（异步非阻塞）：客户端在请求数据的过程中，不用保持一个连接，可以做其他事情。（客户端做其他事情，数据来了等服务端来通知。）</li>
+</ul>
+<p>是不是逻辑清楚了？结论下完了，再说一下同步与阻塞的语义理解。</p>
+<ul>
+<li>同步的意思是：客户端与服务端 相同步调<sup data-draft-node="inline" data-draft-type="reference" data-numero="1" data-text="迄今为止把同步/异步/阻塞/非阻塞/BIO/NIO/AIO讲的这么清楚的好文章（快快珍藏）" data-tooltip="迄今为止把同步/异步/阻塞/非阻塞/BIO/NIO/AIO讲的这么清楚的好文章（快快珍藏） https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html" data-tooltip-classname="ztext-referene-tooltip" data-tooltip-preset="white" data-url="https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_1" id="ref_1_0">[1]</a></sup>。就是说 服务端 没有把数据给 客户端 之前，客户端什么都不能做。它们做同样一件事情，就是说它们有相同步调，即同步。</li>
+<li>阻塞的意思是：客户端与服务端之间是否始终有个东西占据着它们中间的通道。就是说 客户端与服务端中间，始终有一个连接。导致其他客户端不能继续建立新通道连接服务器。</li>
+</ul>
+<h2>BIO NIO AIO在处理什么问题？</h2>
+<p>做科研讲究一个Motivation，做技术也是一样。为什么会出现NIO AIO？NIO比BIO好在哪？AIO比BIO好在哪？<sup data-draft-node="inline" data-draft-type="reference" data-numero="2" data-text="BIO与NIO、AIO的区别(这个容易理解)" data-tooltip="BIO与NIO、AIO的区别(这个容易理解) https://blog.csdn.net/skiof007/article/details/52873421" data-tooltip-classname="ztext-referene-tooltip" data-tooltip-preset="white" data-url="https://blog.csdn.net/skiof007/article/details/52873421"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_2" id="ref_2_0">[2]</a></sup></p>
+<h3>BIO（同步阻塞）</h3>
+<p>定义：客户端在请求数据的过程中，保持一个连接，不能做其他事情。</p>
+<p>那么BIO存在两个问题：</p>
+<ol>
+<li>由于连接是双向的，“始终保持一个连接”，则说明，对于客户端和服务端而言，都需要一个线程来维护这个连接，如果服务端没有数据给客户端，则客户端需要一直等待，该连接也需要一直维持。假设一个连接需要5MB的内存，不考虑多任务的情况下，客户端总是要花费固定的5MB。那么对服务端，1个客户端建立连接则需要花5MB，10个就要50MB，1000个就要5GB。显然，阻塞给服务器带来的性能负担极大。</li>
+<li>客户端不能做其他事情，只能等待该请求的完成，其本身的性能没有得到充分的释放，所以等待就是浪费时间。</li>
+</ol>
+<h3>NIO（同步非阻塞）</h3>
+<p>定义：客户端在请求数据的过程中，不用保持一个连接，不能做其他事情。</p>
+<p>上面提到BIO，当有很多个客户端同时向服务端请求数据时，其连接所花费的开销就极大。那么NIO就使用了“不用始终保持一个连接”的方式，解决该问题。其过程为：</p>
+<p>客户端发送一个请求，并建立一个连接，服务端接收到了。如果服务端没有数据，就告知客户端“没有数据”；如果有数据，则返回数据。客户端接到了服务端回复的“没有数据”就断开连接，过了一段时间后，客户端重新问服务端是否有数据。服务器重复以上步骤。</p>
+<p>客户端反复建立连接询问，如果没有数据则断开连接。这个过程称为“轮询”。NIO用轮询代替了始终保持一个连接。</p>
+<p>那么这样具体会有什么收益呢？</p>
+<p>我们考虑以下问题：假如一个轮询连接只持续1s，服务器需要4s来准备一个数据，客户端在接到“没有数据”的回复后，隔1s再轮询一次。</p>
+<p>对于BIO，1000个连接就需要5GB，在4s内，服务器内存消耗都是5GB。</p>
+<p>对于NIO，在第1s内，服务器接收1000个连接的请求并花费5GB；在第2s内，服务器没有接收任何请求；在第3s内，服务器再次花费5GB接收1000个连接；第4s内没有请求；第5s开始时，处理所有请求返回结果。</p>
+<p>整个流程是：为了接收1000个连接的请求，第1和第3s花费5GB，第2和第4s花费0GB，平均下来则是2.5GB。换个角度实际上是，1000个连接需要花费2.5GB，则2000个请求需要花费5GB。</p>
+<p>在该例子中，NIO的容纳量比BIO高了一倍（5GB的容纳量从1000变成2000）</p>
+<p>所以NIO的收益就是，节约了“始终保持一个连接”的内存消耗。</p>
+<h3>AIO（异步非阻塞）</h3>
+<p>定义：客户端在请求数据的过程中，不用保持一个连接，可以做其他事情。</p>
+<p>AIO也不用始终保持一个连接，但是其处理方式和NIO是不同的。并且这个方式让客户端可以做其他事情。</p>
+<p>AIO用了一个通知机制，其流程如下：</p>
+<p>客户端向服务端请求数据。服务端若有，则返回数据；若无，则告诉客户端“没有数据”。客户端收到“没有数据”的回复后，就做自己的其他事情。服务端有了数据之后，就主动通知客户端，并把数据返回去。</p>
+<p>如此一来，整个请求流程中，不仅维持连接的消耗没了，而且客户端可以做别的事情了，节约了客户端的时间。</p>
+<p>需要提的是，这里解决了连接的消耗，但是也必然引入了别的消耗。这里让客户端能先做别的事情，也肯定会带来新的麻烦。</p>
+<p>别的消耗是指，服务端需要主动通知客户端，关于“通知”的业务逻辑肯定是需要消耗资源的。新的麻烦是指，客户端本来在做别的事情，突然前面的事情又插过来要做了，必然引入了一个多线程的协调工作。</p>
+<h2>NIO的三个实体</h2>
+<p>NIO有3个实体：Buffer（缓冲区），Channel（通道），Selector（多路复用器）。</p>
+<p>Buffer是客户端存放服务端信息的一个容器，服务端如果把数据准备好了，就会通过Channel往Buffer里面传。Buffer有7个类型：ByteBuffer、CharBuffer、DoubleBuffer、FloatBuffer、IntBuffer、LongBuffer、ShortBuffer。</p>
+<p>Channel是客户端与服务端之间的双工连接通道。所以在请求的过程中，客户端与服务端中间的Channel就在不停的执行“连接、询问、断开”的过程。直到数据准备好，再通过Channel传回来。Channel主要有4个类型：FileChannel（从文件读取数据）、DatagramChannel（读写UDP网络协议数据）、SocketChannel（读写TCP网络协议数据）、ServerSocketChannel（可以监听TCP连接）</p>
+<p>Selector是服务端选择Channel的一个复用器。Seletor有两个核心任务：监控数据是否准备好，应答Channel。具体说来，多个Channel反复轮询时，Selector就看该Channel所需的数据是否准备好了；如果准备好了，则将数据通过Channel返回给该客户端的Buffer，该客户端再进行后续其他操作；如果没准备好，则告诉Channel还需要继续轮询；多个Channel反复询问Selector，Selector为这些Channel一一解答。</p>
+<h2>NIO的实际应用</h2>
+<p>NIO主要用于分布式、即时通信和中间件Java系统中<sup data-draft-node="inline" data-draft-type="reference" data-numero="3" data-text="8分钟深入浅出搞懂BIO、NIO、AIO" data-tooltip="8分钟深入浅出搞懂BIO、NIO、AIO https://zhuanlan.zhihu.com/p/83597838" data-tooltip-classname="ztext-referene-tooltip" data-tooltip-preset="white" data-url="https://zhuanlan.zhihu.com/p/83597838"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_3" id="ref_3_0">[3]</a></sup>。</p>
+<p>阿里的分布式服务框架Dubbo就默认使用Netty作为基础通信组件，用于实现各进程节点之间的内部通信。</p>
+<p>Jetty、Apach的Mina、Jboos的Netty、Zookeeper都是基于NIO实现</p>
+<h2>理解具体化</h2>
+<p>文章最初提到了两个实体：客户端和服务端。但是全文实际上并未明确，实体到底是什么，实际物理表示是什么。在参考文献<sup data-draft-node="inline" data-draft-type="reference" data-numero="1" data-text="迄今为止把同步/异步/阻塞/非阻塞/BIO/NIO/AIO讲的这么清楚的好文章（快快珍藏）" data-tooltip="迄今为止把同步/异步/阻塞/非阻塞/BIO/NIO/AIO讲的这么清楚的好文章（快快珍藏） https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html" data-tooltip-classname="ztext-referene-tooltip" data-tooltip-preset="white" data-url="https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_1" id="ref_1_1">[1]</a></sup>中提到，“事物有很多种理解”。在这也将“实体”具体化。</p>
+<p>在网络IO场景中，客户端可以理解为我们自己的Client（台式机、手机、平板），服务端可以理解为云上的Server（高性能工作站）。Client向Server请求各种数据（商品详情、游戏角色信息、音乐mp3文件等）</p>
+<p>在本地IO场景中，客户端是一个需要数据的程序，服务端是操作系统。客户端向操作系统请求本地磁盘的数据。</p>
+<h2>品一品各路大神的理解</h2>
+<p>这篇文章<sup data-draft-node="inline" data-draft-type="reference" data-numero="1" data-text="迄今为止把同步/异步/阻塞/非阻塞/BIO/NIO/AIO讲的这么清楚的好文章（快快珍藏）" data-tooltip="迄今为止把同步/异步/阻塞/非阻塞/BIO/NIO/AIO讲的这么清楚的好文章（快快珍藏） https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html" data-tooltip-classname="ztext-referene-tooltip" data-tooltip-preset="white" data-url="https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_1" id="ref_1_2">[1]</a></sup>里面讲逻辑，讲推导，讲排队就是同步，讲堵车就是阻塞；最后下了一个“不存在同步非阻塞”的结论。问题确实是搞复杂了，也是搞晕了。我相信这位作者肯定有自己的一套完整理解，其理论在他的知识体系也可以自洽，不过讲的太玄了，把科学讲成了哲学。其中对“事物”的表述是没问题的，但是这种过于抽象的表述对理清问题其实没有太大帮助，对进阶可能更有用。</p>
+<p>这篇文章<sup data-draft-node="inline" data-draft-type="reference" data-numero="3" data-text="8分钟深入浅出搞懂BIO、NIO、AIO" data-tooltip="8分钟深入浅出搞懂BIO、NIO、AIO https://zhuanlan.zhihu.com/p/83597838" data-tooltip-classname="ztext-referene-tooltip" data-tooltip-preset="white" data-url="https://zhuanlan.zhihu.com/p/83597838"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_3" id="ref_3_1">[3]</a></sup>也讲了一个经典的水壶故事，不过在讲NIO的时的表述为：“一个线程不断询问每个水壶的状态，看是否有状态发生了改变，从而进行下一步操作”。在讲AIO时的表述为：“异步非阻塞无需一个线程去轮询所有IO操作的状态改变，在相应的状态改变后，系统会通知对应的线程来处理。对应到烧开水中就是，为每个水壶上面装了一个开关，水烧开之后，水壶会自动通知我水烧开了”。其实也没有讲清楚，非阻塞到底体现在哪里。异步到底是谁和谁步调不同。</p>
+<p><span style="font-size: 14pt;"><strong>参考</strong></span></p>
+<ol class="ReferenceList">
+<li id="ref_1"><span class="ReferenceList-backHint">^<sup class="ReferenceList-backLink"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_1_0">a</a></sup><sup class="ReferenceList-backLink"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_1_1">b</a></sup><sup class="ReferenceList-backLink"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_1_2">c</a></sup>迄今为止把同步/异步/阻塞/非阻塞/BIO/NIO/AIO讲的这么清楚的好文章（快快珍藏） <a class="external" data-za-detail-view-id="1043" href="https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html" rel="noopener noreferrer" target="_blank">https://www.cnblogs.com/lixinjie/p/a-post-about-io-clearly.html</a></span></li>
+<li id="ref_2"><a class="ReferenceList-backLink" data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_2_0">^</a>BIO与NIO、AIO的区别(这个容易理解) <a class="external" data-za-detail-view-id="1043" href="https://blog.csdn.net/skiof007/article/details/52873421" rel="noopener noreferrer" target="_blank">https://blog.csdn.net/skiof007/article/details/52873421</a></li>
+<li id="ref_3"><span class="ReferenceList-backHint">^<sup class="ReferenceList-backLink"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_3_0">a</a></sup><sup class="ReferenceList-backLink"><a data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_3_1">b</a></sup>8分钟深入浅出搞懂BIO、NIO、AIO <a class="external" data-za-detail-view-id="1043" href="https://zhuanlan.zhihu.com/p/83597838" rel="noopener noreferrer" target="_blank">https://zhuanlan.zhihu.com/p/83597838</a></span></li>
+<li id="ref_4"><a class="ReferenceList-backLink" data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_4_0">^</a>Java核心（五）深入理解BIO、NIO、AIO <a class="external" data-za-detail-view-id="1043" href="https://zhuanlan.zhihu.com/p/51453522" rel="noopener noreferrer" target="_blank">https://zhuanlan.zhihu.com/p/51453522</a></li>
+<li id="ref_5"><a class="ReferenceList-backLink" data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_5_0">^</a>说一下 BIO/AIO/NIO 有什么区别？及异步模式的用途和意义？ <a class="external" data-za-detail-view-id="1043" href="https://zhuanlan.zhihu.com/p/58095676" rel="noopener noreferrer" target="_blank">https://zhuanlan.zhihu.com/p/58095676</a></li>
+<li id="ref_6"><a class="ReferenceList-backLink" data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_6_0">^</a>java IO、NIO、AIO详解 <a class="external" data-za-detail-view-id="1043" href="https://www.cnblogs.com/sxkgeek/p/9488703.html" rel="noopener noreferrer" target="_blank">https://www.cnblogs.com/sxkgeek/p/9488703.html</a></li>
+<li id="ref_7"><a class="ReferenceList-backLink" data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_7_0">^</a>为什么说Java NIO 是非阻塞的？ - Java3y的回答 - 知乎  <a class="external" data-za-detail-view-id="1043" href="https://www.zhihu.com/question/64056856/answer/1004584371" rel="noopener noreferrer" target="_blank">https://www.zhihu.com/question/64056856/answer/1004584371</a></li>
+<li id="ref_8"><a class="ReferenceList-backLink" data-reference-link="true" href="https://zhuanlan.zhihu.com/p/111816019#ref_8_0">^</a>高并发Java NIO和AIO - 王炸的文章 - 知乎  <a class="external" data-za-detail-view-id="1043" href="https://zhuanlan.zhihu.com/p/70273939" rel="noopener noreferrer" target="_blank">https://zhuanlan.zhihu.com/p/70273939</a></li>
+</ol>
+{% endraw %}

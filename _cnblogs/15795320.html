@@ -1,0 +1,147 @@
+---
+title: "【Go】如何终止goroutine"
+date: 2022-01-12 21:09:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "var wg sync.WaitGroup func foo(){ defer wg.Done() for { fmt.Println(\"我是foo函数内的Print\") time.Sleep(time.Millisecond*500) } } func main() { wg.Add(1) go"
+read_minutes: 2
+cnblogs_id: 15795320
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15795320.html"
+---
+{% raw %}
+<div class="cnblogs_Highlighter">
+<pre class="brush:go;gutter:true;">var wg sync.WaitGroup
+
+func foo(){
+	defer wg.Done()
+	for  {
+		fmt.Println("我是foo函数内的Print")
+		time.Sleep(time.Millisecond*500)
+	}
+}
+
+func main() {
+	wg.Add(1)
+	go foo()
+	wg.Wait()
+}
+</pre>
+</div>
+<p>以上代码永远不会退出，那么如何来通知子goroutine退出呢？</p>
+<h1><a name="t0"></a><a id="_21"></a>一、可以添加一个标记值</h1>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">//</span><span style="color: #008000;"> 添加tag标记值</span>
+<span style="color: #000000;">var wg sync.WaitGroup
+var tag bool </span><span style="color: #008000;">//</span><span style="color: #008000;"> 标记值</span>
+<span style="color: #000000;">
+func foo(){
+    defer wg.Done()
+    </span><span style="color: #0000ff;">for</span><span style="color: #000000;">  {
+        fmt.Println(</span>"我是foo函数内的Print"<span style="color: #000000;">)
+        time.Sleep(time.Millisecond</span>*500<span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> tag { <span style="color: #008000;">//</span><span style="color: #008000;"> tag为真退出foo</span>
+            fmt.Printf("foo停止啦"<span style="color: #000000;">)
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;">
+        }
+    }
+}
+
+func tagFunc(tag </span>*<span style="color: #000000;">bool){
+    time.Sleep(time.Second</span>*10<span style="color: #000000;">)
+    </span>*tag = <span style="color: #0000ff;">true</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 将tag设为真</span>
+<span style="color: #000000;">}
+
+func main() {
+    wg.Add(</span>1<span style="color: #000000;">)
+    go foo()
+    go tagFunc(</span>&amp;<span style="color: #000000;">tag) 
+    wg.Wait()
+}</span></pre>
+</div>
+<h1>二、channel传值</h1>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">var wg sync.WaitGroup
+var tag  </span>= make(chan bool,1) <span style="color: #008000;">//</span><span style="color: #008000;"> 初始化tag channel</span>
+<span style="color: #000000;">
+func foo(){
+    defer wg.Done()
+FOO:</span><span style="color: #008000;">//</span><span style="color: #008000;">for循环标签</span>
+    <span style="color: #0000ff;">for</span><span style="color: #000000;">  {
+        fmt.Println(</span>"我是foo函数内的Print"<span style="color: #000000;">)
+        time.Sleep(time.Millisecond</span>*500<span style="color: #000000;">)
+        select {
+        </span><span style="color: #0000ff;">case</span> &lt;-<span style="color: #000000;"> tag:
+            fmt.Println(</span>"foo停止啦"<span style="color: #000000;">)
+      close(tag)
+            </span><span style="color: #0000ff;">break</span> FOO <span style="color: #008000;">//</span><span style="color: #008000;"> 跳出for虚幻</span>
+        <span style="color: #0000ff;">default</span><span style="color: #000000;">:
+        }
+    }
+}
+
+func tagFunc(){
+    time.Sleep(time.Second</span>*10<span style="color: #000000;">)
+    tag </span>&lt;- <span style="color: #0000ff;">true</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 向通道传值</span>
+<span style="color: #000000;">    wg.Done()
+}
+
+func main() {
+    wg.Add(</span>2<span style="color: #000000;">)
+    go foo()
+    go tagFunc()
+    wg.Wait()
+}</span></pre>
+</div>
+<h1>三、context（官方推荐）</h1>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">//</span><span style="color: #008000;"> 原理与第二种类似</span>
+<span style="color: #000000;">var wg sync.WaitGroup
+
+func foo2(ctx context.Context) {
+    defer wg.Done()
+FOO2:
+    </span><span style="color: #0000ff;">for</span><span style="color: #000000;"> {
+        fmt.Println(</span>"我是foo2函数内的Print"<span style="color: #000000;">)
+        time.Sleep(time.Millisecond </span>* 500<span style="color: #000000;">)
+        select {
+        </span><span style="color: #0000ff;">case</span> &lt;-ctx.Done():<span style="color: #008000;">//</span><span style="color: #008000;"> 有值执行退出</span>
+            fmt.Println("foo2停止啦"<span style="color: #000000;">)
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;"> FOO2
+        </span><span style="color: #0000ff;">default</span>:<span style="color: #008000;">//</span><span style="color: #008000;"> 无值继续循环</span>
+<span style="color: #000000;">        }
+    }
+}
+
+
+func foo(ctx context.Context) {
+    defer wg.Done()
+    wg.Add(</span>1<span style="color: #000000;">)
+    go foo2(ctx) </span><span style="color: #008000;">//</span><span style="color: #008000;"> 将ctx传递给子goroutine</span>
+<span style="color: #000000;">FOO:
+    </span><span style="color: #0000ff;">for</span><span style="color: #000000;"> {
+        fmt.Println(</span>"我是foo函数内的Print"<span style="color: #000000;">)
+        time.Sleep(time.Millisecond </span>* 500<span style="color: #000000;">)
+        select {
+        </span><span style="color: #0000ff;">case</span> &lt;-ctx.Done(): <span style="color: #008000;">//</span><span style="color: #008000;"> 有值执行退出</span>
+            fmt.Println("foo停止啦"<span style="color: #000000;">)
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;"> FOO
+        </span><span style="color: #0000ff;">default</span>: <span style="color: #008000;">//</span><span style="color: #008000;"> 无值继续循环</span>
+<span style="color: #000000;">        }
+    }
+}
+
+func tagFunc(cancel context.CancelFunc) {
+    time.Sleep(time.Second </span>* 10<span style="color: #000000;">)
+    cancel() </span><span style="color: #008000;">//</span><span style="color: #008000;">运行cancelFunc</span>
+<span style="color: #000000;">    wg.Done()
+}
+
+func main() {
+  </span><span style="color: #008000;">//</span><span style="color: #008000;"> ctx可用于goroutine之间传递，当执行cancelFunc时，ctx.Done()传入空的chan结构体</span>
+    ctx, cancelFunc :=<span style="color: #000000;"> context.WithCancel(context.Background()) 
+    wg.Add(</span>2<span style="color: #000000;">)
+    go foo(ctx)
+    go tagFunc(cancelFunc)
+    wg.Wait()
+}</span>　　</pre>
+</div>
+{% endraw %}

@@ -1,0 +1,120 @@
+---
+title: "Java中HashMap的entrySet()方法: HashMap.entrySet()"
+date: 2020-08-21 11:33:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "Java中的java.util.HashMap.entrySet() 方法用于创建哈希映射HashMap中包含的相同元素的集合。它基本上返回哈希映射的set视图，或者我们可以创建一个新的set并将map元素存储到它们中。 句法： hash_map.entrySet() 参数：该方法不带任何参数。 返"
+read_minutes: 2
+cnblogs_id: 13540136
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13540136.html"
+tags_inferred: true
+---
+{% raw %}
+<p>Java中的java.util.HashMap.entrySet() 方法用于创建<a href="https://www.breakyizhan.com/java/4653.html">哈希映射HashMap</a>中包含的相同元素的集合。它基本上返回哈希映射的set视图，或者我们可以创建一个新的set并将map元素存储到它们中。</p>
+<p>句法：</p>
+<pre>hash_map.entrySet()</pre>
+<p>参数：该方法不带任何参数。</p>
+<p>返回值：该方法返回一个与哈希映射具有相同元素的集合。</p>
+<h2>下面的程序用于说明java.util.HashMap.entrySet() 的工作方法</h2>
+<p>HashMap.entrySet()程序1：将字符串值映射到整数键。</p>
+<div>
+<div>
+<div class="syntaxhighlighter nogutter java" id="highlighter_551009">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java comments">// Java code to illustrate the entrySet() method</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">import</code> <code class="java plain">java.util.*;</code></div>
+<div class="line number3 index2 alt2"> </div>
+<div class="line number4 index3 alt1"><code class="java keyword">public</code> <code class="java keyword">class</code> <code class="java plain">Hash_Map_Demo {</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">    </code><code class="java keyword">public</code> <code class="java keyword">static</code> <code class="java keyword">void</code> <code class="java plain">main(String[] args)</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">    </code><code class="java plain">{</code></div>
+<div class="line number7 index6 alt2"> </div>
+<div class="line number8 index7 alt1"><code class="java spaces">        </code><code class="java comments">// Creating an empty HashMap</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">        </code><code class="java plain">HashMap&lt;Integer, String&gt; hash_map = </code><code class="java keyword">new</code> <code class="java plain">HashMap&lt;Integer, String&gt;();</code></div>
+<div class="line number10 index9 alt1"> </div>
+<div class="line number11 index10 alt2"><code class="java spaces">        </code><code class="java comments">// Mapping string values to int keys</code></div>
+<div class="line number12 index11 alt1"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java value">10</code><code class="java plain">, </code><code class="java string">"Geeks"</code><code class="java plain">);</code></div>
+<div class="line number13 index12 alt2"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java value">15</code><code class="java plain">, </code><code class="java string">"4"</code><code class="java plain">);</code></div>
+<div class="line number14 index13 alt1"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java value">20</code><code class="java plain">, </code><code class="java string">"Geeks"</code><code class="java plain">);</code></div>
+<div class="line number15 index14 alt2"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java value">25</code><code class="java plain">, </code><code class="java string">"Welcomes"</code><code class="java plain">);</code></div>
+<div class="line number16 index15 alt1"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java value">30</code><code class="java plain">, </code><code class="java string">"You"</code><code class="java plain">);</code></div>
+<div class="line number17 index16 alt2"> </div>
+<div class="line number18 index17 alt1"><code class="java spaces">        </code><code class="java comments">// Displaying the HashMap</code></div>
+<div class="line number19 index18 alt2"><code class="java spaces">        </code><code class="java plain">System.out.println(</code><code class="java string">"Initial Mappings are: "</code> <code class="java plain">+ hash_map);</code></div>
+<div class="line number20 index19 alt1"> </div>
+<div class="line number21 index20 alt2"><code class="java spaces">        </code><code class="java comments">// Using entrySet() to get the set view</code></div>
+<div class="line number22 index21 alt1"><code class="java spaces">        </code><code class="java plain">System.out.println(</code><code class="java string">"The set is: "</code> <code class="java plain">+ hash_map.entrySet());</code></div>
+<div class="line number23 index22 alt2"><code class="java spaces">    </code><code class="java plain">}</code></div>
+<div class="line number24 index23 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="outputDiv">
+<p>输出：</p>
+<pre>Initial Mappings are: {20=Geeks, 25=Welcomes, 10=Geeks, 30=You, 15=4}
+The set is: [20=Geeks, 25=Welcomes, 10=Geeks, 30=You, 15=4]</pre>
+</div>
+<p>HashMap.entrySet()程序2：将整数值映射到字符串键。</p>
+<div>
+<div>
+<div class="syntaxhighlighter nogutter java" id="highlighter_254238">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java comments">// Java code to illustrate the entrySet() method</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">import</code> <code class="java plain">java.util.*;</code></div>
+<div class="line number3 index2 alt2"> </div>
+<div class="line number4 index3 alt1"><code class="java keyword">public</code> <code class="java keyword">class</code> <code class="java plain">Hash_Map_Demo {</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">    </code><code class="java keyword">public</code> <code class="java keyword">static</code> <code class="java keyword">void</code> <code class="java plain">main(String[] args)</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">    </code><code class="java plain">{</code></div>
+<div class="line number7 index6 alt2"> </div>
+<div class="line number8 index7 alt1"><code class="java spaces">        </code><code class="java comments">// Creating an empty HashMap</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">        </code><code class="java plain">HashMap&lt;String, Integer&gt; hash_map = </code><code class="java keyword">new</code> <code class="java plain">HashMap&lt;String, Integer&gt;();</code></div>
+<div class="line number10 index9 alt1"> </div>
+<div class="line number11 index10 alt2"><code class="java spaces">        </code><code class="java comments">// Mapping int values to string keys</code></div>
+<div class="line number12 index11 alt1"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java string">"Geeks"</code><code class="java plain">, </code><code class="java value">10</code><code class="java plain">);</code></div>
+<div class="line number13 index12 alt2"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java string">"4"</code><code class="java plain">, </code><code class="java value">15</code><code class="java plain">);</code></div>
+<div class="line number14 index13 alt1"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java string">"Geeks"</code><code class="java plain">, </code><code class="java value">20</code><code class="java plain">);</code></div>
+<div class="line number15 index14 alt2"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java string">"Welcomes"</code><code class="java plain">, </code><code class="java value">25</code><code class="java plain">);</code></div>
+<div class="line number16 index15 alt1"><code class="java spaces">        </code><code class="java plain">hash_map.put(</code><code class="java string">"You"</code><code class="java plain">, </code><code class="java value">30</code><code class="java plain">);</code></div>
+<div class="line number17 index16 alt2"> </div>
+<div class="line number18 index17 alt1"><code class="java spaces">        </code><code class="java comments">// Displaying the HashMap</code></div>
+<div class="line number19 index18 alt2"><code class="java spaces">        </code><code class="java plain">System.out.println(</code><code class="java string">"Initial Mappings are: "</code> <code class="java plain">+ hash_map);</code></div>
+<div class="line number20 index19 alt1"> </div>
+<div class="line number21 index20 alt2"><code class="java spaces">        </code><code class="java comments">// Using entrySet() to get the set view</code></div>
+<div class="line number22 index21 alt1"><code class="java spaces">        </code><code class="java plain">System.out.println(</code><code class="java string">"The set is: "</code> <code class="java plain">+ hash_map.entrySet());</code></div>
+<div class="line number23 index22 alt2"><code class="java spaces">    </code><code class="java plain">}</code></div>
+<div class="line number24 index23 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="outputDiv">
+<p>输出：</p>
+<pre>Initial Mappings are: {4=15, Geeks=20, You=30, Welcomes=25}
+The set is: [4=15, Geeks=20, You=30, Welcomes=25]</pre>
+</div>
+<p>注意：对于具有不同数据类型的变体和组合的任何类型的映射，都可以执行相同的操作。</p>
+<p> </p>
+<p><strong>注意：通过.entrySet()后，里面的数据变为了</strong></p>
+<div>entrySet()方式：</div>
+<div><img alt="" loading="lazy" src="/images/cnblogs/2ceaf4a4e2b0beb0.png"/>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/7c7d0dec699f2212.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+</div>
+{% endraw %}

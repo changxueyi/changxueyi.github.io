@@ -1,0 +1,27 @@
+---
+title: "etcd简单介绍"
+date: 2023-08-24 15:51:00 +0800
+tags: ["【微服务】-- 解决方案"]
+excerpt: "一、etcd是什么 etcd是一个分布式的、高可用的、一致的key-value存储数据库，基于Go语言实现，主要用于共享配置和服务发现。 二、为什么需要etcd 在分布式系统中，各种服务配置信息的管理共享和服务发现是一个很基本也是很重要的问题。etcd可集中管理配置信息，服务端将配置信息存储于etc"
+read_minutes: 2
+cnblogs_id: 17654340
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/17654340.html"
+---
+{% raw %}
+<p><strong>一、etcd是什么</strong><br/>　　etcd是一个分布式的、高可用的、一致的key-value存储数据库，基于Go语言实现，主要用于共享配置和服务发现。</p>
+<p> </p>
+<p><strong>二、为什么需要etcd</strong><br/>　　在分布式系统中，各种服务配置信息的管理共享和服务发现是一个很基本也是很重要的问题。etcd可集中管理配置信息，服务端将配置信息存储于etcd，客户端通过etcd得到服务配置信息，etcd监听配置信息的改变，发现改变通知客户端。<br/>为了防止单点故障，还可启动多个etcd组成集群。etcd集群使用raft一致性算法处理日志复制，保证多节点数据的强一致性。</p>
+<p> </p>
+<p><strong>三、etcd的raft算法</strong><br/>1. 主节点选举<br/>　　etcd集群中有一个主节点（leader，负责写操作），多个从节点（follower，负责读操作）。主节点会发送心跳包给从节点，从节点进行响应。从节点若超过一定时间（一定范围内的随机值）没有收到主节点的心跳包，则认为主节点已不可用，自身可成为候选主节点（candidate），发起投票，若超过一半节点响应，则可成为新的主节点（可能会有几轮争夺）。在每一轮投票中，参与投票的所有节点，只响应收到的第一个投票请求，对后续请求不作响应。<br/>2. 数据更新<br/>（1）第一阶段：主节点将修改记录到本地日志，并将日志复制给所有从节点，若超过一半节点响应，则认为操作成功，通知客户端。<br/>（2）第二阶段：主节点提交本地修改（持久化到磁盘），通知所有从节点也进行数据修改提交。</p>
+<p> </p>
+<p><strong>四、安装</strong><br/>1. 下载etcd<br/><a href="https://github.com/etcd-io/etcd/releases" rel="noopener" target="_blank">https://github.com/etcd-io/etcd/releases</a><br/>2. 安装etcd<br/>解压文件，添加可执行文件路径到环境变量PATH中。<br/>3. 下载并安装etcd-manager（etcd的可视化客户端）<br/><a href="https://etcdmanager.io/" rel="noopener" target="_blank">https://etcdmanager.io/</a></p>
+<p> </p>
+<p><strong>五、简单操作</strong><br/>1. 启动etcd</p>
+<p><img alt="" class="medium-zoom-image" height="21" loading="lazy" src="/images/cnblogs/85bf847542ac466a.png" width="368"/></p>
+<p>默认端口为2379。<br/>进入etcd安装目录，etcdctl客户端可用于请求etcd。<br/>2. 查询版本号</p>
+<p><img alt="" class="medium-zoom-image" height="60" loading="lazy" src="/images/cnblogs/6bc6c34c7a638680.png" width="628"/></p>
+<p>3. 键值添加与查询</p>
+<p><img alt="" class="medium-zoom-image" height="108" loading="lazy" src="/images/cnblogs/1c03052fd4150d56.png" width="535"/></p>
+<p>4. 在etcd-manager中查询：</p>
+<p><img alt="" class="medium-zoom-image" height="232" loading="lazy" src="/images/cnblogs/10231c7876c99829.png" width="846"/></p>
+{% endraw %}

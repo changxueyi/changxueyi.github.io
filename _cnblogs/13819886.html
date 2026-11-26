@@ -1,0 +1,75 @@
+---
+title: "记录一下近期项目中遇到得小问题"
+date: 2020-10-15 12:35:00 +0800
+tags: ["【茶话心得】"]
+excerpt: "1. PostMan使用 1. 使用postMan进行请求，记得添加Headers信息 2. 记录一次遇到得小坑，在PostMman请求一个接口信息时候 ResponseVo<XXXXResVo> queryXXXXManage(XXXXReqVo XXXXReqVo); XXXXReqVo对象为"
+read_minutes: 1
+cnblogs_id: 13819886
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13819886.html"
+---
+{% raw %}
+<p><span style="font-size: 16px;"><strong>1. PostMan使用</strong></span></p>
+<p><span style="font-size: 14px;">1. 使用postMan进行请求，记得添加Headers信息</span></p>
+<p><span style="font-size: 14px;"><img alt="" loading="lazy" src="/images/cnblogs/2d6562859f67f4df.png"/></span></p>
+<p> </p>
+<p> </p>
+<p> 2. 记录一次遇到得小坑，在PostMman请求一个接口信息时候</p>
+<div class="cnblogs_code">
+<pre>ResponseVo&lt;XXXXResVo&gt; queryXXXXManage(XXXXReqVo XXXXReqVo);</pre>
+</div>
+<p>XXXXReqVo对象为</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> XXXReqVo{
+      </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String pin；
+      </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String ip;
+      Pirvate String src;
+}</span></pre>
+</div>
+<p><span style="font-size: 14px;">这个时候，需要使用PostMan请求，参数应该是</span></p>
+<p> </p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">[{
+    </span>"pin": "creditTest001"<span style="color: #000000;">,
+    </span>"ip": "127.0.0.1"<span style="color: #000000;">,
+    </span>"src": "03"<span style="color: #000000;">
+}]
+
+注意这里根据postMan ，请求的是一个对象，参数应该这样写（记得加入一个中括号）</span></pre>
+</div>
+<p> </p>
+<p> </p>
+<p><strong>如果请求的接口参数为一个对象，则应该在postMan中也要这样去写</strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">这是请求的接口信息
+Map</span>&lt;String,String&gt; fun (Map&lt;String,Object&gt;<span style="color: #000000;">  map);
+
+需要在postMan中配置
+[{
+    </span>"pin": "creditTest001"<span style="color: #000000;">,
+    </span>"ip": "127.0.0.1"<span style="color: #000000;">,
+    </span>"src": "03"<span style="color: #000000;">
+}]<br/><br/>记得加上一个中括号【】</span></pre>
+</div>
+<p><strong><span style="font-size: 18px;">2. IDEA Debug 模式中，计算器使用</span></strong></p>
+<p>学习一个快捷键：重启debug：ctrl+F5</p>
+<p>计算器表达式</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/a4272ee28eb054a0.png"/></p>
+<p> </p>
+<p> </p>
+<p><span style="font-size: 18px;"> </span></p>
+<p><span style="font-size: 18px;"><strong>3.启动项目，通过本地去请求JSF中的接口信息，使用PostMan</strong></span></p>
+<p><span style="font-size: 14px;">1. 直接在postMan中地址栏选择POST请求</span></p>
+<p><span style="font-size: 14px;">2.http:// ip(jsf杰夫查询接口服务器的ip）：端口（服务器上面的端口）/接口本地地址/jsf上面的别名/方法名</span></p>
+<p> </p>
+<p><strong><span style="font-size: 18px;">4. RPC 层请求的问题</span></strong></p>
+<p><strong><span style="font-size: 18px;"> </span></strong><span style="font-size: 15px;">1. 调用的RPC，如果RPC抛出异常，则直接在RPC直接进行捕获，不回去影响到service层代码中，RPC，中控制直接返回一个null</span></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/ee2f130fa34444ec.png"/></p>
+<p> </p>
+<p> </p>
+<p><span style="font-size: 18px;"><strong>5. 关于Json数据格式的一写内容</strong></span></p>
+<p><strong><img alt="" loading="lazy" src="/images/cnblogs/6af7df2d23655d3a.png"/></strong></p>
+<p> </p>
+<p><span style="font-size: 16px;"><strong> 下面是List格式</strong></span></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/378ebf13bad827ae.png"/></p>
+<p> </p>
+{% endraw %}

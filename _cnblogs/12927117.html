@@ -1,0 +1,252 @@
+---
+title: "分布式ID生成方式，9种一个一个谈"
+date: 2020-05-20 23:12:00 +0800
+tags: ["【微服务】-- 解决方案"]
+excerpt: "一、为什么要用分布式ID？ 在说分布式ID的具体实现之前，我们来简单分析一下为什么用分布式ID？分布式ID应该满足哪些特征？ 1、什么是分布式ID？ 拿MySQL数据库举个栗子： 在我们业务数据量不大的时候，单库单表完全可以支撑现有业务，数据再大一点搞个MySQL主从同步读写分离也能对付。 但随着数"
+read_minutes: 14
+cnblogs_id: 12927117
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12927117.html"
+tags_inferred: true
+---
+{% raw %}
+<p>一、为什么要用分布式ID？</p>
+<p>在说分布式ID的具体实现之前，我们来简单分析一下为什么用分布式ID？分布式ID应该满足哪些特征？</p>
+<h6>1、什么是分布式ID？</h6>
+<p>拿MySQL数据库举个栗子：</p>
+<p>在我们业务数据量不大的时候，单库单表完全可以支撑现有业务，数据再大一点搞个MySQL主从同步读写分离也能对付。</p>
+<p>但随着数据日渐增长，主从同步也扛不住了，就需要对数据库进行分库分表，但分库分表后需要有一个唯一ID来标识一条数据，数据库的自增ID显然不能满足需求；特别一点的如订单、优惠券也都需要有<code>唯一ID</code>做标识。此时一个能够生成<code>全局唯一ID</code>的系统是非常必要的。那么这个<code>全局唯一ID</code>就叫<code>分布式ID</code>。</p>
+<h6>2、那么分布式ID需要满足那些条件？</h6>
+<ul class="list-paddingleft-2">
+<li>
+<p>全局唯一：必须保证ID是全局性唯一的，基本要求</p>
+</li>
+<li>
+<p>高性能：高可用低延时，ID生成响应要块，否则反倒会成为业务瓶颈</p>
+</li>
+<li>
+<p>高可用：100%的可用性是骗人的，但是也要无限接近于100%的可用性</p>
+</li>
+<li>
+<p>好接入：要秉着拿来即用的设计原则，在系统设计和实现上要尽可能的简单</p>
+</li>
+<li>
+<p>趋势递增：最好趋势递增，这个要求就得看具体业务场景了，一般不严格要求</p>
+</li>
+</ul>
+<h4>二、 分布式ID都有哪些生成方式？</h4>
+<p>今天主要分析一下以下9种，分布式ID生成器方式以及优缺点：</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>UUID</p>
+</li>
+<li>
+<p>数据库自增ID</p>
+</li>
+<li>
+<p>数据库多主模式</p>
+</li>
+<li>
+<p>号段模式</p>
+</li>
+<li>
+<p>Redis</p>
+</li>
+<li>
+<p>雪花算法（SnowFlake）</p>
+</li>
+<li>
+<p>滴滴出品（TinyID）</p>
+</li>
+<li>
+<p>百度 （Uidgenerator）</p>
+</li>
+<li>
+<p>美团（Leaf）</p>
+</li>
+</ul>
+<p>那么它们都是如何实现？以及各自有什么优缺点？我们往下看</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/15875d22be3513d4.png"/></p>
+<p> </p>
+<p> </p>
+<h5>1、基于UUID</h5>
+<p> </p>
+<p>在Java的世界里，想要得到一个具有唯一性的ID，首先被想到可能就是<code>UUID</code>，毕竟它有着全球唯一的特性。那么<code>UUID</code>可以做<code>分布式ID</code>吗？<strong>答案是可以的，但是并不推荐！</strong></p>
+<pre><code>public static void main(String[] args) { <br/>       String uuid = UUID.randomUUID().toString().replaceAll("-","");<br/>       System.out.println(uuid);<br/> }</code></pre>
+<p><code>UUID</code>的生成简单到只有一行代码，输出结果 <code>c2b8c2b9e46c47e3b30dca3b0d447718</code>，但UUID却并不适用于实际的业务需求。像用作订单号<code>UUID</code>这样的字符串没有丝毫的意义，看不出和订单相关的有用信息；而对于数据库来说用作业务<code>主键ID</code>，它不仅是太长还是字符串，存储性能差查询也很耗时，所以不推荐用作<code>分布式ID</code>。</p>
+<p><strong>优点：</strong></p>
+<ul class="list-paddingleft-2">
+<li>
+<p>生成足够简单，本地生成无网络消耗，具有唯一性</p>
+</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul class="list-paddingleft-2">
+<li>
+<p>无序的字符串，不具备趋势自增特性</p>
+</li>
+<li>
+<p>没有具体的业务含义</p>
+</li>
+<li>
+<p>长度过长16 字节128位，36位长度的字符串，存储以及查询对MySQL的性能消耗较大，MySQL官方明确建议主键要尽量越短越好，作为数据库主键 <code>UUID</code> 的无序性会导致数据位置频繁变动，严重影响性能。</p>
+</li>
+</ul>
+<h5>2、基于数据库自增ID</h5>
+<p>基于数据库的<code>auto_increment</code>自增ID完全可以充当<code>分布式ID</code>，具体实现：需要一个单独的MySQL实例用来生成ID，建表结构如下：</p>
+<pre><code>CREATE DATABASE `SEQ_ID`;<br/>CREATE TABLE SEQID.SEQUENCE_ID (<br/>    id bigint(20) unsigned NOT NULL auto_increment, <br/>    value char(10) NOT NULL default '',<br/>    PRIMARY KEY (id),<br/>) ENGINE=MyISAM;<br/></code></pre>
+<pre><code>insert into SEQUENCE_ID(value)  VALUES ('values');</code></pre>
+<p>当我们需要一个ID的时候，向表中插入一条记录返回<code>主键ID</code>，但这种方式有一个比较致命的缺点，访问量激增时MySQL本身就是系统的瓶颈，用它来实现分布式服务风险比较大，不推荐！</p>
+<p><strong>优点：</strong></p>
+<ul class="list-paddingleft-2">
+<li>
+<p>实现简单，ID单调自增，数值类型查询速度快</p>
+</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul class="list-paddingleft-2">
+<li>
+<p>DB单点存在宕机风险，无法扛住高并发场景</p>
+</li>
+</ul>
+<h5>3、基于数据库集群模式</h5>
+<p>前边说了单点数据库方式不可取，那对上边的方式做一些高可用优化，换成主从模式集群。害怕一个主节点挂掉没法用，那就做双主模式集群，也就是两个Mysql实例都能单独的生产自增ID。</p>
+<p>那这样还会有个问题，两个MySQL实例的自增ID都从1开始，<strong>会生成重复的ID怎么办？</strong></p>
+<p><strong>解决方案</strong>：设置<code>起始值</code>和<code>自增步长</code></p>
+<p>MySQL_1 配置：</p>
+<pre><code>set @@auto_increment_offset = 1;     -- 起始值<br/>set @@auto_increment_increment = 2;  -- 步长</code></pre>
+<p>MySQL_2 配置：</p>
+<pre><code>set @@auto_increment_offset = 2;     -- 起始值<br/>set @@auto_increment_increment = 2;  -- 步长</code></pre>
+<p>这样两个MySQL实例的自增ID分别就是：</p>
+<blockquote>
+<p>1、3、5、7、9 <br/>2、4、6、8、10</p>
+</blockquote>
+<p>那如果集群后的性能还是扛不住高并发咋办？就要进行MySQL扩容增加节点，这是一个比较麻烦的事。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/652acceaddd1be00.png"/></p>
+<p> </p>
+<p> </p>
+<p><br/>从上图可以看出，水平扩展的数据库集群，有利于解决数据库单点压力的问题，同时为了ID生成特性，将自增步长按照机器数量来设置。</p>
+<p>增加第三台<code>MySQL</code>实例需要人工修改一、二两台<code>MySQL实例</code>的起始值和步长，把<code>第三台机器的ID</code>起始生成位置设定在比现有<code>最大自增ID</code>的位置远一些，但必须在一、二两台<code>MySQL实例</code>ID还没有增长到<code>第三台MySQL实例</code>的<code>起始ID</code>值的时候，否则<code>自增ID</code>就要出现重复了，<strong>必要时可能还需要停机修改</strong>。</p>
+<p><strong>优点：</strong></p>
+<ul class="list-paddingleft-2">
+<li>
+<p>解决DB单点问题</p>
+</li>
+</ul>
+<p><strong>缺点：</strong></p>
+<ul class="list-paddingleft-2">
+<li>
+<p>不利于后续扩容，而且实际上单个数据库自身压力还是大，依旧无法满足高并发场景。</p>
+</li>
+</ul>
+<h5>4、基于数据库的号段模式</h5>
+<p>号段模式是当下分布式ID生成器的主流实现方式之一，号段模式可以理解为从数据库批量的获取自增ID，每次从数据库取出一个号段范围，例如 (1,1000] 代表1000个ID，具体的业务服务将本号段，生成1~1000的自增ID并加载到内存。表结构如下：</p>
+<pre><code>CREATE TABLE id_generator (<br/>  id int(10) NOT NULL,<br/>  max_id bigint(20) NOT NULL COMMENT '当前最大id',<br/>  step int(20) NOT NULL COMMENT '号段的布长',<br/>  biz_type    int(20) NOT NULL COMMENT '业务类型',<br/>  version int(20) NOT NULL COMMENT '版本号',<br/>  PRIMARY KEY (`id`)<br/>) </code></pre>
+<p>biz_type ：代表不同业务类型</p>
+<p>max_id ：当前最大的可用id</p>
+<p>step ：代表号段的长度</p>
+<p>version ：是一个乐观锁，每次都更新version，保证并发时数据的正确性</p>
+<table style="width: 894px;">
+<thead>
+<tr><th>id</th><th>biz_type</th><th>max_id</th><th>step</th><th>version</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>101</td>
+<td>1000</td>
+<td>2000</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>等这批号段ID用完，再次向数据库申请新号段，对<code>max_id</code>字段做一次<code>update</code>操作，<code>update max_id= max_id + step</code>，update成功则说明新号段获取成功，新的号段范围是<code>(max_id ,max_id +step]</code>。</p>
+<pre><code>update id_generator set max_id = #{max_id+step}, version = version + 1 where version = # {version} and biz_type = XXX</code></pre>
+<p>由于多业务端可能同时操作，所以采用版本号<code>version</code>乐观锁方式更新，这种<code>分布式ID</code>生成方式不强依赖于数据库，不会频繁的访问数据库，对数据库的压力小很多。</p>
+<h5>5、基于Redis模式</h5>
+<p><code>Redis</code>也同样可以实现，原理就是利用<code>redis</code>的 <code>incr</code>命令实现ID的原子性自增。</p>
+<pre><code>127.0.0.1:6379&gt; set seq_id 1     // 初始化自增ID为1<br/>OK<br/>127.0.0.1:6379&gt; incr seq_id      // 增加1，并返回递增后的数值<br/>(integer) 2</code></pre>
+<p>用<code>redis</code>实现需要注意一点，要考虑到redis持久化的问题。<code>redis</code>有两种持久化方式<code>RDB</code>和<code>AOF</code></p>
+<ul class="list-paddingleft-2">
+<li>
+<p><code>RDB</code>会定时打一个快照进行持久化，假如连续自增但<code>redis</code>没及时持久化，而这会Redis挂掉了，重启Redis后会出现ID重复的情况。</p>
+</li>
+<li>
+<p><code>AOF</code>会对每条写命令进行持久化，即使<code>Redis</code>挂掉了也不会出现ID重复的情况，但由于incr命令的特殊性，会导致<code>Redis</code>重启恢复的数据时间过长。</p>
+</li>
+</ul>
+<h5>6、基于雪花算法（Snowflake）模式</h5>
+<p>雪花算法（Snowflake）是twitter公司内部分布式项目采用的ID生成算法，开源后广受国内大厂的好评，在该算法影响下各大公司相继开发出各具特色的分布式生成器。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4c136eda5d2796f3.png"/></p>
+<p> </p>
+<p> </p>
+<p><code>Snowflake</code>生成的是Long类型的ID，一个Long类型占8个字节，每个字节占8比特，也就是说一个Long类型占64个比特。</p>
+<p>Snowflake ID组成结构：<code>正数位</code>（占1比特）+ <code>时间戳</code>（占41比特）+ <code>机器ID</code>（占5比特）+ <code>数据中心</code>（占5比特）+ <code>自增值</code>（占12比特），总共64比特组成的一个Long类型。</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>第一个bit位（1bit）：Java中long的最高位是符号位代表正负，正数是0，负数是1，一般生成ID都为正数，所以默认为0。</p>
+</li>
+<li>
+<p>时间戳部分（41bit）：毫秒级的时间，不建议存当前时间戳，而是用（当前时间戳 - 固定开始时间戳）的差值，可以使产生的ID从更小的值开始；41位的时间戳可以使用69年，(1L &lt;&lt; 41) / (1000L * 60 * 60 * 24 * 365) = 69年</p>
+</li>
+<li>
+<p>工作机器id（10bit）：也被叫做<code>workId</code>，这个可以灵活配置，机房或者机器号组合都可以。</p>
+</li>
+<li>
+<p>序列号部分（12bit），自增值支持同一毫秒内同一个节点可以生成4096个ID</p>
+</li>
+</ul>
+<p>根据这个算法的逻辑，只需要将这个算法用Java语言实现出来，封装为一个工具方法，那么各个业务应用可以直接使用该工具方法来获取分布式ID，只需保证每个业务应用有自己的工作机器id即可，而不需要单独去搭建一个获取分布式ID的应用。</p>
+<p><strong>Java版本的</strong><strong><code>Snowflake</code>算法实现：</strong></p>
+<pre><code>/**<br/> * Twitter的SnowFlake算法,使用SnowFlake算法生成一个整数，然后转化为62进制变成一个短地址URL<br/> *<br/> * https://github.com/beyondfengyu/SnowFlake<br/> */<br/>public class SnowFlakeShortUrl {<br/><br/>    /**<br/>     * 起始的时间戳<br/>     */<br/>    private final static long START_TIMESTAMP = 1480166465631L;<br/><br/>    /**<br/>     * 每一部分占用的位数<br/>     */<br/>    private final static long SEQUENCE_BIT = 12;   //序列号占用的位数<br/>    private final static long MACHINE_BIT = 5;     //机器标识占用的位数<br/>    private final static long DATA_CENTER_BIT = 5; //数据中心占用的位数<br/><br/>    /**<br/>     * 每一部分的最大值<br/>     */<br/>    private final static long MAX_SEQUENCE = -1L ^ (-1L &lt;&lt; SEQUENCE_BIT);<br/>    private final static long MAX_MACHINE_NUM = -1L ^ (-1L &lt;&lt; MACHINE_BIT);<br/>    private final static long MAX_DATA_CENTER_NUM = -1L ^ (-1L &lt;&lt; DATA_CENTER_BIT);<br/><br/>    /**<br/>     * 每一部分向左的位移<br/>     */<br/>    private final static long MACHINE_LEFT = SEQUENCE_BIT;<br/>    private final static long DATA_CENTER_LEFT = SEQUENCE_BIT + MACHINE_BIT;<br/>    private final static long TIMESTAMP_LEFT = DATA_CENTER_LEFT + DATA_CENTER_BIT;<br/><br/>    private long dataCenterId;  //数据中心<br/>    private long machineId;     //机器标识<br/>    private long sequence = 0L; //序列号<br/>    private long lastTimeStamp = -1L;  //上一次时间戳<br/><br/>    private long getNextMill() {<br/>        long mill = getNewTimeStamp();<br/>        while (mill &lt;= lastTimeStamp) {<br/>            mill = getNewTimeStamp();<br/>        }<br/>        return mill;<br/>    }<br/><br/>    private long getNewTimeStamp() {<br/>        return System.currentTimeMillis();<br/>    }<br/><br/>    /**<br/>     * 根据指定的数据中心ID和机器标志ID生成指定的序列号<br/>     *<br/>     * @param dataCenterId 数据中心ID<br/>     * @param machineId    机器标志ID<br/>     */<br/>    public SnowFlakeShortUrl(long dataCenterId, long machineId) {<br/>        if (dataCenterId &gt; MAX_DATA_CENTER_NUM || dataCenterId &lt; 0) {<br/>            throw new IllegalArgumentException("DtaCenterId can't be greater than MAX_DATA_CENTER_NUM or less than 0！");<br/>        }<br/>        if (machineId &gt; MAX_MACHINE_NUM || machineId &lt; 0) {<br/>            throw new IllegalArgumentException("MachineId can't be greater than MAX_MACHINE_NUM or less than 0！");<br/>        }<br/>        this.dataCenterId = dataCenterId;<br/>        this.machineId = machineId;<br/>    }<br/><br/>    /**<br/>     * 产生下一个ID<br/>     *<br/>     * @return<br/>     */<br/>    public synchronized long nextId() {<br/>        long currTimeStamp = getNewTimeStamp();<br/>        if (currTimeStamp &lt; lastTimeStamp) {<br/>            throw new RuntimeException("Clock moved backwards.  Refusing to generate id");<br/>        }<br/><br/>        if (currTimeStamp == lastTimeStamp) {<br/>            //相同毫秒内，序列号自增<br/>            sequence = (sequence + 1) &amp; MAX_SEQUENCE;<br/>            //同一毫秒的序列数已经达到最大<br/>            if (sequence == 0L) {<br/>                currTimeStamp = getNextMill();<br/>            }<br/>        } else {<br/>            //不同毫秒内，序列号置为0<br/>            sequence = 0L;<br/>        }<br/><br/>        lastTimeStamp = currTimeStamp;<br/><br/>        return (currTimeStamp - START_TIMESTAMP) &lt;&lt; TIMESTAMP_LEFT //时间戳部分<br/>                | dataCenterId &lt;&lt; DATA_CENTER_LEFT       //数据中心部分<br/>                | machineId &lt;&lt; MACHINE_LEFT             //机器标识部分<br/>                | sequence;                             //序列号部分<br/>    }<br/><br/>    public static void main(String[] args) {<br/>        SnowFlakeShortUrl snowFlake = new SnowFlakeShortUrl(2, 3);<br/><br/>        for (int i = 0; i &lt; (1 &lt;&lt; 4); i++) {<br/>            //10进制<br/>            System.out.println(snowFlake.nextId());<br/>        }<br/>    }<br/>}</code></pre>
+<h5>7、百度（uid-generator）</h5>
+<p><code>uid-generator</code>是由百度技术部开发，项目GitHub地址 https://github.com/baidu/uid-generator</p>
+<p><code>uid-generator</code>是基于<code>Snowflake</code>算法实现的，与原始的<code>snowflake</code>算法不同在于，<code>uid-generator</code>支持自<code>定义时间戳</code>、<code>工作机器ID</code>和 <code>序列号</code> 等各部分的位数，而且<code>uid-generator</code>中采用用户自定义<code>workId</code>的生成策略。</p>
+<p><code>uid-generator</code>需要与数据库配合使用，需要新增一个<code>WORKER_NODE</code>表。当应用启动时会向数据库表中去插入一条数据，插入成功后返回的自增ID就是该机器的<code>workId</code>数据由host，port组成。</p>
+<p><strong>对于</strong><strong><code>uid-generator</code> ID组成结构</strong>：</p>
+<p><code>workId</code>，占用了22个bit位，时间占用了28个bit位，序列化占用了13个bit位，需要注意的是，和原始的<code>snowflake</code>不太一样，时间的单位是秒，而不是毫秒，<code>workId</code>也不一样，而且同一应用每次重启就会消费一个<code>workId</code>。</p>
+<blockquote>
+<p>参考文献<br/>https://github.com/baidu/uid-generator/blob/master/README.zh_cn.md</p>
+</blockquote>
+<h5>8、美团（Leaf）</h5>
+<p><code>Leaf</code>由美团开发，github地址：https://github.com/Meituan-Dianping/Leaf</p>
+<p><code>Leaf</code>同时支持号段模式和<code>snowflake</code>算法模式，可以切换使用。</p>
+<h5>号段模式</h5>
+<p>先导入源码 https://github.com/Meituan-Dianping/Leaf ，在建一张表<code>leaf_alloc</code></p>
+<pre><code>DROP TABLE IF EXISTS `leaf_alloc`;<br/><br/>CREATE TABLE `leaf_alloc` (<br/>  `biz_tag` varchar(128)  NOT NULL DEFAULT '' COMMENT '业务key',<br/>  `max_id` bigint(20) NOT NULL DEFAULT '1' COMMENT '当前已经分配了的最大id',<br/>  `step` int(11) NOT NULL COMMENT '初始步长，也是动态调整的最小步长',<br/>  `description` varchar(256)  DEFAULT NULL COMMENT '业务key的描述',<br/>  `update_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '数据库维护的更新时间',<br/>  PRIMARY KEY (`biz_tag`)<br/>) ENGINE=InnoDB;</code></pre>
+<p>然后在项目中开启<code>号段模式</code>，配置对应的数据库信息，并关闭<code>snowflake</code>模式</p>
+<pre><code>leaf.name=com.sankuai.leaf.opensource.test<br/>leaf.segment.enable=true<br/>leaf.jdbc.url=jdbc:mysql://localhost:3306/leaf_test?useUnicode=true&amp;characterEncoding=utf8&amp;characterSetResults=utf8<br/>leaf.jdbc.username=root<br/>leaf.jdbc.password=root<br/><br/>leaf.snowflake.enable=false<br/>#leaf.snowflake.zk.address=<br/>#leaf.snowflake.port=</code></pre>
+<p>启动<code>leaf-server</code> 模块的 <code>LeafServerApplication</code>项目就跑起来了</p>
+<p>号段模式获取分布式自增ID的测试url ：http：//localhost：8080/api/segment/get/leaf-segment-test</p>
+<p>监控号段模式：http://localhost:8080/cache</p>
+<h5>snowflake模式</h5>
+<p><code>Leaf</code>的snowflake模式依赖于<code>ZooKeeper</code>，不同于<code>原始snowflake</code>算法也主要是在<code>workId</code>的生成上，<code>Leaf</code>中<code>workId</code>是基于<code>ZooKeeper</code>的顺序Id来生成的，每个应用在使用<code>Leaf-snowflake</code>时，启动时都会都在<code>Zookeeper</code>中生成一个顺序Id，相当于一台机器对应一个顺序节点，也就是一个<code>workId</code>。</p>
+<pre><code>leaf.snowflake.enable=true<br/>leaf.snowflake.zk.address=127.0.0.1<br/>leaf.snowflake.port=2181</code></pre>
+<p>snowflake模式获取分布式自增ID的测试url：http://localhost:8080/api/snowflake/get/test</p>
+<h5>9、滴滴（Tinyid）</h5>
+<p><code>Tinyid</code>由滴滴开发，Github地址：https://github.com/didi/tinyid。</p>
+<p><code>Tinyid</code>是基于号段模式原理实现的与<code>Leaf</code>如出一辙，每个服务获取一个号段（1000,2000]、（2000,3000]、（3000,4000]</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/40af639dfa1816b1.png"/></p>
+<p> </p>
+<p> </p>
+<p><code>Tinyid</code>提供<code>http</code>和<code>tinyid-client</code>两种方式接入</p>
+<h5>Http方式接入</h5>
+<p>（1）导入Tinyid源码：</p>
+<p>git clone https://github.com/didi/tinyid.git</p>
+<p>（2）创建数据表：</p>
+<pre><code>CREATE TABLE `tiny_id_info` (<br/>  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增主键',<br/>  `biz_type` varchar(63) NOT NULL DEFAULT '' COMMENT '业务类型，唯一',<br/>  `begin_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '开始id，仅记录初始值，无其他含义。初始化时begin_id和max_id应相同',<br/>  `max_id` bigint(20) NOT NULL DEFAULT '0' COMMENT '当前最大id',<br/>  `step` int(11) DEFAULT '0' COMMENT '步长',<br/>  `delta` int(11) NOT NULL DEFAULT '1' COMMENT '每次id增量',<br/>  `remainder` int(11) NOT NULL DEFAULT '0' COMMENT '余数',<br/>  `create_time` timestamp NOT NULL DEFAULT '2010-01-01 00:00:00' COMMENT '创建时间',<br/>  `update_time` timestamp NOT NULL DEFAULT '2010-01-01 00:00:00' COMMENT '更新时间',<br/>  `version` bigint(20) NOT NULL DEFAULT '0' COMMENT '版本号',<br/>  PRIMARY KEY (`id`),<br/>  UNIQUE KEY `uniq_biz_type` (`biz_type`)<br/>) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT 'id信息表';<br/><br/>CREATE TABLE `tiny_id_token` (<br/>  `id` int(11) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增id',<br/>  `token` varchar(255) NOT NULL DEFAULT '' COMMENT 'token',<br/>  `biz_type` varchar(63) NOT NULL DEFAULT '' COMMENT '此token可访问的业务类型标识',<br/>  `remark` varchar(255) NOT NULL DEFAULT '' COMMENT '备注',<br/>  `create_time` timestamp NOT NULL DEFAULT '2010-01-01 00:00:00' COMMENT '创建时间',<br/>  `update_time` timestamp NOT NULL DEFAULT '2010-01-01 00:00:00' COMMENT '更新时间',<br/>  PRIMARY KEY (`id`)<br/>) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT 'token信息表';<br/><br/>INSERT INTO `tiny_id_info` (`id`, `biz_type`, `begin_id`, `max_id`, `step`, `delta`, `remainder`, `create_time`, `update_time`, `version`)<br/>VALUES<br/>    (1, 'test', 1, 1, 100000, 1, 0, '2018-07-21 23:52:58', '2018-07-22 23:19:27', 1);<br/><br/>INSERT INTO `tiny_id_info` (`id`, `biz_type`, `begin_id`, `max_id`, `step`, `delta`, `remainder`, `create_time`, `update_time`, `version`)<br/>VALUES<br/>    (2, 'test_odd', 1, 1, 100000, 2, 1, '2018-07-21 23:52:58', '2018-07-23 00:39:24', 3);<br/><br/><br/>INSERT INTO `tiny_id_token` (`id`, `token`, `biz_type`, `remark`, `create_time`, `update_time`)<br/>VALUES<br/>    (1, '0f673adf80504e2eaa552f5d791b644c', 'test', '1', '2017-12-14 16:36:46', '2017-12-14 16:36:48');<br/><br/>INSERT INTO `tiny_id_token` (`id`, `token`, `biz_type`, `remark`, `create_time`, `update_time`)<br/>VALUES<br/>    (2, '0f673adf80504e2eaa552f5d791b644c', 'test_odd', '1', '2017-12-14 16:36:46', '2017-12-14 16:36:48');</code></pre>
+<p>（3）配置数据库：</p>
+<pre><code>datasource.tinyid.names=primary<br/>datasource.tinyid.primary.driver-class-name=com.mysql.jdbc.Driver<br/>datasource.tinyid.primary.url=jdbc:mysql://ip:port/databaseName?autoReconnect=true&amp;useUnicode=true&amp;characterEncoding=UTF-8<br/>datasource.tinyid.primary.username=root<br/>datasource.tinyid.primary.password=123456</code></pre>
+<p>（4）启动<code>tinyid-server</code>后测试</p>
+<pre><code>获取分布式自增ID: http://localhost:9999/tinyid/id/nextIdSimple?bizType=test&amp;token=0f673adf80504e2eaa552f5d791b644c'<br/>返回结果: 3<br/><br/>批量获取分布式自增ID:<br/>http://localhost:9999/tinyid/id/nextIdSimple?bizType=test&amp;token=0f673adf80504e2eaa552f5d791b644c&amp;batchSize=10'<br/>返回结果:  4,5,6,7,8,9,10,11,12,13</code></pre>
+<h5>Java客户端方式接入</h5>
+<p>重复Http方式的（2）（3）操作</p>
+<p>引入依赖</p>
+<pre><code>       &lt;dependency&gt;<br/>            &lt;groupId&gt;com.xiaoju.uemc.tinyid&lt;/groupId&gt;<br/>            &lt;artifactId&gt;tinyid-client&lt;/artifactId&gt;<br/>            &lt;version&gt;${tinyid.version}&lt;/version&gt;<br/>        &lt;/dependency&gt;</code></pre>
+<p>配置文件</p>
+<pre><code>tinyid.server =localhost:9999<br/>tinyid.token =0f673adf80504e2eaa552f5d791b644c</code></pre>
+<p><code>test</code> 、<code>tinyid.token</code>是在数据库表中预先插入的数据，<code>test</code> 是具体业务类型，<code>tinyid.token</code>表示可访问的业务类型</p>
+<pre><code>// 获取单个分布式自增ID<br/>Long id =  TinyId . nextId( " test " );<br/><br/>// 按需批量分布式自增ID<br/>List&lt; Long &gt; ids =  TinyId . nextId( " test " , 10 );</code></pre>
+<hr/>
+<h4><strong>总结</strong></h4>
+<p>本文只是简单介绍一下每种分布式ID生成器，旨在给大家一个详细学习的方向，每种生成方式都有它自己的优缺点，具体如何使用还要看具体的业务需求。</p>
+{% endraw %}

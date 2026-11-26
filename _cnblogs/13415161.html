@@ -1,0 +1,139 @@
+---
+title: "TIME_WAIT"
+date: 2020-08-01 16:26:00 +0800
+tags: ["【计算机网络】-- 网络"]
+excerpt: "由于TCP协议整个机制也非常复杂我只能尽可能的在某一条线上来说，不可能面面俱到，如果有疏漏或者对于内容有异议可以留言。谢谢大家。 查看服务器上各个状态的统计数量： netstat -ant | awk '/^tcp/ {++y[$NF]} END {for(w in y) print w, y[w]"
+read_minutes: 12
+cnblogs_id: 13415161
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13415161.html"
+tags_inferred: true
+---
+{% raw %}
+<p>由于TCP协议整个机制也非常复杂我只能尽可能的在某一条线上来说，不可能面面俱到，如果有疏漏或者对于内容有异议可以留言。谢谢大家。</p>
+<p>查看服务器上各个状态的统计数量：</p>
+<p><code>netstat -ant | awk '/^tcp/ {++y[$NF]} END {for(w in y) print w, y[w]}'</code></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/784f428fd6b7c6f7.png"/></p>
+<p>单独查看TIME_WAIT，<code>ss -nat | grep TIME-WAIT</code></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/5fb7cf530a1e9b28.png"/></p>
+<blockquote>
+<p><code>ss</code>命令中的TIME WAIT的写法和<code>netstat</code>中有所不同</p>
+</blockquote>
+<h2 id="time_wait的作用">TIME_WAIT的作用</h2>
+<p>主动断开的一方的TCP连接会在这个状态下保持2MSL，其作用就2个：</p>
+<ul>
+<li>
+<p>确保对方收到自己发送的最后一个ACK（因为对方发送了FIN），如果对方没有收到自己发送的ACK必定会重新发送FIN，这样保证4次断开的完整性。因为MSL是最大报文生存时间，如果在1个MSL时间内自己发送的ACK对方没有收到那就注定收不到了，而且对方肯定还会发送FIN，那么一个FIN发送过来的最长时间也是1个MSL，所以这里要等待2MSL。</p>
+</li>
+<li>
+<p>另外一个原因就是避免延迟的IP报文，在频繁短连接的场景下客户端通常会对同一个IP和端口在短时间内发起多次连接，而客户端使用的端口是自己系统随机分配的高位端口，有一定概率发生上一个socket四元组和下一个socket四元组一样，如果这时候一个原本属于上一个socket四元组的被延迟的IP报文送达，那么这将发送数据混乱的状态，所以为了避免这种情况就利用MSL这个报文最大生存时长机制让残余的IP报文在网络中消失。这时候同样的四元组又可以被使用了。</p>
+</li>
+</ul>
+<blockquote>
+<p>另外你无须担心这个迟到的IP报文是有用的，因为TCP是可靠连接，它有重传机制，所以这个迟到的IP报文消失不会影响之前通信的数据完整性。哪怕这个报文是在2MSL期间到达也将会被抛弃。</p>
+</blockquote>
+<p>处于该状态的socket什么时候可以再次使用：</p>
+<ul>
+<li>
+<p>2MSL之后</p>
+</li>
+<li>
+<p>如果处于2MS期间，重用连接那么要保证新连接的TCP的Seq也就是序列号要比之前的大</p>
+</li>
+<li>
+<p>如果处于2MS期间，重用的连接要保证后续的时间戳要比之前的连接的时间戳更晚</p>
+</li>
+</ul>
+<p>只有满足上面的条件才不会在发生新连接上出现老连接的延迟的IP分组，满足第一个条件则不会出现延迟的IP分组，如果满足后面的条件那么延迟的IP分组即使出现在新连接上也会被直接丢弃进而不会影响现有通信数据。</p>
+<p>使用Wireshark抓包在TCP中显示的Seq都是从0开始的，这是这个软件做了处理，如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/95f88b13de61c158.png"/></p>
+<p>要想看真正的序列号需要做一个配置：</p>
+<p>Wireshark--&gt;Preferences--&gt;Protocols--&gt;Tcp</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d3cd9eb9e7a736eb.png"/></p>
+<p>点击确定你就可以看到真实的Seq</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/82078f3816f4cbbd.png"/></p>
+<blockquote>
+<p>2MSL到底有多长呢？这个不一定，1分钟、2分钟或者4分钟，还有的30秒。不同的发行版可能会不同。在Centos 7.6.1810 的3.10内核版本上是60秒。<a href="https://elixir.bootlin.com/linux/v3.10/source/include/net/tcp.h">v3.10/source/include/net/tcp.h</a></p>
+</blockquote>
+<h2 id="time_wait会影响什么">TIME_WAIT会影响什么</h2>
+<p>端口：但是这是对于通信过程中扮演客户端角色的一端来说，因为客户端使用随机端口来访问服务器，当它主动断开的时候会出现这个状态，比如第一次系统给它分配了一个51000的随机端口访问服务器，然后客户端主动断开了，在2MSL期间，该端口就处于TIME_WAIT状态，如果它再次访问相同的服务器，那么系统会为它再次分配一个随机端口，如果51000端口还处于TIME_WAIT状态，那么这个随机端口就肯定不是51000，如果51000端口不处于TIME_WAIT状态，那么这个随机端口就有可能是51000。所以这个状态在一定期间内对于客户端角色来讲会影响并发量，大量这个TIME_WAIT就导致可用随机端口不断减少。</p>
+<p>内存：这个量会很小，无需担心，哪怕是上万的TIME_WAIT。</p>
+<p>文件描述符：但是处于TIME_WAIT状态的套接字其实是已经关闭了文件描述符，也就是说这个状态并不占用文件描述符这也就是意味着该状态不会对应一个打开的文件。</p>
+<h2 id="如何解决">如何解决</h2>
+<p>网上很多人给出的答案是调整内核参数比如下面的参数，但是这些答案有很多误区，在不同场景下并不一定适用，所以这里先对参数做一下澄清：</p>
+<p><code>net.ipv4.tcp_tw_reuse = 1</code></p>
+<p>表示开启重用。允许将一个处于TIME-WAIT状态的端口重新用于新的TCP连接，默认为0，表示关闭，其防止重复报文的原理也是时间戳，具体看后面。</p>
+<p><code>net.ipv4.tcp_tw_recycle = 1</code></p>
+<p>表示开启TCP连接中TIME-WAIT sockets的快速回收，意思就是系统会保存最近一次该socket连接上的传输报文（包括数据或者仅仅是ACK报文）的时间戳，当相同四元组socket过来的报文的时间戳小于缓存下来的时间戳则丢弃该数据包，并回收这个socket，默认为0，表示关闭。开启这个功能风险有点大，NAT环境可能导致DROP掉SYN包（回复RST），在NAT场景下不要使用。需要注意在Linux内核4.10版本以后该参数就已经被移除了。</p>
+<p><code>net.ipv4.tcp_fin_timeout = 60</code></p>
+<p>这个时间不是修改2MSL的时长，主动关闭连接的一方接收到ACK之后会进入，FIN_WAIT-2状态，然后等待被动关闭一方发送FIN，这个时间是设置主动关闭的一方等待对方发送FIN的最长时长，默认是60秒。在这个状态下端口是不可能被重用的，文件描述符和内存也不会被释放，因为这个阶段被动关闭的一方有可能还有数据要发送，因为对端处于CLOSE_WAIT状态，也就是等待上层应用程序。关于这个的真实含义我希望大家清楚，而且不要调整的太小当然太大也不行，至少在3.10内核版本上这个参数不是调整的TIME_WAIT时长。我的资料查询<a href="https://elixir.bootlin.com/linux/v3.10/source/include/net/tcp.h">3.10内核变量定义</a>和<a href="https://access.redhat.com/solutions/41776">RedHat官方解释</a>。至于到底如何修改TIME_WAIT的时长，目前没找到可以通过命令或者配置的形式去修改的方式。</p>
+<p><code>net.ipv4.ip_local_port_range = 32768 60999</code></p>
+<p>表示用于外连使用的随机高位端口范围，也就是作为客户端连接其他服务的时候系统从这个范围随机取出一个端口来作为源端口使用来去连接对端服务器，这个范围也就决定了最多主动能同时建立多少个外连。</p>
+<p><code>net.ipv4.tcp_max_tw_buckets = 6000</code></p>
+<p>同时保持TIME_WAIT套接字的最大个数，超过这个数字那么该TIME_WAIT套接字将立刻被释放并在/var/log/message日志中打印警告信息（TCP: time wait bucket table overflow）。这个过多主要是消耗内存，单个TIME_WAIT占用内存非常小，但是多了就不好了，这个主要看内存以及你的服务器是否直接对外。</p>
+<blockquote>
+<p>使用<code>net.ipv4.tcp_tw_reuse</code>和<code>net.ipv4.tcp_tw_recycle</code> 的前提是开启时间戳<code>net.ipv4.tcp_timestamps = 1</code>不过这一项默认是开启的。</p>
+</blockquote>
+<h3 id="作为7层的代理的nginx">作为7层的代理的Nginx</h3>
+<p>在这种场景下首先要搞清楚哪一侧产生TIME_WAIT最多。为什么要看这个，我们知道TIME_WAIT是主动关闭一方具有的状态，但是Nginx作为7层代理对外它是服务器而对内它是客户端（例如，相对于后端的其他Web应用比如Tomcat）。</p>
+<h4 id="对外侧（被动连接）">对外侧（被动连接）</h4>
+<p><img alt="" loading="lazy" src="/images/cnblogs/fbc451ec778d60d4.png"/></p>
+<p><code>ss -nat | grep "TIME-WAIT" | awk '{print $4}' | egrep -w "192.168.71.101:80|192.168.71.101:443" | wc -l</code></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/34a663d74d7c2615.png"/></p>
+<p>作为代理服务器对外提供的端口就是80和443，所以我们针对"TIME-WAIT"状态来进行过滤本地地址和端口而且通过-w进行严格匹配2个条件就是"192.168.71.101:80|192.168.71.101:443"，这样就统计出Nginx作为服务器一方的外连TIME-WAIT的数量。</p>
+<p>看一下抓包情况（下图是测试环境的包，上图是生产环境的统计）</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/5c9d0138a32ffc50.png"/></p>
+<p>由于在作为Web代理角色运行的时候为了提高HTTP性能所以Nginx通常会开启Keep-alive来让客户端对TCP连接进行复用，如果客户端在Keep-alive超时内没有进行通信那么当触发超时时服务器就会主动断开连接，也就是上图红色箭头的地方，另外一个情况就是Nginx设置对Keep-alive最大请求数量，意思是改链接在复用的时候可以发送多少次请求，如果到达这个最大请求次数也会断开连接，但无论怎么说这种情况是服务器主动断开所以TIME_WAIT则会出现在服务器上。</p>
+<p>对于这种情况的TIME_WAIT通过修改<code>net.ipv4.tcp_tw_reuse</code>无法优化，因为服务器工作在80或者443端口，不存在重复使用或者快速回收的前提。开启<code>net.ipv4.tcp_tw_recycle</code>这个功能倒是还有点意义。</p>
+<h4 id="对内侧（主动连接）">对内侧（主动连接）</h4>
+<p><code>ss -nat | grep "TIME-WAIT" | awk '{print $4}' | egrep -w -v "192.168.71.101:80|192.168.71.101:443" | wc -l</code></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/a6c28f062fac1bde.png"/></p>
+<p>我们增加一个-v参数来取反，这样就获取了本地地址中不是80和443端口的TIME-WAIT状态数量，那么这个数量就是Nginx作为客户端进行内连后端服务器所产生的。</p>
+<p>很明显对内侧的TIME_WAIT明显比对外侧要高，这就是因为Nginx反向代理到后端使用随机端口来主动连接后端服务的固定端口，在短连接的情况下（通常是短连接），Nginx作为主动发起连接的一方会主动断开，所以在业务繁忙的Nginx代理服务器上会看到大量的对内侧的TIME_WAIT。</p>
+<p>基于这种情况可以采用<code>net.ipv4.tcp_tw_reuse</code>和<code>net.ipv4.tcp_tw_recycle</code>优化方式，因为高位随机端口具备复用的可能。当然至于旧IP分组影响新连接的情况在前面已经说过了其依靠时间戳来做丢弃。具体机制请看后面，现在你只需要知道是依靠时间戳来规避这个问题。</p>
+<p>另外<code>net.ipv4.ip_local_port_range</code>参数可以设置一个更大的范围，比如<code>net.ipv4.ip_local_port_range = 2048 65000</code>这就意味着你的可用随机端口多了，端口少我们更多关注与端口复用，端口多其实是不是复用的意义就不是那么大，当然这还得取决于并发量，当然这里也不要死磕，如果你的并发量是100万，你怎么可能指望1台Nginx来抗住流量呢，显然需要构建Nginx集群。</p>
+<p>再有<code>net.ipv4.tcp_max_tw_buckets</code>这个参数当主机对外的时候需要调整，如果完全是内网提供服务那么这个值无需关心，它根据系统内存动态生成的，当然你可以修改。在对外的时候主要是简单防止DoS攻击。</p>
+<p><code>net.ipv4.tcp_fin_timeout</code>这个值保持默认60秒或者调整成30秒都可以，主要避免对端上层应用死掉了无法进行正常发送fin，进而长期处在CLOSE_WAIT阶段，这样你自己这段的服务器就被拖住了。</p>
+<h4 id="总结">总结</h4>
+<p>对于TIME_WAIT不要死磕，存在即合理，明明是一个很正常的且保证可靠通信的机制你非要抑制它的产生或者让它快速消失。任何的调整都是双刃剑，就像2台Nginx组成的集群去抗100万并发的流量，你非要去优化TIME_WAIT，你为什么不想想会不会是你Nginx集群规模太小了呢？</p>
+<p>作为不会主动进行外连的服务器来说对于TIME_WAIT除了消耗一点内存和CPU资源之外你不必过多关心这个状态。</p>
+<p>针对Nginx做反代的场景使用reuse优化一下，另外调大一下高位端口范围，fin_timeout可以设置小一点，至于net.ipv4.tcp_max_tw_buckets保存默认就可以，另外对于net.ipv4.tcp_tw_recycle则放弃使用吧，比较从Linux 4.10以后这个参数也被弃用了参见<a href="https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=4396e46187ca5070219b81773c4e65088dac50cc">kernel.org</a>。</p>
+<h3 id="2msl和resue或者recycle会不会有冲突">2MSL和resue或者recycle会不会有冲突</h3>
+<p>这个问题在TCP上有一个术语缩写是PAWS，全名为PROTECT AGAINST WRAPPED SEQUENCE NUMBERS，也就是防止TCP的Seq序列号反转的机制。</p>
+<p>我们上面介绍了2MSL的作用以及减少TIME_WAIT常用措施，但是你想过没有重用TIME_WAIT状态的端口以及快速回收会不会引发收到该相同4元组之前的重复IP报文呢？很显然是有可能的，那么这里就谈谈如何规避。通常2种办法：</p>
+<ul>
+<li>
+<p>TCP序列号，也就是Seq位置的数字</p>
+</li>
+<li>
+<p>时间戳，所以这也是为什么在开启resue和recycle的时候要求开启时间戳功能。</p>
+</li>
+</ul>
+<p>TCP头中的序列号位有长度限制（32位），其最大值为2的32次方个，这就意味着它是循环使用的，也很容易在短时间内完成一个循环（序列号反转），在1Gbps的网络里17秒就可以完成一个循环，所以单纯的通过检查序列号不能完全实现阻挡老IP分组的数据，因为高速网络中这个循环完成的太快，而一个IP分组的最长TTL是2MSL，通常是1分钟，所以最主要还是靠时间戳。</p>
+<p>前面我们也几次提到时间戳，比如在reuse和recycle的时候提到会对比时间戳，如果收到的报文时间戳小于最近连接的时间戳就会被丢弃，那么我们如何获取这个时间戳呢？我们先看看它长什么样子：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/ba1b29f079de59b7.png"/></p>
+<p>TSval：发送端时间戳</p>
+<p>TSecr：对端回显时间戳</p>
+<p>我们看第三行，如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/f41ad26bf9b2817f.png"/></p>
+<p>这一行是客户端回复ACK给服务器完成三次握手的最后一个阶段，TSval就是客户端的时间戳这个和第一行一样这是因为速度快还没有走完一个时间周期，这一行的TSecr是434971890，这个就是第二行服务器回复SYN时候给客户端发来的服务器的时间戳，这个就叫做回显时间戳。</p>
+<blockquote>
+<p>这个时间戳是一个相对时间戳而不是我们通常理解的绝对时间戳（自1970年1月1日的那种形式），而且你不能把它当做时间来用，在RFC1323中也提到对报文的接收者来讲时间戳可以看做另外一种高阶序列号。</p>
+</blockquote>
+<p>这里就会有一个问题，2个时间戳，一个是自己的，一个是对端的，到底用哪个时间戳来进行比较来确定是否丢弃报文呢？答案是TSval，也就是发送端的时间戳。这样很容易理解，作为主动断开的一方要丢弃的是对端传递过来的重复报文，显然需要用对端的时间戳来判断不可能用自己的时间戳。而且从上图可以看到自己的时间戳和对端的时间戳明显有很大差距，也就是说这个时间戳是通信双方自己生成的。这个时间戳就放在TCP报文的options选项中，如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/ca854f0e24fe5f57.png"/></p>
+<blockquote>
+<p>可以看到它是options，既然是选项那么就不是必须的，所以这也就是为什么当开启reuse和recycle的时候要求开启这个，因为不开启则无法识别重复的IP分组。</p>
+</blockquote>
+<p>简单原理就是：保存该socket上一次报文的TSval时间戳，如果该socket的4元组被重复利用或者快速回收，那么假如收到了之前连接重复的报文，则比较该报文的时间戳是不是比保存的TSval小，如果小则丢弃。我这里只是简单来说基于时间戳的机制来放置重复报文，整个的PAWS还有其他的原则，具体请查看<a href="https://tools.ietf.org/html/rfc1323#section-3.4">RFC1323</a>。</p>
+<p>另外，由于时间戳也是通过一串数字来表示且TCP头的时间戳长度也是32位（每个都是4byes），所以它也会出现循环，时间跳动频率就决定了翻转周期，那这个频率是多少呢，RFC1312中规定建议在1ms到1s之间，这个时间间隔不同系统可能不一样，不过这里内核选项和用户选项的区别：</p>
+<p>内核选项，在Linux中<code>cat /boot/config-$(uname -r) | grep -w "CONFIG_HZ"</code>查看，</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/1526606de6d47c80.png"/></p>
+<blockquote>
+<p>Jiffies是从计算机启动到现在总共发生多少节拍数，节拍数叫做Tick，Tick是HZ的倒数，如果上所示HZ是1000，每秒发生1000次中断，也就是1毫秒发生一次中断，对应Tick是1ms，也就是每1毫秒Jiffies就加1。当重启电脑的时候Jiffies重置。</p>
+</blockquote>
+<p>用户选项，由于用户空间程序不能直接访问，所以内核还提供了一个USER_HZ来让用户空间程序使用，固定为100，百分之一秒，也就是10毫秒。如何查看呢？<code>getconf CLK_TCK</code>命令：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/502482a199f02fa2.png"/></p>
+<p>我们从网卡上看也是这个值<code>cat /proc/sys/net/ipv4/neigh/ens33/locktime</code></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/bf1ed08439898684.png"/></p>
+<p>如果这个间隔是1毫秒，那么时间戳反转一次将是24.8天；如果是10毫秒就是248天，依次类推，但最大不能超过1秒。</p>
+{% endraw %}

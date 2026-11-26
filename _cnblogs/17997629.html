@@ -1,0 +1,111 @@
+---
+title: "如何保证幂等性"
+date: 2024-01-30 17:41:00 +0800
+tags: ["【Mysql】-- 事务"]
+excerpt: "一、背景： 二、场景： 1、前端重复提交： 2、接口超时重试： 3、消息重复消费： 三、幂等性方案： 1、业务表唯一索引： 2、状态流转控制： 3、乐观锁版本号： 4、去重： 5、分布式锁： 一、背景： 分布式场景下，接口的开发大都需要保证幂等性。 幂等性：一个接口被调用，不管几次，产生一样的效果，"
+read_minutes: 2
+cnblogs_id: 17997629
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/17997629.html"
+---
+{% raw %}
+<ul>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#%E4%B8%80%E8%83%8C%E6%99%AF" rel="noopener">一、背景：</a></li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#%E4%BA%8C%E5%9C%BA%E6%99%AF" rel="noopener">二、场景：</a>
+<ul>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-3YPdxW" rel="noopener">1、前端重复提交：</a></li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-C443QS" rel="noopener">2、接口超时重试：</a></li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-Kdpy4k" rel="noopener">3、消息重复消费：</a></li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#%E4%B8%89%E5%B9%82%E7%AD%89%E6%80%A7%E6%96%B9%E6%A1%88" rel="noopener">三、幂等性方案：</a>
+<ul>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-yFyNM2" rel="noopener">1、业务表唯一索引：</a></li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-eHzWtR" rel="noopener">2、状态流转控制：</a></li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-h3ARMW" rel="noopener">3、乐观锁版本号：</a></li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-JQxzjp" rel="noopener">4、去重：</a></li>
+<li><a href="https://www.cnblogs.com/huigelaile/p/15843021.html#tid-MkWa7i" rel="noopener">5、分布式锁：</a></li>
+</ul>
+</li>
+</ul>
+<p> </p>
+<h3 id="一背景">一、背景：</h3>
+<blockquote>
+<p>分布式场景下，接口的开发大都需要保证幂等性。</p>
+</blockquote>
+<blockquote>
+<p>幂等性：一个接口被调用，不管几次，产生一样的效果，一样返回结果。</p>
+</blockquote>
+<blockquote>
+<p>接口调用过程中，很可能因为网络等原因进行重试调用，如果不能保证幂等性，那就完犊子了。</p>
+</blockquote>
+<blockquote>
+<p>例如：用户支付的接口，用户有可能连续点击支付，总不能扣好几次钱吧。</p>
+</blockquote>
+<h3 id="二场景">二、场景：</h3>
+<h4 id="tid-3YPdxW">1、前端重复提交：</h4>
+<blockquote>
+<p>用户快速重复点击多次，造成后端生成多个内容重复的数据。</p>
+</blockquote>
+<h4 id="tid-C443QS">2、接口超时重试：</h4>
+<blockquote>
+<p>对于给第三方调用的接口，为了防止网络抖动或其他原因造成请求丢失，这样的接口一般都会设计成超时重试多次。</p>
+</blockquote>
+<blockquote>
+<p>HTTP,RPC等在超时的情况下会有重试机制。</p>
+</blockquote>
+<h4 id="tid-Kdpy4k">3、消息重复消费：</h4>
+<blockquote>
+<p>MQ消息中间件，消息重复消费。</p>
+</blockquote>
+<h3 id="三幂等性方案">三、幂等性方案：</h3>
+<p>幂等性的保证，很明显无法通过一个方案解决所有问题，只能具体场景具体分析的。</p>
+<h4 id="tid-yFyNM2">1、业务表唯一索引：</h4>
+<blockquote>
+<p>对于数据插入的场景来说，这是最常见的方案。</p>
+</blockquote>
+<blockquote>
+<p>核心业务字段设置为唯一索引，多次插入就会报错，从而保证幂等性。</p>
+</blockquote>
+<h4 id="tid-eHzWtR">2、状态流转控制：</h4>
+<blockquote>
+<p>状态流转也是最常见的幂等性保证手段。</p>
+</blockquote>
+<blockquote>
+<p>如配送业务中，骑手的操作肯定会对业务流转状态进行校验。如果骑手已经提货，那就肯定不能再次提货的。</p>
+</blockquote>
+<h4 id="tid-h3ARMW">3、乐观锁版本号：</h4>
+<blockquote>
+<p>在业务表中新建一个字段version，int类型。</p>
+</blockquote>
+<blockquote>
+<p>服务A调用服务B需要更新的时候，需要提前查询到version，然后作为参数传过去。</p>
+</blockquote>
+<blockquote>
+<p>如果数据更新的时候将version + 1，接口如果发生重试的时候，version已经发生变更，那么也能保证幂等性。</p>
+</blockquote>
+<p>PS：老实说，这个方案我本人没用过，有点麻烦。大部分的更新不需要保证幂等性，最终的数据也能保证一致。</p>
+<h4 id="tid-JQxzjp">4、去重：</h4>
+<blockquote>
+<p>对于前端调用的接口，有些场景无法通过前面的方案保证幂等性。</p>
+</blockquote>
+<blockquote>
+<p>接口中可以新增一个参数，这个参数保证每次请求都是唯一的。</p>
+</blockquote>
+<blockquote>
+<p>然后将这个参数保存，每次请求的入参校验都会查询这个参数是否存在，如果存在就返回。</p>
+</blockquote>
+<blockquote>
+<p>参数保存的方案可以是MySQL或者Redis。</p>
+</blockquote>
+<blockquote>
+<p>对于本身并发较低的场景，不会对MySQL服务造成压力，可以直接使用MySQL。否则，就要考虑Redis了，Redis这个key设置超时时间不用太长。</p>
+</blockquote>
+<h4 id="tid-MkWa7i">5、分布式锁：</h4>
+<blockquote>
+<p>考虑到分布式环境下，很多方案的校验如果无法保证串行的情况下，还是无法保证幂等性的。</p>
+</blockquote>
+<blockquote>
+<p>例如，前面的状态机校验，并发环境下，可能还是会有问题，所以具体场景再进行分析。</p>
+</blockquote>
+<iframe style="display: none !important;"></iframe>
+{% endraw %}

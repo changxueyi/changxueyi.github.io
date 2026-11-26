@@ -1,0 +1,60 @@
+---
+layout: default
+---
+
+{% include base_path %}
+
+<div id="main" role="main">
+  {% include sidebar.html %}
+
+  <article class="page cnblog-page" itemscope itemtype="http://schema.org/BlogPosting">
+    <meta itemprop="headline" content="{{ page.title | strip_html | escape_once }}">
+    {% if page.excerpt %}<meta itemprop="description" content="{{ page.excerpt | strip_html | strip_newlines | escape_once }}">{% endif %}
+    <meta itemprop="datePublished" content="{{ page.date | date_to_xmlschema }}">
+
+    <div class="page__inner-wrap">
+      <header class="cnblog-header">
+        <nav class="cnblog-crumb" aria-label="面包屑">
+          <a href="{{ base_path }}/tech/">技术分享</a><span aria-hidden="true">/</span><a href="{{ base_path }}/blog/">博客文章</a>
+        </nav>
+        <h1 class="page__title" itemprop="headline">{{ page.title | escape }}</h1>
+        <p class="page__meta cnblog-meta">
+          <span><i class="fa fa-fw fa-calendar" aria-hidden="true"></i> 发布时间：<time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%Y-%m-%d %H:%M" }}</time></span>
+          <span><i class="fa fa-clock" aria-hidden="true"></i> 约 {{ page.read_minutes | default: 1 }} 分钟阅读</span>
+        </p>
+        {% if page.tags and page.tags.size > 0 %}
+        <div class="post-tags" aria-label="文章标签">
+          {% for tag in page.tags %}<a class="post-tag" href="{{ base_path }}/blog/?tag={{ tag | uri_escape }}">#{{ tag | replace: "-- ", "" | replace: "--", "" }}</a>{% endfor %}
+        </div>
+        {% endif %}
+      </header>
+
+      <section class="page__content cnblog-content" itemprop="text">
+        {{ content }}
+      </section>
+
+      <footer class="cnblog-footer">
+        <p>本文最初发布于博客园（{{ page.date | date: "%Y-%m-%d" }}），现已完整迁移至本站。{% if page.cnblogs_url %}<a href="{{ page.cnblogs_url }}" target="_blank" rel="noopener">查看博客园原文 ↗</a>{% endif %}</p>
+        <a class="cnblog-back" href="{{ base_path }}/blog/">← 返回全部博客文章</a>
+      </footer>
+
+      {% if page.share %}{% include social-share.html %}{% endif %}
+      {% include post_pagination.html %}
+    </div>
+  </article>
+</div>
+
+<script>
+(function () {
+  function markMissing(img) {
+    var tip = document.createElement('span');
+    tip.className = 'cnblog-img-missing';
+    tip.textContent = '图片已失效（原图床不可访问）';
+    if (img.parentNode) img.parentNode.replaceChild(tip, img);
+  }
+  document.querySelectorAll('.cnblog-content img').forEach(function (img) {
+    if (img.complete && img.getAttribute('src') && img.naturalWidth === 0) { markMissing(img); return; }
+    img.addEventListener('error', function () { markMissing(img); }, { once: true });
+  });
+})();
+</script>

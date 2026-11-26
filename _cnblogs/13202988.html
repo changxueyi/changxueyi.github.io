@@ -1,0 +1,99 @@
+---
+title: "Java中的isEmpty方法、null以及\"\"的区别"
+date: 2020-06-28 15:22:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "public class TestNull { public static void main(String[] args) { String a = new String(); String b = \"\"; String c = null; if (a.isEmpty()) { System.ou"
+read_minutes: 1
+cnblogs_id: 13202988
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13202988.html"
+tags_inferred: true
+---
+{% raw %}
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TestNull {
+ 
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+        String a </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String();
+        String b </span>= ""<span style="color: #000000;">;
+        String c </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (a.isEmpty()) {
+            System.out.println(</span>"String a = new String"<span style="color: #000000;">);
+        }
+ 
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (b.isEmpty()) {
+            System.out.println(</span>"String b = \"\""<span style="color: #000000;">);
+        }
+ 
+        </span><span style="color: #0000ff;">if</span> (c == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            System.out.println(</span>"String c =null"<span style="color: #000000;">);
+        }
+ 
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">null</span> ==<span style="color: #000000;"> a) {
+            System.out.println(</span>"String a =null"<span style="color: #000000;">);
+        }
+ 
+        </span><span style="color: #0000ff;">if</span> (a == ""<span style="color: #000000;">) {
+            System.out.println(</span>"a = ''"<span style="color: #000000;">);
+        }
+    }
+}</span></pre>
+</div>
+<p>控制台输出：</p>
+<p> </p>
+<p>分析：</p>
+<p>此时a是分配了内存空间，但值为空，是绝对的空，是一种有值（值存在为空而已）。</p>
+<p>此时b是分配了内存空间，值为空字符串，是相对的空，是一种有值（值存在为空字串）。</p>
+<p>此时c是未分配内存空间，无值，是一种无值（值不存在）。</p>
+<p> </p>
+<p>综上所述：</p>
+<p>isEmpty() 分配了内存空间，值为空，是绝对的空，是一种有值（值 = 空）<br/>""	分配了内存空间，值为空字符串，是相对的空，是一种有值（值 = 空字串）<br/>null	是未分配内存空间，无值，是一种无值(值不存在)</p>
+<p> </p>
+<p>例子二： </p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">	public static void main(String[] args) {
+		String a = new String();
+		String b = "";
+		String c = null;
+		if (a.isEmpty()) {
+			System.out.println("String a is empty");
+		}
+		if (b.isEmpty()) {
+			System.out.println("String b is empty");
+		}
+		if (c == null) {
+			System.out.println("String c = null");
+		}
+		if (null == a) {
+			// 编译器直接就提示了Dead code，a指向了一个新对象，肯定不是null了
+			System.out.println("String a =null");
+		}
+		if (a == "") {
+			System.out.println("a = ''");
+		}
+		if (a.equals("")) {
+			//由于a是字符串，字符串的比较需要用equals，不能直接用 ==
+			System.out.println("a = ''");
+		}
+		/*if (c.isEmpty()) {
+			// 这里会报空指针，即null不能使用此方法
+			System.out.println("c == null   and   c.isEmpty");
+		}*/
+		
+		List&lt;String&gt; list = new ArrayList&lt;&gt;();
+		//list.add("");
+		if (list.isEmpty()) {
+			System.out.println("list is empty");
+		}
+		System.out.println(list.size());
+	}
+/*Output:
+String a is empty
+String b is empty
+String c = null
+equals:a = ''
+list is empty
+0
+*/</pre>
+</div>
+<p>end<br/>原文链接：https://blog.csdn.net/peng86788/article/details/80885814</p>
+{% endraw %}

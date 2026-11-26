@@ -1,0 +1,84 @@
+---
+title: "JAVA封神之路-设计模式-单例模式"
+date: 2020-11-24 18:30:00 +0800
+tags: ["【设计模式】-- 基础"]
+excerpt: "为什么要有单例模式 实际编程应用场景中，有一些对象其实我们只需要一个，比如线程池对象、缓存、系统全局配置对象等。这样可以就保证一个在全局使用的类不被频繁地创建与销毁，节省系统资源。 实现单例模式的几个要点 首先要确保全局只有一个类的实例。要保证这一点，至少类的构造器要私有化。 单例的类只能自己创建自"
+read_minutes: 2
+cnblogs_id: 14031851
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14031851.html"
+---
+{% raw %}
+<h3 id="为什么要有单例模式">为什么要有单例模式</h3>
+<p>实际编程应用场景中，有一些对象其实我们只需要一个，比如线程池对象、缓存、系统全局配置对象等。这样可以就保证一个在全局使用的类不被频繁地创建与销毁，节省系统资源。</p>
+<h3 id="实现单例模式的几个要点">实现单例模式的几个要点</h3>
+<ol><ol>
+<li>首先要确保全局只有一个类的实例。<br/>要保证这一点，至少类的构造器要私有化。</li>
+<li>单例的类只能自己创建自己的实例。<br/>因为，构造器私有了，但是还要有一个实例，只能自己创建咯！</li>
+<li>单例类必须能够提供自己的唯一实例给其他类<br/>就是要有一个公共的方法能返回该单例类的唯一实例。</li>
+</ol></ol>
+<p><strong>优点：</strong></p>
+<ul>
+<li>1、在内存里只有一个实例，减少了内存的开销，尤其是频繁的创建和销毁实例（比如管理学院首页页面缓存）。</li>
+<li>2、避免对资源的多重占用（比如写文件操作）。</li>
+</ul>
+<p><strong>缺点：</strong>没有接口，不能继承，与单一职责原则冲突，一个类应该只关心内部逻辑，而不关心外面怎么样来实例化。</p>
+<p><strong>使用场景：</strong></p>
+<ul>
+<li>1、要求生产唯一序列号。</li>
+<li>2、WEB 中的计数器，不用每次刷新都在数据库里加一次，用单例先缓存起来。</li>
+<li>3、创建的一个对象需要消耗的资源过多，比如 I/O 与数据库的连接等。</li>
+</ul>
+<h4 id="1、饿汉式静态常量方式（线程安全）">1、饿汉式—静态常量方式（线程安全）</h4>
+<pre><code class="language-java hljs"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Singleton {  
+    <span class="hljs-keyword">private <span class="hljs-keyword">static Singleton instance = <span class="hljs-keyword">new Singleton();  
+    <span class="hljs-function"><span class="hljs-keyword">private <span class="hljs-title">Singleton <span class="hljs-params">(){}  
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static Singleton <span class="hljs-title">getInstance<span class="hljs-params">() {  
+    <span class="hljs-keyword">return instance;  
+    }  
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p><strong>类加载时就初始化实例，避免了多线程同步问题。天然线程安全。</strong></p>
+<h4 id="3、懒汉式（线程不安全）">2、懒汉式（线程不安全）</h4>
+<pre><code class="language-java hljs"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Singleton {
+    <span class="hljs-keyword">private <span class="hljs-keyword">static Singleton singleton;
+    <span class="hljs-function"><span class="hljs-keyword">private <span class="hljs-title">Singleton<span class="hljs-params">() {}
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static Singleton <span class="hljs-title">getInstance<span class="hljs-params">() {
+        <span class="hljs-keyword">if (singleton == <span class="hljs-keyword">null) {
+            singleton = <span class="hljs-keyword">new Singleton();
+        }
+        <span class="hljs-keyword">return singleton;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>这是最基本的实现方式，第一次调用才初始化，实现了懒加载的特性。多线程场景下禁止使用，因为可能会产生多个对象，不再是单例。</p>
+<h4 id="4、懒汉式（线程安全，方法上加同步锁）">3、懒汉式（线程安全，方法上加同步锁）</h4>
+<pre><code class="language-java hljs"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Singleton {
+    <span class="hljs-keyword">private <span class="hljs-keyword">static Singleton singleton;
+    <span class="hljs-function"><span class="hljs-keyword">private <span class="hljs-title">Singleton<span class="hljs-params">() {}
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">synchronized Singleton <span class="hljs-title">getInstance<span class="hljs-params">() {
+        <span class="hljs-keyword">if (singleton == <span class="hljs-keyword">null) {
+            singleton = <span class="hljs-keyword">new Singleton();
+        }
+        <span class="hljs-keyword">return singleton;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>和上面 懒汉式（线程不安全）实现上唯一不同是：获取实例的getInstance()方法上加了同步锁。保证了多线程场景下的单例。但是效率会有所折损，不过还好。</p>
+<h4 id="5、双重校验锁（线程安全，效率高）">4、双重校验锁（线程安全，效率高）</h4>
+<pre><code class="language-java hljs"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Singleton {
+	<span class="hljs-keyword">private <span class="hljs-keyword">volatile <span class="hljs-keyword">static Singleton singleton;
+	<span class="hljs-function"><span class="hljs-keyword">private <span class="hljs-title">Singleton<span class="hljs-params">() {}
+	<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static Singleton <span class="hljs-title">getSingleton<span class="hljs-params">() {
+		<span class="hljs-keyword">if (singleton == <span class="hljs-keyword">null) {
+			<span class="hljs-keyword">synchronized (Singleton.class) {
+				<span class="hljs-keyword">if (singleton == <span class="hljs-keyword">null) {
+						singleton = <span class="hljs-keyword">new Singleton();
+				}
+			}
+		}
+		<span class="hljs-keyword">return singleton;
+	}
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>此种实现中不用每次需要获得锁，减少了获取锁和等待的事件。<br/>注意volatile关键字的使用，保证了各线程对singleton静态实例域修改的可见性。</p>
+{% endraw %}

@@ -1,0 +1,111 @@
+---
+title: "消息队列（mq）是什么？"
+date: 2020-09-29 18:45:00 +0800
+tags: ["【中间件】-- MQ"]
+excerpt: "作者：敖丙链接：https://www.zhihu.com/question/54152397/answer/923992679来源：知乎著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。 面试开始 一个风度翩翩，穿着格子衬衣的中年男子，拿着一个满是划痕的mac向你走来，看着铮亮的"
+read_minutes: 10
+cnblogs_id: 13751220
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13751220.html"
+---
+{% raw %}
+<div>作者：敖丙<br/>链接：https://www.zhihu.com/question/54152397/answer/923992679<br/>来源：知乎<br/>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。<br/><br/>
+<div>
+<h2><strong>面试开始</strong></h2>
+<blockquote> 一个风度翩翩，穿着格子衬衣的中年男子，拿着一个满是划痕的mac向你走来，看着铮亮的头，心想着肯定是尼玛顶级架构师吧！但是我们看过暖男敖丙的系列，腹有诗书气自华，虚都不虚。<br/> </blockquote>
+<h3><strong>你为啥用消息队列？</strong> </h3>
+<p>噗此，这也叫问题？别人用了我能不用么？别人用了我就用了呗，我就是为了用而用。</p>
+<p><strong>你心里嘀咕就好了，千万别说出来哈，说出来了没拿到Offer别到时候就在那说，敖丙那个渣男教我说的！</strong></p>
+<noscript><img class="content_image" data-caption="" data-default-watermark-src="https://pic2.zhimg.com/50/v2-8349931177816d5a5bbb07710aec4b4e_hd.jpg?source=1940ef5c" data-rawheight="255" data-rawwidth="255" data-size="normal" loading="lazy" src="/images/cnblogs/3314a335744f3315.jpg" width="255"/></noscript><img class="content_image lazy" data-actualsrc="https://pic4.zhimg.com/50/v2-d3425f9db1384f3450cf0d1da0d4e756_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic2.zhimg.com/50/v2-8349931177816d5a5bbb07710aec4b4e_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="255" data-rawwidth="255" data-size="normal" loading="lazy" src="/images/cnblogs/9e1e88e7b0236694.jpg" width="255"/>
+<p>面试官你好：我们公司本身的业务体量很小，所以直接<strong>单机一把梭</strong>啥都能搞定了，但是后面业务体量不断扩大，采用<strong>微服务的设计思想</strong>，<strong>分布式的部署方式</strong>，所以拆分了很多的服务，随着体量的增加以及业务场景越来越复杂了，很多场景单机的技术栈和中间件以及不够用了，而且对系统的友好性也下降了，最后做了很多技术选型的工作，我们决定引入<strong>消息队列中间件</strong>。</p>
+<h3><strong>哦？你说到业务场景越来越复杂，你那说一下你都在什么场景用到了消息队列？</strong> </h3>
+<p>嗯，我从三个方面去说一下我使用的场景吧。</p>
+<p><strong>Tip</strong>：这三个场景也是消息队列的经典场景，大家基本上要烂熟于心那种，就是一说到消息队列你脑子就要想到<strong>异步、削峰、解耦</strong>，条件反射那种。</p>
+<h3><strong>异步：</strong></h3>
+<p>我们之前的场景里面有很多步骤都是在一个流程里面需要做完的，就比如说我的下单系统吧，本来我们业务简单，下单了付了钱就好了，流程就走完了。</p>
+<p>但是后面来了个产品经理，搞了个<strong>优惠券系统</strong>，OK问题不大，流程里面多100ms去扣减优惠券。</p>
+<p>后来产品经理灵光一闪说我们可以搞个<strong>积分系统</strong>啊，也行吧，流程里面多了200ms去增减积分。</p>
+<p>再后来后来隔壁的产品老王说：下单成功后我们要给用户发短信，也将就吧，100ms去发个短信。</p>
+<p>再后来。。。（敖丙你有完没完！！！）</p>
+<noscript><img class="content_image" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-94d59f0e9c3bcc202d07cf1fd45a6823_hd.jpg?source=1940ef5c" data-rawheight="200" data-rawwidth="200" data-size="normal" loading="lazy" src="/images/cnblogs/22a6f4df350a707f.jpg" width="200"/></noscript><img class="content_image lazy" data-actualsrc="https://pic4.zhimg.com/50/v2-8fc73e0e8ba50d49a04eb86a9f4e8cf5_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-94d59f0e9c3bcc202d07cf1fd45a6823_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="200" data-rawwidth="200" data-size="normal" loading="lazy" src="/images/cnblogs/1cfbc44c01b12604.jpg" width="200"/>
+<p>反正就流程有点像这样 ↓</p>
+<noscript><img class="content_image" data-caption="" data-default-watermark-src="https://pic3.zhimg.com/50/v2-3db5988cfb43f0a262f1f73cc9c2765c_hd.jpg?source=1940ef5c" data-rawheight="459" data-rawwidth="300" data-size="normal" loading="lazy" src="/images/cnblogs/9cbcfd2faafd9df2.jpg" width="300"/></noscript><img class="content_image lazy" data-actualsrc="https://picb.zhimg.com/50/v2-78d930cb32bdde2112c5c0e70ddb1487_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic3.zhimg.com/50/v2-3db5988cfb43f0a262f1f73cc9c2765c_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="459" data-rawwidth="300" data-size="normal" loading="lazy" src="/images/cnblogs/1fbd29deb40e29b0.jpg" width="300"/>
+<p>你们可以看到这才加了三个，我可以<strong>斩钉截铁</strong>的告诉你真正的下单流程涉及的系统绝对在10个以上（主流电商），越大的越多。</p>
+<p>这个链路这样下去，<strong>时间长得一批</strong>，用户发现我买个东西你特么要花几十秒，垃圾电商我不在你这里买了，不过要是都像<strong>并夕夕</strong>这么便宜，<strong>真香</strong>！</p>
+<p>但是我们公司没有夕夕的那个经济实力啊，那只能优化系统了。</p>
+<p>Tip：我之前在的电商老东家要求所有接口的<strong>Rt</strong>（<strong>ResponseTime响应时间</strong>）在200ms内，超出的全部优化，我现在所负责的系统QPS也是<strong>9W+</strong>就是抖动一下<strong>网络集群都可能炸锅</strong>那种，<strong>RT</strong>基本上都要求在50ms以内。</p>
+<noscript><img class="origin_image zh-lightbox-thumb" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-579b8e103d024bca94b5cc5b0903ad69_hd.jpg?source=1940ef5c" data-rawheight="207" data-rawwidth="606" data-size="normal" loading="lazy" src="/images/cnblogs/ce25cf863938dbf9.jpg" width="606"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic4.zhimg.com/50/v2-33297ba4139048936d0b66a47370640d_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-579b8e103d024bca94b5cc5b0903ad69_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="207" data-rawwidth="606" data-size="normal" loading="lazy" src="/images/cnblogs/d2ed0a1b2b8fc736.jpg" width="606"/>
+<p><strong>大家感受一下这个QPS。</strong></p>
+<h3><strong>嗯不错，链路长了就慢了，那你怎么解决的？</strong> </h3>
+<p>那链路长了就慢了，但是我们发现上面的流程其实可以<strong>同时做</strong>的呀，你支付成功后，我去校验优惠券的同时我可以去增减积分啊，还可以同时发个短信啊。</p>
+<p>那正常的流程我们是没办法实现的呀，怎么办，<strong>异步</strong>。</p>
+<p>你对比一下是不是发现，这样子最多只用100毫秒用户知道下单成功了，至于短信你迟几秒发给他他根本不在意是吧。</p>
+<noscript><img class="origin_image zh-lightbox-thumb" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-b22e1fd7b9daaae00515592da98d33a1_hd.jpg?source=1940ef5c" data-rawheight="472" data-rawwidth="476" data-size="normal" loading="lazy" src="/images/cnblogs/7a49b511c4ff27da.jpg" width="476"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic3.zhimg.com/50/v2-f0f03f80551dabb7ba60367c25e4fb01_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-b22e1fd7b9daaae00515592da98d33a1_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="472" data-rawwidth="476" data-size="normal" loading="lazy" src="/images/cnblogs/bc7d408fbeff6efd.jpg" width="476"/>
+<h3><strong>小伙子我打断你一下，你说了异步，那我用线程，线程池去做不是一样的么？</strong> </h3>
+<p>诶呀，面试官你<strong>不要急嘛</strong>，我后面还会说到的，骚等。</p>
+<h3><strong>解耦：</strong></h3>
+<p>既然面试官这么问了，我就说一下为啥我们不能用线程去做，因为用线程去做，你是不是要写代码？</p>
+<p>你一个订单流程，你扣积分，扣优惠券，发短信，扣库存。。。等等这么多业务要调用这么多的接口，<strong>每次加一个你要调用一个接口然后还要重新发布系统</strong>，写一次两次还好，写多了你就说：老子不干了！</p>
+<p>而且真的全部都写在一起的话，不单单是耦合这一个问题，你出问题排查也麻烦，流程里面随便一个地方出问题搞不好会影响到其他的点，小伙伴说我每个流程都<strong>try catch</strong>不就行了，相信我别这么做，这样的代码就像个<strong>定时炸弹 </strong>，你不知道什么时候爆炸，平时不炸偏偏在你做活动的时候炸，你就领个<strong>P0故障</strong>收拾书包<strong>提前回家过年</strong>吧。</p>
+<p>Tip：P0—PN 是互联网大厂经常用来判定事故等级的机制，P0是最高等级了。</p>
+<p>但是你用了<strong>消息队列</strong>，耦合这个问题就迎刃而解了呀。</p>
+<h3><strong>哦，帅丙怎么说？</strong> </h3>
+<p>且听我娓娓道来：</p>
+<p>你下单了，你就把你<strong>支付成功的消息告诉别的系统</strong>，他们收到了去处理就好了，你只用走完自己的流程，把自己的消息发出去，那后面要接入什么系统简单，直接订阅你发送的支付成功消息，你支付成功了我<strong>监听就好了</strong>。</p>
+<noscript><img class="content_image" data-caption="" data-default-watermark-src="https://pic2.zhimg.com/50/v2-90c9293a114206c26432ed2880c1d011_hd.jpg?source=1940ef5c" data-rawheight="348" data-rawwidth="300" data-size="normal" loading="lazy" src="/images/cnblogs/12b5aca38189c5a0.jpg" width="300"/></noscript><img class="content_image lazy" data-actualsrc="https://picb.zhimg.com/50/v2-ee2ed0c6889e4f1f157010745dd0f162_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic2.zhimg.com/50/v2-90c9293a114206c26432ed2880c1d011_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="348" data-rawwidth="300" data-size="normal" loading="lazy" src="/images/cnblogs/3846a11bdd821f3a.jpg" width="300"/>
+<h3><strong>那你的流程走完了，你不用管别人是否成功么？比如你下单了积分没加，优惠券没扣怎么办？</strong> </h3>
+<p>问题是个好问题，但是没必要考虑，业务系统本身就是自己的开发人员维护的，你积分扣失败关我下单的什么事情？你管好自己下单系统的就好了。</p>
+<p><strong>Tip</strong>：话是这么说，但是这其实是用了消息队列的一个缺点，涉及到<strong>分布式事务</strong>的知识点，我下面会提到。</p>
+<h3><strong>削峰：</strong></h3>
+<p>就拿我上一期写的秒杀来说（暗示新同学看我上一期），你平时流量很低，但是你要做秒杀活动00 ：00的时候流量疯狂怼进来，你的服务器，<strong>Redis</strong>，<strong>MySQL</strong>各自的承受能力都不一样，你直接<strong>全部流量照单全收</strong>肯定有问题啊，直接就打挂了。</p>
+<h3><strong>那怎么办？</strong> </h3>
+<p>简单，把请求放到队列里面，然后至于每秒消费多少请求，就看自己的<strong>服务器处理能力</strong>，你能处理5000QPS你就消费这么多，可能会比正常的慢一点，但是<strong>不至于打挂服务器</strong>，等流量高峰下去了，你的服务也就没压力了。</p>
+<p>你看阿里双十一12：00的时候这么多流量瞬间涌进去，他有时候是不是会慢一点，但是人家没挂啊，或者降级给你个友好的提示页面，等高峰过去了又是一条好汉了。</p>
+<noscript><img class="content_image" data-caption="" data-default-watermark-src="https://pic2.zhimg.com/50/v2-720f9e8637249e9dbce8b23b8ae4a8d5_hd.jpg?source=1940ef5c" data-rawheight="185" data-rawwidth="407" data-size="normal" loading="lazy" src="/images/cnblogs/aef11daa11b3118b.jpg" width="407"/></noscript><img class="content_image lazy" data-actualsrc="https://pic1.zhimg.com/50/v2-3a23d44b86a22ff42e33387b88433c6e_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic2.zhimg.com/50/v2-720f9e8637249e9dbce8b23b8ae4a8d5_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="185" data-rawwidth="407" data-size="normal" loading="lazy" src="/images/cnblogs/db271e9779bd9eb0.jpg" width="407"/>
+<h3><strong>听你说了辣么多，怎么都是好处，那我问你使用了消息队列有啥问题么？</strong> </h3>
+<p>诶，看过前面我写的文章的<strong>人才</strong>都知道，我经常说的就是，<strong>技术是把双刃剑</strong>！</p>
+<p>没错面试官，我使用他是因为他带给我们很多好处，但是使用之后问题也是<strong>接踵而至</strong>。</p>
+<p>同样的暖男我呀，也从三个点介绍他主要的缺点：</p>
+<h3><strong>系统复杂性</strong></h3>
+<p>本来蛮简单的一个系统，我代码随便写都没事，现在你凭空接入一个中间件在那，我是不是要考虑去维护他，而且使用的过程中是不是要考虑各种问题，比如消息<strong>重复消费</strong>、<strong>消息丢失</strong>、<strong>消息的顺序消费</strong>等等，反正用了之后就是贼烦。</p>
+<h3><strong>我插一句嘴，上面的问题（重复消费、消息丢失、顺序消费）你能分别介绍一下，并且说一下分别是怎么解决的么？</strong> </h3>
+<p><strong>不要！</strong>我都说了敖丙下一章写啥？</p>
+<p>其实不是<strong>暖男</strong>我不想在这里写，这三个问题我想了下，统统都是<strong>MQ</strong>的<strong>重点问题</strong>，单独拿一个出来就是一篇文章了，<strong>篇幅实在太长了</strong>，我会在下一章挨个介绍一遍的。</p>
+<h3><strong>数据一致性</strong></h3>
+<p>这个其实是分布式服务本身就存在的一个问题，<strong>不仅仅是消息队列的问题</strong>，但是放在这里说是因为用了消息队列这个问题会暴露得比较严重一点。</p>
+<p>就像我开头说的，你下单的服务自己保证自己的逻辑成功处理了，你成功发了消息，但是优惠券系统，积分系统等等这么多系统，<strong>他们成功还是失败你就不管了？</strong></p>
+<p>我说了保证自己的业务数据对的就好了，其实还是比较不负责任的一种说法，这样就<strong>像个渣男，没有格局</strong>，<strong>这样呀你的路会越走越窄的</strong>。</p>
+<noscript><img class="content_image" data-caption="" data-default-watermark-src="https://pic4.zhimg.com/50/v2-8ff1ff5f3f6074353be91ce17a99a27c_hd.jpg?source=1940ef5c" data-rawheight="212" data-rawwidth="224" data-size="normal" loading="lazy" src="/images/cnblogs/b14b11d46e777944.jpg" width="224"/></noscript><img class="content_image lazy" data-actualsrc="https://pic3.zhimg.com/50/v2-34d20cb17c88413d31c8f327cd9d81d6_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic4.zhimg.com/50/v2-8ff1ff5f3f6074353be91ce17a99a27c_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="212" data-rawwidth="224" data-size="normal" loading="lazy" src="/images/cnblogs/baa629fee3cd2412.jpg" width="224"/>
+<p><strong>所有的服务都成功才能算这一次下单是成功的</strong>，那怎么才能保证数据一致性呢？</p>
+<p><strong>分布式事务</strong>：把下单，优惠券，积分。。。都放在一个事务里面一样，要成功一起成功，要失败一起失败。</p>
+<noscript><img class="content_image" data-caption="" data-default-watermark-src="https://picb.zhimg.com/50/v2-8bf0df0920816aa936b850c4d2f87a91_hd.jpg?source=1940ef5c" data-rawheight="150" data-rawwidth="240" data-size="normal" loading="lazy" src="/images/cnblogs/53e1df140d5ced78.jpg" width="240"/></noscript><img class="content_image lazy" data-actualsrc="https://picb.zhimg.com/50/v2-548b1974ba7c82dec28cf66a4982800c_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://picb.zhimg.com/50/v2-8bf0df0920816aa936b850c4d2f87a91_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="150" data-rawwidth="240" data-size="normal" loading="lazy" src="/images/cnblogs/a8fdd729cf712ac1.jpg" width="240"/>
+<p>Tip:<strong>分布式事务</strong>在互联网公司里面实在常见，我也不在这里大篇幅介绍了，后面都会专门说的。</p>
+<h3><strong>可用性</strong></h3>
+<p>你搞个系统本身没啥问题，你现在突然接入一个中间件在那放着，万一挂了怎么办？我下个单<strong>MQ挂了</strong>，优惠券不扣了，积分不减了，这不是杀一个程序员能搞定的吧，感觉得杀一片。</p>
+<p>至于怎么保证高可用，还是那句话也不在这里展开讨论了，我后面一样会写，像写<strong>Redis</strong>那样写出来的。</p>
+<p><strong>放心敖丙我不是渣男来的，我肯定会对你们负责的。点赞！</strong></p>
+<h3><strong>看不出来啊，你有点东西呀，那我问一下你，你们是怎么做技术选型的？</strong> </h3>
+<p>目前在市面上比较主流的消息队列中间件主要有，<strong>Kafka、ActiveMQ、RabbitMQ、RocketMQ</strong> 等这几种。</p>
+<p>不过敖丙我想说的是，<strong>ActiveMQ</strong>和<strong>RabbitMQ</strong>这两着因为吞吐量还有<strong>GitHub</strong>的社区活跃度的原因，在各大互联网公司都已经基本上绝迹了，业务体量一般的公司会是有在用的，但是越来越多的公司更青睐<strong>RocketMQ</strong>这样的消息中间件了。</p>
+<p><strong>Kafka</strong>和<strong>RocketMQ</strong>一直在各自擅长的领域发光发亮，不过写这篇文章的时候我问了蚂蚁金服，字节跳动和美团的朋友，好像大家用的都有点不一样，应该都是各自的中间件，可能做过修改，也可能是<strong>自研</strong>的，大多<strong>没有开源</strong>。</p>
+<p>就像我们公司就是是基于<strong>Kafka</strong>和<strong>RocketMQ</strong>两者的优点自研的消息队列中间件，吞吐量、可靠性、时效性等都很可观。</p>
+<p>我们回归正题，我这里用网上找的对比图让大家看看差距到底在哪里：</p>
+<noscript><img class="origin_image zh-lightbox-thumb" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-6b7ba32330f3fda8b8bca558dc3afff7_hd.jpg?source=1940ef5c" data-rawheight="930" data-rawwidth="818" data-size="normal" loading="lazy" src="/images/cnblogs/217188a1ffbd7677.jpg" width="818"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic3.zhimg.com/50/v2-8234b69f5e46550bc5d95db96251d8b6_hd.jpg?source=1940ef5c" data-caption="" data-default-watermark-src="https://pic1.zhimg.com/50/v2-6b7ba32330f3fda8b8bca558dc3afff7_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="930" data-rawwidth="818" data-size="normal" loading="lazy" src="/images/cnblogs/037c85c5024820a7.jpg" width="818"/>
+<p>大家其实一下子就能看到差距了，就拿<strong>吞吐量</strong>来说，早期比较活跃的<strong>ActiveMQ</strong> 和<strong>RabbitMQ</strong>基本上不是后两者的对手了，在现在这样大数据的年代<strong>吞吐量是真的很重要</strong>。</p>
+<p>比如现在突然爆发了一个超级热点新闻，你的APP注册用户高达亿数，你要想办法第一时间把突发全部推送到每个人手上，你没有<strong>大吞吐量的消息队列</strong>中间件用啥去推？</p>
+<p>再说这些用户大量涌进来看了你的新闻产生了一系列的附带流量，你怎么应对这些数据，<strong>很多场景离开消息队列基本上难以为继</strong>。</p>
+<p>就<strong>部署方式</strong>而言前两者也是大不如后面两个<strong>天然分布式架构的哥哥</strong>，都是高可用的分布式架构，而且数据多个副本的数据也能做到0丢失。</p>
+<p>我们再聊一下<strong>RabbitMQ</strong>这个中间件其实还行，但是这玩意开发语言居然是<strong>erlang</strong>，我敢说绝大部分工程师肯定不会为了一个中间件去刻意学习一门语言的，开发维护成本你想都想不到，出个问题查都查半天。</p>
+<p>至于<strong>RocketMQ</strong>（阿里开源的），git活跃度还可以。基本上你push了自己的bug确认了有问题都有阿里大佬跟你试试解答并修复的，我个人推荐的也是这个，他的架构设计部分跟同样是阿里开源的一个<strong>RPC</strong>框架是真的很像（<strong>Dubbo</strong>）可能是因为师出同门的原因吧。</p>
+<p>Tip：<strong>Dubbo</strong>等我写到<strong>RPC</strong>我会详细介绍的。</p>
+<p><strong>Kafka</strong>我放到最后说，你们也应该知道了，压轴的这是个大哥，大数据领域，公司的日志采集，实时计算等场景，都离不开他的身影，他基本上算得上是<strong>世界范围级别的消息队列标杆</strong>了。</p>
+<p>以上这些都只是一些我自己的<strong>个人意见</strong>，真正的选型还是要去<strong>深入研究</strong>的，不然那你公司一天UV就1000你告诉我你要去用<strong>Kafka</strong>我只能说你吃饱撑的。</p>
+<p><strong>记住，没有最好的技术，只有最适合的技术，不要为了用而用</strong>。</p>
+<h2><strong>面试结束</strong></h2>
+<h3><strong>嗯，小伙子不错不错，分析得很到位，那你记得下期来说一下消息队列的高可用，重复消费、消息丢失、消息顺序、分布式事务等问题？</strong> </h3>
+<p>嗯嗯好的面试官，不过不确定能不能一口气说完，毕竟敖丙还没开始写，而且读者还有可能白嫖，动力不一定够。</p>
+<h3><strong>嗯嗯这倒是个问题，不过啊在看的都是人才肯定会给你点赞 的！</strong> </h3>
+<p>我也这么认为。</p>
+<blockquote>文章每周持续更新，可以微信搜索「 <strong>三太子敖丙</strong> 」第一时间阅读和催更（比博客早一到两篇哟），本文 <strong>GitHub</strong> <span style="text-decoration: underline;"><a class="wrap external" data-za-detail-view-id="1043" href="https://link.zhihu.com/?target=https%3A//github.com/AobingJava/JavaFamily" rel="nofollow noreferrer" target="_blank">https://github.com/JavaFamily</a></span> 已经收录，有一线大厂面试点思维导图，也整理了很多我的文档，欢迎Star和完善，大家面试可以参照考点复习，希望我们一起有点东西。</blockquote>
+</div>
+</div>
+{% endraw %}

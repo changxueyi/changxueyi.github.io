@@ -1,0 +1,146 @@
+---
+title: "java中四种线程池及poolSize、corePoolSize、maximumPoolSize"
+date: 2020-08-18 14:57:00 +0800
+tags: ["【Java高级】-- java高级", "【Java】-- Java基础"]
+excerpt: "Executors提供四种线程池： newCachedThreadPool ：缓存线程池，如果线程池长度超过处理需要，可回收空闲线程，若无可回收，则新建线程。 newFixedThreadPool ： 定长线程池，可控制线程最大并发数，超出的线程会在队列中等待。 newScheduledThread"
+read_minutes: 3
+cnblogs_id: 13523550
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13523550.html"
+tags_inferred: true
+---
+{% raw %}
+<div>
+<div>
+<div>Executors提供四种线程池：</div>
+<ul>
+<li>newCachedThreadPool ：缓存线程池，如果线程池长度超过处理需要，可回收空闲线程，若无可回收，则新建线程。</li>
+<li>newFixedThreadPool ： 定长线程池，可控制线程最大并发数，超出的线程会在队列中等待。</li>
+<li>newScheduledThreadPool ： 计划线程池，支持定时及周期性任务执行。</li>
+<li>newSingleThreadExecutor ：单线程线程池，用唯一的线程来执行任务，保证所有任务按照指定顺序(FIFO, LIFO, 优先级)执行。</li>
+</ul>
+</div>
+</div>
+<div> </div>
+<div>
+<div>
+<div>ThreadPoolExecutor有几个重要的成员变量：keepAliveTime、allowCoreThreadTimeOut、poolSize、corePoolSize、maximumPoolSize。下面分别介绍一下：</div>
+<div> </div>
+</div>
+<div>corePoolSize：线程池的基本大小。下面会解释什么是基本大小。</div>
+<div> </div>
+<div>maximumPoolSize：线程池中允许的最大线程数。</div>
+<div>
+<div>注意还有一个largestPoolSize，记录了曾经出现的最大线程个数。因为setMaximumPoolSize()可以改变最大线程数。</div>
+<div> </div>
+</div>
+<div>poolSize：线程池中当前线程的数量。</div>
+<div>
+<div> </div>
+<div>那么poolSize、corePoolSize、maximumPoolSize三者的关系是如何的呢？</div>
+<div>当新提交一个任务时：</div>
+<div>（1）如果poolSize&lt;corePoolSize，新增加一个线程处理新的任务。</div>
+<div>（2）如果poolSize=corePoolSize，新任务会被放入阻塞队列等待。</div>
+<div>（3）如果阻塞队列的容量达到上限，且这时poolSize&lt;maximumPoolSize，新增线程来处理任务。</div>
+<div>（4）如果阻塞队列满了，且poolSize=maximumPoolSize，那么线程池已经达到极限，会根据饱和策略RejectedExecutionHandler拒绝新的任务。</div>
+</div>
+</div>
+<div>
+<p> </p>
+<div>
+<div> </div>
+<div>所以通过上面的描述可知corePoolSize&lt;=maximumPoolSize，poolSize&lt;=maximumPoolSize；而poolSize和corePoolSize无法比较，poolSize是有可能比corePoolSize大的。</div>
+<div> </div>
+<div>那么corePoolSize、maximumPoolSize在上面四种线程池中如何设定的？</div>
+<div>通过几个newXXX函数的源码就可以知道，源码如下：</div>
+<div>（1）</div>
+<div>
+<pre>public static ExecutorService newFixedThreadPool(int nThreads) {
+    return new ThreadPoolExecutor(nThreads, nThreads,
+                                  0L, TimeUnit.<em>MILLISECONDS</em>,
+                                  new LinkedBlockingQueue&lt;Runnable&gt;());
+}</pre>
+</div>
+</div>
+<div>
+<div>定长线程池的corePoolSize、maximumPoolSize相同。都是设定值。</div>
+<div> </div>
+<div>（2）</div>
+<div>
+<pre>public static ExecutorService newCachedThreadPool() {
+    return new ThreadPoolExecutor(0, Integer.<em>MAX_VALUE</em>,
+                                  60L, TimeUnit.<em>SECONDS</em>,
+                                  new SynchronousQueue&lt;Runnable&gt;());
+}</pre>
+</div>
+<div>缓存线程池corePoolSize为0，maximumPoolSize则是int最大值。</div>
+<div> </div>
+<div>（3）</div>
+<div>
+<pre>public static ExecutorService newSingleThreadExecutor() {
+    return new FinalizableDelegatedExecutorService
+        (new ThreadPoolExecutor(1, 1,
+                                0L, TimeUnit.<em>MILLISECONDS</em>,
+                                new LinkedBlockingQueue&lt;Runnable&gt;()));
+}</pre>
+</div>
+<div>单线程线程池corePoolSize和maximumPoolSize都是1。</div>
+<div> </div>
+<div>（4）</div>
+<div>
+<pre>public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
+    return new ScheduledThreadPoolExecutor(corePoolSize);
+}</pre>
+</div>
+<div>
+<pre>public ScheduledThreadPoolExecutor(int corePoolSize) {
+    super(corePoolSize, Integer.<em>MAX_VALUE</em>,
+          <em>DEFAULT_KEEPALIVE_MILLIS</em>, <em>MILLISECONDS</em>,
+          new DelayedWorkQueue());
+}</pre>
+</div>
+<div>计划线程池用的是ThreadPoolExecutor的一个子类，可以看到corePoolSize是定义的，而maximumPoolSize则是int最大值。</div>
+<div>注意这里的corePoolSize、maximumPoolSize不是最终的，因为可以通过setCorePoolSize和setMaximumPoolSize()改变。</div>
+<div> </div>
+<div>上面提到阻塞队列的饱和，那么这个饱和值是多少呢？</div>
+<div>通过上面的代码可以看到</div>
+<div>（1）定长线程池和单线程线程都使用LinkedBlockingQueue，而LinkedBlockingQueue默认的大小是int的最大值，如下：</div>
+<div>
+<pre>public LinkedBlockingQueue() {
+    this(Integer.<em>MAX_VALUE</em>);
+}</pre>
+</div>
+<div> </div>
+<div>（2）计划线程池使用的是DelayedWordQueue，它默认大小是16，但是可以动态增长，最大值则是int的最大值，如下：</div>
+<div>
+<pre>private static final int <em>INITIAL_CAPACITY </em>= 16;
+private RunnableScheduledFuture&lt;?&gt;[] queue =
+    new RunnableScheduledFuture&lt;?&gt;[<em>INITIAL_CAPACITY</em>];</pre>
+</div>
+<div>
+<pre>private void grow() {
+    int oldCapacity = queue.length;
+    int newCapacity = oldCapacity + (oldCapacity &gt;&gt; 1); // grow 50%
+    if (newCapacity &lt; 0) // overflow
+        newCapacity = Integer.<em>MAX_VALUE</em>;
+    queue = Arrays.copyOf(queue, newCapacity);
+}</pre>
+</div>
+<div> </div>
+<div><strong>（3）缓存线程池使用的则是SynchronousQueue，这个比较特殊没有所谓的饱和值，而且前面也看到了缓存线程池的corePoolSize默认是0。所以它新建一个线程与SynchronousQueue的机制有关，这里不展开说了，有兴趣的可以研究一下这个类。</strong></div>
+<div><strong> </strong></div>
+<div><strong> </strong></div>
+</div>
+<div><strong>allowCoreThreadTimeOut：</strong></div>
+<div>
+<div><strong>是否允许核心线程超时退出。</strong></div>
+<div><strong>如果该值为false，且poolSize&lt;=corePoolSize，线程池都会保证这些核心线程处于存活状态，不会超时退出。</strong></div>
+<div><strong>如果为true，则不论poolSize的大小，都允许超时退出。</strong></div>
+<div><strong>如果poolSize&gt;corePoolSize，则该参数不论true还是false，都允许超时退出。</strong></div>
+<div><strong>相关判断如下：</strong></div>
+<div><strong>(poolSize &gt; corePoolSize || allowCoreThreadTimeOut)</strong></div>
+<div><strong> </strong></div>
+</div>
+<p><strong>keepAliveTime：</strong></p>
+<div><strong>如果一个线程处在空闲状态的时间超过了该属性值，就会因为超时而退出。是否允许超时退出则取决于上面的逻辑。</strong></div>
+</div>
+{% endraw %}

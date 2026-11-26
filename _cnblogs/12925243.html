@@ -1,0 +1,352 @@
+---
+title: "谈谈你对Restful Api的知识"
+date: 2020-05-20 18:20:00 +0800
+tags: ["【计算机网络】-- 网络"]
+excerpt: "前言：restful出现的环境，什么是rest?以及出现的意义 1.REST的由来 全称：REST，全称是Resource Representational State Transfer，即：资源在网络中以某种形式进行状态转移。————所谓状态的转移，它首次出现在2000年Roy Fielding的"
+read_minutes: 19
+cnblogs_id: 12925243
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12925243.html"
+tags_inferred: true
+---
+{% raw %}
+<div>
+<div>
+<p>前言：restful出现的环境，什么是rest?以及出现的意义</p>
+<p><strong>1.REST的由来</strong></p>
+<p>全称：REST，全称是Resource Representational State Transfer，即：<strong>资源在网络中以某种形式进行状态转移</strong>。————所谓状态的转移，它首次出现在2000年Roy Fielding的博士论文中，Roy Fielding是HTTP规范的主要编写者之一。 他在论文中提到："我这篇文章的写作目的，就是想在符合架构原理的前提下，理解和评估以网络为基础的应用软件的架构设计，得到一个功能强、性能好、适宜通信的架构。REST指的是一组架构约束条件和原则。" 如果一个架构符合REST的约束条件和原则，我们就称它为RESTful架构。</p>
+<p>REST本身并没有创造新的技术、组件或服务，而隐藏在RESTful背后的理念就是使用Web的现有特征和能力， 更好地使用现有Web标准中的一些准则和约束。虽然REST本身受Web技术的影响很深， 但是理论上REST架构风格并不是绑定在HTTP上，只不过目前HTTP是唯一与REST相关的实例。 所以我们这里描述的REST也是通过HTTP实现的REST。</p>
+<p>Web 应用程序最重要的 REST 原则是，客户端和服务器之间的交互在请求之间是无状态的。从客户端到服务器的每个请求都必须包含理解请求所必需的信息。如果服务器在请求之间的任何时间点重启，客户端不会得到通知。此外，无状态请求可以由任何可用服务器回答，这十分适合云计算之类的环境。客户端可以缓存数据以改进性能。</p>
+<p>在<a href="https://www.baidu.com/s?wd=%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF&amp;tn=SE_PcZhidaonwhc_ngpagmjz&amp;rsv_dl=gh_pc_zhidao" rel="nofollow" target="_blank">服务器端</a>，应用程序状态和功能可以分为各种资源。资源是一个有趣的概念实体，它向客户端公开。资源的例子有：应用程序对象、数据库记录、算法等等。每个资源都使用 URI (Universal Resource Identifier) 得到一个惟一的地址。所有资源都共享统一的界面，以便在客户端和服务器之间传输状态。使用的是标准的 HTTP 方法，比如 <strong>GET、PUT、POST 和 DELETE</strong>。Hypermedia 是应用程序状态的引擎，资源表示通过超链接互联。</p>
+<p>另一个重要的 <strong>REST 原则是分层系统</strong>，<strong>这表示组件无法了解它与之交互的中间层以外的组件。通过将系统知识限制在单个层，可以限制整个系统的复杂性，促进了底层的独立性</strong>。</p>
+<p>REST 描述了一个架构样式的互联系统（如 Web 应用程序）。REST 约束条件作为一个整体应用时，将生成一个简单、可扩展、有效、安全、可靠的架构。由于它简便、轻量级以及通过 HTTP 直接传输数据的特性，RESTful Web 服务成为基于 SOAP 服务的一个最有前途的替代方案。用于 web 服务和动态 Web 应用程序的多层架构可以实现可重用性、简单性、可扩展性和组件可响应性的清晰分离。开发人员可以轻松使用 Ajax 和 RESTful Web 服务一起创建丰富的界面。</p>
+<p>出现：REST最早是由Roy Fielding博士发表的论文中提到的，他也曾参与设计了HTTP协议。论文地址：<a href="http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm" rel="nofollow" target="_blank">http://www.ics.uci.edu/~fielding/pubs/dissertation/top.htm</a></p>
+<p>定义：简单来说REST是一种系统架构设计风格（而非标准），一种分布式系统的应用层解决方案。REST 指的是一组架构约束条件和原则。满足这些约束条件和原则的应用程序或设计就是 RESTful。</p>
+<p><strong>Resource：资源，即数据。<br/></strong></p>
+<p><strong> Representational：某种表现形式，比如用JSON，XML，JPEG等；</strong></p>
+<p><strong> State Transfer：状态变化。通过HTTP动词实现。</strong></p>
+<p>背景：早期的网页端是前后台一起的，比如PHP、JSP等。而随着近几年移动端的快速发展和分布式架构的应用，各种Client层出不穷，这个时候就需要有个统一的机制，来为前后端通信提供服务。</p>
+<p>     而RESTful API就是目前比较成熟的的一套应用程序API设计理论。</p>
+<p>目的：Client和Server端进一步解耦。</p>
+<p>应用：最为经典的莫过于<strong>github API。</strong></p>
+<p><strong>2.什么是服务?</strong></p>
+<p>任何业务服务都可以抽象为对象的状态维护,基本操作就<strong>増删查改</strong>四种.</p>
+<p>例如:</p>
+<p>访问文章的,很明显就是对文章及其列表的<strong>增删查改</strong>,文章是被做操的对象,通过增删查改修改文章的状态.</p>
+<p>银行转账,好像是有逻辑行为,但实际上每个转账事务,可以理解为对一个账单对象的状态操作,这个账单又关联了多个账户的状态.</p>
+<p>现实生活中一个人走路,是一个明显的对象行为,也可以表示为人这个对象从位置A经过时间T后变为位置B的状态更新操作.</p>
+<p>服务端无论使用何种架构,加入缓存,队列,数据库,最终的目标就是维护资源的状态.</p>
+<p>从客户端的视角来看,服务端API描述的内容就是其维护的对象的瞬时状态的表现.</p>
+<p><strong>3.Restful的理解</strong></p>
+<p><strong>一种软件架构风格、设计风格，而不是标准，只是提供了一组设计原则和约束条件。它主要用于客户端和服务器交互类的软件。基于这个风格设计的软件可以更简洁，更有层次，更易于实现缓存等机制。<br/></strong></p>
+<p><strong>RESTful架构，就是目前最流行的一种互联网软件架构。它结构清晰、符合标准、易于理解、扩展方便，所以正得到越来越多网站的采用。<br/></strong></p>
+<p><strong><a href="http://www.ruanyifeng.com/blog/2011/09/restful.html" rel="nofollow" target="_blank">RESTful</a> 是目前最流行的 API 设计规范，用于 Web 数据接口的设计。传统上，软件和网络是两个不同的领域，很少有交集；软件开发主要针对单机环境，网络则主要研究系统之间的通信。在当今的互联网应用的前端展示媒介很丰富。有手机、有平板电脑还有PC以及其他的展示媒介。那么这些前端接收到的用户请求统一由一个后台来处理并返回给不同的前端肯定是最科学和最经济的方式，RESTful API就是一套协议来规范多种形式的前端和同一个后台的交互方式.<br/></strong></p>
+<p><strong>一.资源与URI<br/></strong></p>
+<p><strong>二.统一资源接口</strong></p>
+<p><strong>三.资源的表述</strong></p>
+<p><strong>四.资源的链接</strong></p>
+<p><strong>五.状态的转移</strong></p>
+<p><strong>(1).为什么是RESTful<br/></strong></p>
+<p>服务端面向Web的API需要通过HTTP协议来表达.了解一下REST的起源可以知道其作者是HTTP协议的制定者,所以HTTP协议的语义元素天然符合REST的约束要求.但RESTful并不是强制的,Web API不必遵循RESTful,但是遵循RESTful可以令API表达的语义更简单清晰统一,在语义全部抽象为转台转移后,分布式系统的架构关注点(维护状态一致)也会更明确.<strong>前后端分离主要是以API为界限进行解耦的</strong>，这就会产生大量的API，采用RESTful来设计API主要有以下好处：</p>
+<p>一、<strong>表现力更强，更易于理解</strong></p>
+<p>二、RESRful是<strong>无状态</strong>，所以不管前端是何种设备何种状态都可以无差别的请求资源</p>
+<p><strong>(2).RESTful的初级内容</strong></p>
+<p><strong>一.使用METHOD (POST,DELETE,GET,PUT) 等动词表示増删查改四种操作.</strong></p>
+<p><strong>二.使用URI(通常是其子集URL)来表示对象或资源.</strong></p>
+<p><strong>三.使用queryString表示查询输入</strong></p>
+<p><strong>四.使用body表示更新和保存的状态输入</strong></p>
+<p><strong>五.使用HEAD进行扩展</strong></p>
+<p><strong>(3).怎么用RESTful</strong></p>
+<p>一、每个资源使用2个URL，网址中只能有名词</p>
+<p>二、对于资源的操作类型由HTTP动词来表示</p>
+<p>三、统一的返回结果</p>
+<p>四、返回正确的状态码</p>
+<p>五、允许通过HTTP内容协商，建议格式预定义为JSON</p>
+<p>六、对可选发杂的参数，使用查询字符串（？）</p>
+<p>七、返回有用的错误信息(message)</p>
+<p>八、非资源请求用动词，这看起似乎和1中的说法有矛盾，但这里指的是非资源，而不是资源</p>
+<p><strong>（4).RESTful架构优点：</strong></p>
+<p><strong>一.前后端分离，减少流量</strong></p>
+<p><strong>二.安全问题集中在接口上，由于接受json格式，防止了注入型等安全问题</strong></p>
+<p><strong>三.前端无关化，后端只负责数据处理，前端表现方式可以是任何前端语言（android，ios,html5）</strong></p>
+<p><strong>四.前端和后端人员更加专注于各自开发，只需接口文档便可完成前后端交互，无需过多相互了解</strong></p>
+<p><strong>五.服务器性能优化：由于前端是静态页面，通过nginx便可获取，服务器主要压力放在了接口上</strong></p>
+<p><strong>4.RESTful api 规范以及设计原则</strong></p>
+<p><strong>（1）URL 设计（资源与URI）<br/></strong></p>
+<p>REST全称是表述性状态转移，那究竟指的是什么的表述? 其实指的就是资源。任何事物，只要有被引用到的必要，它就是一个资源。资源可以是实体(例如手机号码)，也可以只是一个抽象概念(例如价值) 。下面是一些资源的例子：</p>
+<p>某用户的手机号码</p>
+<p>某用户的个人信息</p>
+<p>最多用户订购的GPRS套餐</p>
+<p>两个产品之间的依赖关系</p>
+<p>某用户可以办理的优惠套餐</p>
+<p>某手机号码的潜在价值</p>
+<p>要让一个资源可以被识别，需要有个唯一标识，在Web中这个唯一标识就是URI(Uniform Resource Identifier)。</p>
+<p>URI既可以看成是资源的地址，也可以看成是资源的名称。如果某些信息没有使用URI来表示，那它就不能算是一个资源， 只能算是资源的一些信息而已。URI的设计应该遵循可寻址性原则，具有自描述性，需要在形式上给人以直觉上的关联。</p>
+<p>一.    <strong>使用_或-来让URI可读性更好</strong></p>
+<p>二.    <strong>使用/来表示资源的层级关系</strong></p>
+<p>三.     <strong>使用?用来过滤资源</strong></p>
+<p>四.    <strong>,或;可以用来表示同级资源的关系</strong></p>
+<p><strong>1.1 动词 + 宾语</strong></p>
+<p><strong>RESTful 的核心思想就是，客户端发出的数据操作指令都是"动词 + 宾语"的结构。比如，GET /articles这个命令，GET是动词，/articles是宾语。<br/></strong></p>
+<p><strong>动词通常就是五种 HTTP 方法，对应 CRUD 操作。<br/></strong></p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="241" data-width="420"><img alt="" data-image-index="0" data-original-filesize="11345" data-original-format="image/jpeg" data-original-height="241" data-original-src="//upload-images.jianshu.io/upload_images/16654739-a3ad3bf0b3676537.jpg" data-original-width="420" loading="lazy" src="/images/cnblogs/4fe6bf7f401594b8.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>根据 HTTP 规范，动词一律大写。</p>
+<p><strong>1.2 动词的覆盖</strong></p>
+<p>有些客户端只能使用GET和POST这两种方法。服务器必须接受POST模拟其他三个方法（PUT、PATCH、DELETE）。</p>
+<p>这时，客户端发出的 HTTP 请求，要加上X-HTTP-Method-Override属性，告诉服务器应该使用哪一个动词，覆盖POST方法。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="119" data-width="378"><img alt="" data-image-index="1" data-original-filesize="5531" data-original-format="image/jpeg" data-original-height="119" data-original-src="//upload-images.jianshu.io/upload_images/16654739-eea52a35b6d0a89d.jpg" data-original-width="378" loading="lazy" src="/images/cnblogs/3223962e7ce95404.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>上面代码中，X-HTTP-Method-Override指定本次请求的方法是PUT，而不是POST。</p>
+<p><strong>1.3 宾语必须是名词</strong></p>
+<p>宾语就是 API 的 URL，是 HTTP 动词作用的对象。它应该是名词，不能是动词。比如，/articles这个 URL 就是正确的，而下面的 URL 不是名词，所以都是错误的。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="164" data-width="241"><img alt="" data-image-index="2" data-original-filesize="5141" data-original-format="image/jpeg" data-original-height="164" data-original-src="//upload-images.jianshu.io/upload_images/16654739-fcb9c76e4da173d9.jpg" data-original-width="241" loading="lazy" src="/images/cnblogs/09dc472399847f16.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p><strong><br/>1.4 复数 URL</strong></p>
+<p>既然 URL 是名词，那么应该使用复数，还是单数？</p>
+<p>这没有统一的规定，但是常见的操作是读取一个集合，比如GET /articles（读取所有文章），这里明显应该是复数。</p>
+<p>为了统一起见，建议都使用复数 URL，比如GET /articles/2要好于GET /article/2。</p>
+<p><strong>1.5 避免多级 URL</strong></p>
+<p>常见的情况是，资源需要多级分类，因此很容易写出多级的 URL，比如获取某个作者的某一类文章。</p>
+<p>GET /authors/12/categories/2</p>
+<p>这种 URL 不利于扩展，语义也不明确，往往要想一会，才能明白含义。</p>
+<p>更好的做法是，除了第一级，其他级别都用查询字符串表达。</p>
+<p>GET /authors/12?categories=2</p>
+<p>下面是另一个例子，查询已发布的文章。你可能会设计成下面的 URL。</p>
+<p>GET /articles/published</p>
+<p>查询字符串的写法明显更好。</p>
+<p>GET /articles?published=true</p>
+<p> <strong>(2)统一资源接口（状态码）</strong></p>
+<p><strong>RESTful风格的数据元操CRUD（create,read,update,delete）分别对应HTTP方法：GET用来获取资源，POST用来新建资源（也可以用于更新资源），PUT用来更新资源，DELETE用来删除资源，这样就统一了数据操作的接口。<br/></strong></p>
+<p><strong>RESTful架构应该遵循统一接口原则(如上)，统一接口包含了一组受限的预定义的操作，不论什么样的资源，都是通过使用相同的接口进行资源的访问。接口应该使用标准的HTTP方法如GET，PUT和POST，并遵循这些方法的语义。</strong></p>
+<p>果按照HTTP方法的语义来暴露资源，那么接口将会拥有安全性和幂等性的特性，例如GET和HEAD请求都是安全的， 无论请求多少次，都不会改变服务器状态。而GET、HEAD、PUT和DELETE请求都是幂等的，无论对资源操作多少次， 结果总是一样的，后面的请求并不会产生比第一次更多的影响。</p>
+<p><strong>一.下面列出了GET，DELETE，PUT和POST的典型用法:</strong></p>
+<p><strong>1.GET</strong></p>
+<p>安全且幂等</p>
+<p>获取表示</p>
+<p>变更时获取表示（缓存）</p>
+<p>200（OK） - 表示已在响应中发出</p>
+<p>204（无内容） - 资源有空表示</p>
+<p>301（Moved Permanently） - 资源的URI已被更新</p>
+<p>303（See Other） - 其他（如，负载均衡）</p>
+<p>304（not modified）- 资源未更改（缓存）</p>
+<p>400 （bad request）- 指代坏请求（如，参数错误）</p>
+<p>404 （not found）- 资源不存在</p>
+<p>406 （not acceptable）- 服务端不支持所需表示</p>
+<p>500 （internal server error）- 通用错误响应</p>
+<p>503 （Service Unavailable）- 服务端当前无法处理请求</p>
+<p><strong>2.POST</strong></p>
+<p>不安全且不幂等</p>
+<p>使用服务端管理的（自动产生）的实例号创建资源</p>
+<p>创建子资源</p>
+<p>部分更新资源</p>
+<p>如果没有被修改，则不过更新资源（乐观锁）</p>
+<p>200（OK）- 如果现有资源已被更改</p>
+<p>201（created）- 如果新资源被创建</p>
+<p>202（accepted）- 已接受处理请求但尚未完成（异步处理）</p>
+<p>301（Moved Permanently）- 资源的URI被更新</p>
+<p>303（See Other）- 其他（如，负载均衡）</p>
+<p>400（bad request）- 指代坏请求</p>
+<p>404 （not found）- 资源不存在</p>
+<p>406 （not acceptable）- 服务端不支持所需表示</p>
+<p>409 （conflict）- 通用冲突</p>
+<p>412 （Precondition Failed）- 前置条件失败（如执行条件更新时的冲突）</p>
+<p>415 （unsupported media type）- 接受到的表示不受支持</p>
+<p>500 （internal server error）- 通用错误响应</p>
+<p>503 （Service Unavailable）- 服务当前无法处理请求</p>
+<p><strong>3.PUT</strong></p>
+<p>不安全但幂等</p>
+<p>用客户端管理的实例号创建一个资源</p>
+<p>通过替换的方式更新资源</p>
+<p>如果未被修改，则更新资源（乐观锁）</p>
+<p>200 （OK）- 如果已存在资源被更改</p>
+<p>201 （created）- 如果新资源被创建</p>
+<p>301（Moved Permanently）- 资源的URI已更改</p>
+<p>303 （See Other）- 其他（如，负载均衡）</p>
+<p>400 （bad request）- 指代坏请求</p>
+<p>404 （not found）- 资源不存在</p>
+<p>406 （not acceptable）- 服务端不支持所需表示</p>
+<p>409 （conflict）- 通用冲突</p>
+<p>412 （Precondition Failed）- 前置条件失败（如执行条件更新时的冲突）</p>
+<p>415 （unsupported media type）- 接受到的表示不受支持</p>
+<p>500 （internal server error）- 通用错误响应</p>
+<p>503 （Service Unavailable）- 服务当前无法处理请求</p>
+<p><strong>4.DELETE</strong></p>
+<p>不安全但幂等</p>
+<p>删除资源</p>
+<p>200 （OK）- 资源已被删除</p>
+<p>301 （Moved Permanently）- 资源的URI已更改</p>
+<p>303 （See Other）- 其他，如负载均衡</p>
+<p>400 （bad request）- 指代坏请求</p>
+<p>404 （not found）- 资源不存在</p>
+<p>409 （conflict）- 通用冲突</p>
+<p>500 （internal server error）- 通用错误响应</p>
+<p>503 （Service Unavailable）- 服务端当前无法处理请求</p>
+<p><strong>2.HTTP 状态码就是一个三位数，分成五个类别。</strong></p>
+<p><strong>1.    1xx：相关信息</strong></p>
+<p><strong>2.     2xx：操作成功</strong></p>
+<p><strong>3.     3xx：重定向</strong></p>
+<p><strong>4.     4xx：客户端错误</strong></p>
+<p><strong>5.     5xx：服务器错误</strong></p>
+<p><strong>2.1      200状态码表示操作成功，但是不同的方法可以返回更精确的状态码。<br/></strong></p>
+<p><strong>1.   GET: 200 OK<br/></strong></p>
+<p><strong>2.   POST: 201 Created</strong></p>
+<p><strong>3.   PUT: 200 OK</strong></p>
+<p><strong>4.   PATCH: 200 OK</strong></p>
+<p><strong>5.   DELETE: 204 No Content</strong></p>
+<p><strong>上面代码中，POST返回201状态码，表示生成了新的资源；DELETE返回204状态码，表示资源已经不存在。<br/></strong></p>
+<p><strong>2.2       3xx 状态码<br/></strong></p>
+<p><strong>API 用不到301状态码（永久重定向）和302状态码（暂时重定向，307也是这个含义），因为它们可以由应用级别返回，浏览器会直接跳转，API 级别可以不考虑这两种情况。<br/></strong></p>
+<p>API 用到的3xx状态码，主要是303 See Other，表示参考另一个 URL。它与302和307的含义一样，也是"暂时重定向"，区别在于302和307用于GET请求，而303用于POST、PUT和DELETE请求。收到303以后，浏览器不会自动跳转，而会让用户自己决定下一步怎么办。</p>
+<p><strong>2.3       4xx 状态码</strong></p>
+<p><strong>4xx状态码表示客户端错误，主要有下面几种。<br/></strong></p>
+<p>400 Bad Request：服务器不理解客户端的请求，未做任何处理。</p>
+<p>401 Unauthorized：用户未提供身份验证凭据，或者没有通过身份验证。</p>
+<p>403 Forbidden：用户通过了身份验证，但是不具有访问资源所需的权限。</p>
+<p>404 Not Found：所请求的资源不存在，或不可用。</p>
+<p>405 Method Not Allowed：用户已经通过身份验证，但是所用的 HTTP 方法不在他的权限之内。</p>
+<p>410 Gone：所请求的资源已从这个地址转移，不再可用。</p>
+<p>415 Unsupported Media Type：客户端要求的返回格式不支持。比如，API 只能返回 JSON 格式，但是客户端要求返回 XML 格式。</p>
+<p>422 Unprocessable Entity ：客户端上传的附件无法处理，导致请求失败。</p>
+<p>429 Too Many Requests：客户端的请求次数超过限额。</p>
+<p><strong>2.5          5xx 状态码</strong></p>
+<p><strong>5xx状态码表示服务端错误。一般来说，API 不会向用户透露服务器的详细信息，所以只要两个状态码就够了。<br/></strong></p>
+<p>500 Internal Server Error：客户端请求有效，服务器处理时发生了意外。</p>
+<p>503 Service Unavailable：服务器无法处理请求，一般用于网站维护状态。</p>
+<p><strong>2.6    下面我们来看一些实践中常见的问题:<br/></strong></p>
+<p><strong>POST和PUT用于创建资源时有什么区别?</strong></p>
+<p>POST和PUT在创建资源的区别在于，所创建的资源的名称(URI)是否由客户端决定。 例如为我的博文增加一个java的分类，生成的路径就是分类名/categories/java，那么就可以采用PUT方法。不过很多人直接把POST、GET、PUT、DELETE直接对应上CRUD，例如在一个典型的rails实现的RESTful应用中就是这么做的。</p>
+<p>我认为，这是因为rails默认使用服务端生成的ID作为URI的缘故，而不少人就是通过rails实践REST的，所以很容易造成这种误解。</p>
+<p>客户端不一定都支持这些HTTP方法吧?</p>
+<p>的确有这种情况，特别是一些比较古老的基于浏览器的客户端，只能支持GET和POST两种方法。</p>
+<p>在实践上，客户端和服务端都可能需要做一些妥协。例如rails框架就支持通过隐藏参数_method=DELETE来传递真实的请求方法， 而像Backbone这样的客户端MVC框架则允许传递_method传输和设置X-HTTP-Method-Override头来规避这个问题。</p>
+<p>统一接口是否意味着不能扩展带特殊语义的方法?</p>
+<p>统一接口并不阻止你扩展方法，只要方法对资源的操作有着具体的、可识别的语义即可，并能够保持整个接口的统一性。</p>
+<p>像WebDAV就对HTTP方法进行了扩展，增加了LOCK、UPLOCK等方法。而github的API则支持使用PATCH方法来进行issue的更新</p>
+<p><strong>(3)服务器回应(资源的表述)</strong></p>
+<p><strong>3.1 不要返回纯本文<br/></strong></p>
+<p><strong>API 返回的数据格式，不应该是纯文本，而应该是一个 JSON 对象，因为这样才能返回标准的结构化数据。所以，服务器回应的 HTTP 头的Content-Type属性要设为application/json。<br/></strong></p>
+<p>客户端请求时，也要明确告诉服务器，可以接受 JSON 格式，即请求的 HTTP 头的ACCEPT属性也要设成application/json客户端通过HTTP方法可以获取资源，是吧? 不，确切的说，客户端获取的只是资源的表述而已。 资源在外界的具体呈现，可以有多种表述(或成为表现、表示)形式，在客户端和服务端之间传送的也是资源的表述，而不是资源本身。 例如文本资源可以采用html、xml、json等格式，图片可以使用PNG或JPG展现出来。</p>
+<p>资源的表述包括数据和描述数据的元数据，例如，HTTP头"Content-Type" 就是这样一个元数据属性。</p>
+<p>那么客户端如何知道服务端提供哪种表述形式呢?</p>
+<p>答案是可以通过HTTP内容协商，客户端可以通过Accept头请求一种特定格式的表述，服务端则通过Content-Type告诉客户端资源的表述形式。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="104" data-width="254"><img alt="" data-image-index="3" data-original-filesize="4538" data-original-format="image/jpeg" data-original-height="104" data-original-src="//upload-images.jianshu.io/upload_images/16654739-11aa53a2ac782dbc.jpg" data-original-width="254" loading="lazy" src="/images/cnblogs/309edef2231c68d4.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="720" data-width="891"><img alt="" data-image-index="4" data-original-filesize="59564" data-original-format="image/jpeg" data-original-height="720" data-original-src="//upload-images.jianshu.io/upload_images/16654739-e9eb1169a168896a.jpg" data-original-width="891" loading="lazy" src="/images/cnblogs/87d4311086783061.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>使用URI后缀来区分表述格式</p>
+<p>像rails框架，就支持使用/users.xml或/users.json来区分不同的格式。 这样的方式对于客户端来说，无疑是更为直观，但混淆了资源的名称和资源的表述形式。 我个人认为，还是应该优先使用内容协商来区分表述格式。</p>
+<p><strong>3.2 发生错误时，不要返回 200 状态码</strong></p>
+<p><strong>有一种不恰当的做法是，即使发生错误，也返回200状态码，把错误信息放在数据体里面，就像下面这样。<br/></strong></p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="246" data-width="487"><img alt="" data-image-index="5" data-original-filesize="9423" data-original-format="image/jpeg" data-original-height="246" data-original-src="//upload-images.jianshu.io/upload_images/16654739-b49a791e2e7417bc.jpg" data-original-width="487" loading="lazy" src="/images/cnblogs/404d35b230b7ef70.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>上面代码中，解析数据体以后，才能得知操作失败。</p>
+<p>这张做法实际上取消了状态码，这是完全不可取的。正确的做法是，状态码反映发生的错误，具体的错误信息放在数据体里面返回。下面是一个例子。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="234" data-width="470"><img alt="" data-image-index="6" data-original-filesize="9126" data-original-format="image/jpeg" data-original-height="234" data-original-src="//upload-images.jianshu.io/upload_images/16654739-c4db2ce997ff6ba1.jpg" data-original-width="470" loading="lazy" src="/images/cnblogs/0c9af3a82a048cd3.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p><strong>3.3 提供链接</strong></p>
+<p><strong>API 的使用者未必知道，URL 是怎么设计的。一个解决方法就是，在回应中，给出相关链接，便于下一步操作。这样的话，用户只要记住一个 URL，就可以发现其他的 URL。这种方法叫做 HATEOAS。<br/></strong></p>
+<p>举例来说，GitHub 的 API 都在 <a href="https://api.github.com/" rel="nofollow" target="_blank">api.github.com</a> 这个域名。访问它，就可以得到其他 URL。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="263" data-width="673"><img alt="" data-image-index="7" data-original-filesize="21501" data-original-format="image/jpeg" data-original-height="263" data-original-src="//upload-images.jianshu.io/upload_images/16654739-fa18307d92e59a32.jpg" data-original-width="673" loading="lazy" src="/images/cnblogs/8a84daba4461a604.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>上面的回应中，挑一个 URL 访问，又可以得到别的 URL。对于用户来说，不需要记住 URL 设计，只要从 api.github.com 一步步查找就可以了。</p>
+<p>HATEOAS 的格式没有统一规定，上面例子中，GitHub 将它们与其他属性放在一起。更好的做法应该是，将相关链接与其他属性分开。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="298" data-width="789"><img alt="" data-image-index="8" data-original-filesize="15295" data-original-format="image/jpeg" data-original-height="298" data-original-src="//upload-images.jianshu.io/upload_images/16654739-743df60e6fa071f6.jpg" data-original-width="789" loading="lazy" src="/images/cnblogs/e3c7d45208d3af8a.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p><strong><br/> 4 资源的链接</strong></p>
+<p>我们知道REST是使用标准的HTTP方法来操作资源的，但仅仅因此就理解成带CURD的Web数据库架构就太过于简单了。</p>
+<p>这种反模式忽略了一个核心概念："超媒体即应用状态引擎（hypermedia as the engine of application state）"。 超媒体是什么?</p>
+<p>当你浏览Web网页时，从一个连接跳到一个页面，再从另一个连接跳到另外一个页面，就是利用了超媒体的概念：把一个个把资源链接起来.</p>
+<p>要达到这个目的，就要求在表述格式里边加入链接来引导客户端。在《RESTful Web Services》一书中，作者把这种具有链接的特性成为连通性。下面我们具体来看一些例子。</p>
+<p>下面展示的是github获取某个组织下的项目列表的请求，可以看到在响应头里边增加Link头告诉客户端怎么访问下一页和最后一页的记录。 而在响应体里边，用url来链接项目所有者和项目地址。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="778" data-width="853"><img alt="" data-image-index="9" data-original-filesize="61220" data-original-format="image/jpeg" data-original-height="778" data-original-src="//upload-images.jianshu.io/upload_images/16654739-0c536ca2e471e07a.jpg" data-original-width="853" loading="lazy" src="/images/cnblogs/5d402466bdeaf87c.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p>又例如下面这个例子，创建订单后通过链接引导客户端如何去付款。</p>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="330" data-width="717"><img alt="" data-image-index="10" data-original-filesize="28242" data-original-format="image/jpeg" data-original-height="330" data-original-src="//upload-images.jianshu.io/upload_images/16654739-a2421089843a69df.jpg" data-original-width="717" loading="lazy" src="/images/cnblogs/2fe2984f57a45359.webp"/></div>
+</div>
+<div class="image-caption"> </div>
+</div>
+<p> </p>
+<p>上面的例子展示了如何使用超媒体来增强资源的连通性。很多人在设计RESTful架构时，使用很多时间来寻找漂亮的URI，而忽略了超媒体。所以，应该多花一些时间来给资源的表述提供链接，而不是专注于"资源的CRUD"。</p>
+<p><strong>4.1状态的转移</strong></p>
+<p>有了上面的铺垫，再讨论REST里边的状态转移就会很容易理解了。</p>
+<p>不过，我们先来讨论一下REST原则中的无状态通信原则。初看一下，好像自相矛盾了，既然无状态，何来状态转移一说?</p>
+<p>其实，这里说的无状态通信原则，并不是说客户端应用不能有状态，而是指服务端不应该保存客户端状态。</p>
+<p><strong>4.1.1 应用状态与资源状态</strong></p>
+<p>实际上，状态应该区分应用状态和资源状态，客户端负责维护应用状态，而服务端维护资源状态。</p>
+<p>客户端与服务端的交互必须是无状态的，并在每一次请求中包含处理该请求所需的一切信息。</p>
+<p>服务端不需要在请求间保留应用状态，只有在接受到实际请求的时候，服务端才会关注应用状态。</p>
+<p>这种无状态通信原则，使得服务端和中介能够理解独立的请求和响应。</p>
+<p>在多次请求中，同一客户端也不再需要依赖于同一服务器，方便实现高可扩展和高可用性的服务端。</p>
+<p>但有时候我们会做出违反无状态通信原则的设计，例如利用Cookie跟踪某个服务端会话状态，常见的像J2EE里边的JSESSIONID。</p>
+<p>这意味着，浏览器随各次请求发出去的Cookie是被用于构建会话状态的。</p>
+<p>当然，如果Cookie保存的是一些服务器不依赖于会话状态即可验证的信息（比如认证令牌），这样的Cookie也是符合REST原则的。</p>
+<p><strong>4.1.2 应用状态的转移</strong></p>
+<p>状态转移到这里已经很好理解了， "会话"状态不是作为资源状态保存在服务端的，而是被客户端作为应用状态进行跟踪的。客户端应用状态在服务端提供的超媒体的指引下发生变迁。服务端通过超媒体告诉客户端当前状态有哪些后续状态可以进入。</p>
+<p>这些类似"下一页"之类的链接起的就是这种推进状态的作用——指引你如何从当前状态进入下一个可能的状态。</p>
+<p>希望对大家理解restful api 有帮助。</p>
+</div>
+<br/><br/>作者：々烽火戏诸侯<br/>链接：https://www.jianshu.com/p/0e7e379afc6f<br/>来源：简书<br/>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。+</div>
+{% endraw %}

@@ -1,0 +1,757 @@
+---
+title: "项目基础回顾：SpringBoot与PageHelper的整合示例详解"
+date: 2020-10-29 18:15:00 +0800
+tags: ["【框架】-- SpringBoot"]
+excerpt: "SpringBoot与PageHelper的整合示例详解 1.PageHelper简介# PageHelper官网地址: https://pagehelper.github.io/ 摘要: com.github.pagehelper.PageHelper是一款好用的开源免费的Mybatis第三方物理"
+read_minutes: 11
+cnblogs_id: 13898406
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13898406.html"
+---
+{% raw %}
+<h1 id="springboot与pagehelper的整合示例详解">SpringBoot与PageHelper的整合示例详解</h1>
+<h4 id="1063749333">1.PageHelper简介<a class="esa-anchor" href="https://www.cnblogs.com/charlypage/p/11220755.html#1063749333">#</a></h4>
+<blockquote>
+<p>PageHelper官网地址:</p>
+<p><a href="https://pagehelper.github.io/">https://pagehelper.github.io/</a></p>
+<p>摘要: com.github.pagehelper.PageHelper是一款好用的开源免费的Mybatis第三方物理分页插件。</p>
+<p>PageHelper是一款好用的开源免费的Mybatis第三方物理分页插件，其实我并不想加上好用两个字，但是为了表扬插件作者开源免费的崇高精神，我毫不犹豫的加上了好用一词作为赞美。</p>
+<p>原本以为分页插件，应该是很简单的，然而PageHelper比我想象的要复杂许多，它做的很强大，也很彻底，强大到使用者可能并不需要这么多功能，彻底到一参可以两用。但是，我认为，作为分页插件，完成物理分页任务是根本，其它的很多智能并不是必要的，保持它够傻够憨，专业术语叫stupid，简单就是美。</p>
+<p>我们将简单介绍PageHelper的基本使用和配置参数的含义，重点分析PageHelper作为Mybatis分页插件的实现原理。</p>
+</blockquote>
+<p><a data-alt="ZvCzAx.png" data-lightbox="roadtrip" data-title="" href="https://upload-images.jianshu.io/upload_images/12057079-47d84661f1473bd3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240"><img alt="ZvCzAx.png" loading="lazy" src="/images/cnblogs/1a6b0ef33d558c87.webp"/></a></p>
+<h4 id="2947445164">2.SpringBoot与PageHelper的整合示例<a class="esa-anchor" href="https://www.cnblogs.com/charlypage/p/11220755.html#2947445164">#</a></h4>
+<h5 id="结构图如下">结构图如下:</h5>
+<p><a data-alt="ZvPHat.png" data-lightbox="roadtrip" data-title="" href="https://upload-images.jianshu.io/upload_images/12057079-27d8aa3e6ee16df3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240"><img alt="ZvPHat.png" loading="lazy" src="/images/cnblogs/2eb00f5df9eeca21.webp"/></a></p>
+<h5 id="pomxml">pom.xml:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_0" data-tips="复制代码">Copy</div>
+<pre><code class="language-xml hljs" id="copy_target_0"><span class="hljs-meta">&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">project <span class="hljs-attr">xmlns=<span class="hljs-string">"http://maven.apache.org/POM/4.0.0" <span class="hljs-attr">xmlns:xsi=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance"
+             <span class="hljs-attr">xsi:schemaLocation=<span class="hljs-string">"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">modelVersion&gt;4.0.0<span class="hljs-tag">&lt;/<span class="hljs-name">modelVersion&gt;
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;com.home<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;springbootdemo<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">version&gt;0.0.1-SNAPSHOT<span class="hljs-tag">&lt;/<span class="hljs-name">version&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">packaging&gt;jar<span class="hljs-tag">&lt;/<span class="hljs-name">packaging&gt;
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">name&gt;springbootdemo<span class="hljs-tag">&lt;/<span class="hljs-name">name&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">description&gt;Demo project for Spring Boot<span class="hljs-tag">&lt;/<span class="hljs-name">description&gt;
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">parent&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-starter-parent<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">version&gt;2.0.3.RELEASE<span class="hljs-tag">&lt;/<span class="hljs-name">version&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">relativePath/&gt; <span class="hljs-comment">&lt;!-- lookup parent from repository --&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-name">parent&gt;
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">properties&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">project.build.sourceEncoding&gt;UTF-8<span class="hljs-tag">&lt;/<span class="hljs-name">project.build.sourceEncoding&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">project.reporting.outputEncoding&gt;UTF-8<span class="hljs-tag">&lt;/<span class="hljs-name">project.reporting.outputEncoding&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">java.version&gt;1.8<span class="hljs-tag">&lt;/<span class="hljs-name">java.version&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-name">properties&gt;
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">dependencies&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-starter-web<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-starter-test<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">scope&gt;test<span class="hljs-tag">&lt;/<span class="hljs-name">scope&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+
+
+            <span class="hljs-comment">&lt;!--mybatis与mysql--&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.mybatis.spring.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;mybatis-spring-boot-starter<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">version&gt;1.2.0<span class="hljs-tag">&lt;/<span class="hljs-name">version&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;mysql<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;mysql-connector-java<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+            <span class="hljs-comment">&lt;!--druid依赖--&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;com.alibaba<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;druid<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">version&gt;1.0.25<span class="hljs-tag">&lt;/<span class="hljs-name">version&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+            <span class="hljs-comment">&lt;!--redis依赖--&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-starter-data-redis<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+
+            <span class="hljs-comment">&lt;!--pageHelper--&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;com.github.pagehelper<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;pagehelper-spring-boot-starter<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">version&gt;1.2.3<span class="hljs-tag">&lt;/<span class="hljs-name">version&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+
+
+            <span class="hljs-comment">&lt;!--lombok--&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.projectlombok<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;lombok<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-starter-thymeleaf<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-starter-actuator<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+
+            <span class="hljs-comment">&lt;!-- 热部署模块 --&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">dependency&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-devtools<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">optional&gt;true<span class="hljs-tag">&lt;/<span class="hljs-name">optional&gt; <span class="hljs-comment">&lt;!-- 这个需要为 true 热部署才有效 --&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">dependency&gt;
+
+        <span class="hljs-tag">&lt;/<span class="hljs-name">dependencies&gt;
+
+        <span class="hljs-tag">&lt;<span class="hljs-name">build&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">plugins&gt;
+                <span class="hljs-tag">&lt;<span class="hljs-name">plugin&gt;
+                    <span class="hljs-tag">&lt;<span class="hljs-name">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-name">groupId&gt;
+                    <span class="hljs-tag">&lt;<span class="hljs-name">artifactId&gt;spring-boot-maven-plugin<span class="hljs-tag">&lt;/<span class="hljs-name">artifactId&gt;
+                    <span class="hljs-tag">&lt;<span class="hljs-name">configuration&gt;
+                        <span class="hljs-tag">&lt;<span class="hljs-name">fork&gt;true<span class="hljs-tag">&lt;/<span class="hljs-name">fork&gt;
+                    <span class="hljs-tag">&lt;/<span class="hljs-name">configuration&gt;
+                <span class="hljs-tag">&lt;/<span class="hljs-name">plugin&gt;
+            <span class="hljs-tag">&lt;/<span class="hljs-name">plugins&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-name">build&gt;
+
+    <span class="hljs-tag">&lt;/<span class="hljs-name">project&gt;
+
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="orderpresentcontroller">OrderPresentController:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_1" data-tips="复制代码">Copy</div>
+<pre><code class="language-java hljs" id="copy_target_1"><span class="hljs-keyword">package com.home.orderpresentdemo.controller;
+
+<span class="hljs-keyword">import com.github.pagehelper.PageInfo;
+<span class="hljs-keyword">import com.home.orderpresentdemo.entity.OrderPresentInfo;
+<span class="hljs-keyword">import com.home.orderpresentdemo.service.OrderPresentInfoService;
+<span class="hljs-keyword">import org.springframework.beans.factory.annotation.Autowired;
+<span class="hljs-keyword">import org.springframework.stereotype.Controller;
+<span class="hljs-keyword">import org.springframework.ui.Model;
+<span class="hljs-keyword">import org.springframework.web.bind.annotation.RequestMapping;
+<span class="hljs-keyword">import org.springframework.web.bind.annotation.RequestParam;
+<span class="hljs-keyword">import org.springframework.web.bind.annotation.ResponseBody;
+
+<span class="hljs-keyword">import java.util.HashMap;
+<span class="hljs-keyword">import java.util.List;
+<span class="hljs-meta">@Controller
+<span class="hljs-meta">@RequestMapping("/")
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">OrderPresentController {
+
+    <span class="hljs-meta">@Autowired
+    <span class="hljs-keyword">private OrderPresentInfoService orderPresentService;
+
+
+    <span class="hljs-comment">/**
+     * 跳转到应用列表页面
+     * <span class="hljs-doctag">@param pageNo 要显示第几页内容
+     * <span class="hljs-doctag">@param pageSize 一页显示多少条
+     * <span class="hljs-doctag">@return
+     */
+    <span class="hljs-meta">@RequestMapping("/list")
+    <span class="hljs-meta">@ResponseBody
+    <span class="hljs-function"><span class="hljs-keyword">public  PageInfo&lt;OrderPresentInfo&gt; <span class="hljs-title">list<span class="hljs-params">(<span class="hljs-meta">@RequestParam(value="pageNo",defaultValue="1")<span class="hljs-keyword">int pageNo, <span class="hljs-meta">@RequestParam(value="pageSize",defaultValue="10")<span class="hljs-keyword">int pageSize) {
+        PageInfo&lt;OrderPresentInfo&gt; page = orderPresentService.getAllOrderPresentForPage(pageNo,pageSize);
+        <span class="hljs-keyword">return  page;
+    }
+
+
+
+
+
+    <span class="hljs-meta">@RequestMapping("/")
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">helloHtml<span class="hljs-params">(HashMap&lt;String, Object&gt; map, Model model) {
+        model.addAttribute(<span class="hljs-string">"say",<span class="hljs-string">"欢迎欢迎,热烈欢迎");
+        map.put(<span class="hljs-string">"hello", <span class="hljs-string">"欢迎进入HTML页面");
+        <span class="hljs-keyword">return <span class="hljs-string">"index";
+    }
+
+    <span class="hljs-meta">@RequestMapping("/goToAdd")
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">goToAdd<span class="hljs-params">() {
+        <span class="hljs-keyword">return <span class="hljs-string">"add";
+    }
+
+    <span class="hljs-meta">@RequestMapping("/add")
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">add<span class="hljs-params">(OrderPresentInfo orderPresent) {
+        <span class="hljs-keyword">return <span class="hljs-string">"添加成功";
+    }
+
+}
+
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="orderpresentinfoservice">OrderPresentInfoService:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_2" data-tips="复制代码">Copy</div>
+<pre><code class="language-java hljs" id="copy_target_2"><span class="hljs-keyword">package com.home.orderpresentdemo.service;
+
+<span class="hljs-keyword">import com.github.pagehelper.PageInfo;
+<span class="hljs-keyword">import com.home.orderpresentdemo.entity.OrderPresentInfo;
+
+<span class="hljs-keyword">import java.util.List;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">OrderPresentInfoService {
+    <span class="hljs-function">List&lt;OrderPresentInfo&gt; <span class="hljs-title">getAllOrderPresent<span class="hljs-params">();
+
+    <span class="hljs-function">PageInfo&lt;OrderPresentInfo&gt; <span class="hljs-title">getAllOrderPresentForPage<span class="hljs-params">(<span class="hljs-keyword">int pageNo, <span class="hljs-keyword">int pageSize);
+}
+
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="orderpresentinfoserviceimpl">OrderPresentInfoServiceImpl:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_3" data-tips="复制代码">Copy</div>
+<pre><code class="language-java hljs" id="copy_target_3"><span class="hljs-keyword">package com.home.orderpresentdemo.service.impl;
+
+<span class="hljs-keyword">import com.github.pagehelper.PageHelper;
+<span class="hljs-keyword">import com.github.pagehelper.PageInfo;
+<span class="hljs-keyword">import com.home.orderpresentdemo.entity.OrderPresentInfo;
+<span class="hljs-keyword">import com.home.orderpresentdemo.mapper.OrderPresentInfoMapper;
+<span class="hljs-keyword">import com.home.orderpresentdemo.service.OrderPresentInfoService;
+<span class="hljs-keyword">import org.springframework.beans.factory.annotation.Autowired;
+<span class="hljs-keyword">import org.springframework.stereotype.Service;
+
+<span class="hljs-keyword">import java.util.List;
+
+<span class="hljs-meta">@Service
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">OrderPresentInfoServiceImpl <span class="hljs-keyword">implements <span class="hljs-title">OrderPresentInfoService {
+
+
+    <span class="hljs-meta">@Autowired
+    <span class="hljs-keyword">private OrderPresentInfoMapper orderPresentMapper;
+
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public List&lt;OrderPresentInfo&gt; <span class="hljs-title">getAllOrderPresent<span class="hljs-params">() {
+        <span class="hljs-keyword">return orderPresentMapper.getAllOrderPresent();
+    }
+
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public PageInfo&lt;OrderPresentInfo&gt; <span class="hljs-title">getAllOrderPresentForPage<span class="hljs-params">(<span class="hljs-keyword">int pageNo, <span class="hljs-keyword">int pageSize) {
+
+        PageHelper.startPage(pageNo,pageSize);
+        List&lt;OrderPresentInfo&gt; allOrderPresentList = orderPresentMapper.getAllOrderPresent();
+        PageInfo&lt;OrderPresentInfo&gt; pageInfo = <span class="hljs-keyword">new PageInfo&lt;&gt;(allOrderPresentList);
+        <span class="hljs-keyword">return pageInfo;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="orderpresentinfo">OrderPresentInfo:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_4" data-tips="复制代码">Copy</div>
+<pre><code class="language-java hljs" id="copy_target_4"><span class="hljs-keyword">package com.home.orderpresentdemo.entity;
+
+<span class="hljs-keyword">import java.math.BigDecimal;
+<span class="hljs-keyword">import java.util.Date;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">OrderPresentInfo {
+    <span class="hljs-keyword">private Long id;
+
+    <span class="hljs-keyword">private String activityName;
+
+    <span class="hljs-keyword">private Date beginTime;
+
+    <span class="hljs-keyword">private Date endTime;
+
+    <span class="hljs-keyword">private Integer activityStoresSelectType;
+
+    <span class="hljs-keyword">private String activityStoresIds;
+
+    <span class="hljs-keyword">private Integer memberLevelSelectType;
+
+    <span class="hljs-keyword">private String memberLevelIds;
+
+    <span class="hljs-keyword">private BigDecimal activityOrderConsume;
+
+    <span class="hljs-keyword">private String paymentChannelIds;
+
+    <span class="hljs-keyword">private Integer equityType;
+
+    <span class="hljs-keyword">private Long couponId;
+
+    <span class="hljs-keyword">private Long luckyTurningId;
+
+    <span class="hljs-keyword">private Integer activityStatus;
+
+    <span class="hljs-keyword">private Date createTime;
+
+    <span class="hljs-keyword">private Date updateTime;
+
+    <span class="hljs-function"><span class="hljs-keyword">public Long <span class="hljs-title">getId<span class="hljs-params">() {
+        <span class="hljs-keyword">return id;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setId<span class="hljs-params">(Long id) {
+        <span class="hljs-keyword">this.id = id;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">getActivityName<span class="hljs-params">() {
+        <span class="hljs-keyword">return activityName;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setActivityName<span class="hljs-params">(String activityName) {
+        <span class="hljs-keyword">this.activityName = activityName == <span class="hljs-keyword">null ? <span class="hljs-keyword">null : activityName.trim();
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Date <span class="hljs-title">getBeginTime<span class="hljs-params">() {
+        <span class="hljs-keyword">return beginTime;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setBeginTime<span class="hljs-params">(Date beginTime) {
+        <span class="hljs-keyword">this.beginTime = beginTime;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Date <span class="hljs-title">getEndTime<span class="hljs-params">() {
+        <span class="hljs-keyword">return endTime;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setEndTime<span class="hljs-params">(Date endTime) {
+        <span class="hljs-keyword">this.endTime = endTime;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Integer <span class="hljs-title">getActivityStoresSelectType<span class="hljs-params">() {
+        <span class="hljs-keyword">return activityStoresSelectType;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setActivityStoresSelectType<span class="hljs-params">(Integer activityStoresSelectType) {
+        <span class="hljs-keyword">this.activityStoresSelectType = activityStoresSelectType;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">getActivityStoresIds<span class="hljs-params">() {
+        <span class="hljs-keyword">return activityStoresIds;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setActivityStoresIds<span class="hljs-params">(String activityStoresIds) {
+        <span class="hljs-keyword">this.activityStoresIds = activityStoresIds == <span class="hljs-keyword">null ? <span class="hljs-keyword">null : activityStoresIds.trim();
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Integer <span class="hljs-title">getMemberLevelSelectType<span class="hljs-params">() {
+        <span class="hljs-keyword">return memberLevelSelectType;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setMemberLevelSelectType<span class="hljs-params">(Integer memberLevelSelectType) {
+        <span class="hljs-keyword">this.memberLevelSelectType = memberLevelSelectType;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">getMemberLevelIds<span class="hljs-params">() {
+        <span class="hljs-keyword">return memberLevelIds;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setMemberLevelIds<span class="hljs-params">(String memberLevelIds) {
+        <span class="hljs-keyword">this.memberLevelIds = memberLevelIds == <span class="hljs-keyword">null ? <span class="hljs-keyword">null : memberLevelIds.trim();
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public BigDecimal <span class="hljs-title">getActivityOrderConsume<span class="hljs-params">() {
+        <span class="hljs-keyword">return activityOrderConsume;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setActivityOrderConsume<span class="hljs-params">(BigDecimal activityOrderConsume) {
+        <span class="hljs-keyword">this.activityOrderConsume = activityOrderConsume;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">getPaymentChannelIds<span class="hljs-params">() {
+        <span class="hljs-keyword">return paymentChannelIds;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setPaymentChannelIds<span class="hljs-params">(String paymentChannelIds) {
+        <span class="hljs-keyword">this.paymentChannelIds = paymentChannelIds == <span class="hljs-keyword">null ? <span class="hljs-keyword">null : paymentChannelIds.trim();
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Integer <span class="hljs-title">getEquityType<span class="hljs-params">() {
+        <span class="hljs-keyword">return equityType;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setEquityType<span class="hljs-params">(Integer equityType) {
+        <span class="hljs-keyword">this.equityType = equityType;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Long <span class="hljs-title">getCouponId<span class="hljs-params">() {
+        <span class="hljs-keyword">return couponId;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setCouponId<span class="hljs-params">(Long couponId) {
+        <span class="hljs-keyword">this.couponId = couponId;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Long <span class="hljs-title">getLuckyTurningId<span class="hljs-params">() {
+        <span class="hljs-keyword">return luckyTurningId;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setLuckyTurningId<span class="hljs-params">(Long luckyTurningId) {
+        <span class="hljs-keyword">this.luckyTurningId = luckyTurningId;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Integer <span class="hljs-title">getActivityStatus<span class="hljs-params">() {
+        <span class="hljs-keyword">return activityStatus;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setActivityStatus<span class="hljs-params">(Integer activityStatus) {
+        <span class="hljs-keyword">this.activityStatus = activityStatus;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Date <span class="hljs-title">getCreateTime<span class="hljs-params">() {
+        <span class="hljs-keyword">return createTime;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setCreateTime<span class="hljs-params">(Date createTime) {
+        <span class="hljs-keyword">this.createTime = createTime;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Date <span class="hljs-title">getUpdateTime<span class="hljs-params">() {
+        <span class="hljs-keyword">return updateTime;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setUpdateTime<span class="hljs-params">(Date updateTime) {
+        <span class="hljs-keyword">this.updateTime = updateTime;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="orderpresentinfomapper">OrderPresentInfoMapper:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_5" data-tips="复制代码">Copy</div>
+<pre><code class="language-java hljs" id="copy_target_5"><span class="hljs-keyword">package com.home.orderpresentdemo.mapper;
+
+
+<span class="hljs-keyword">import com.home.orderpresentdemo.entity.OrderPresentInfo;
+<span class="hljs-keyword">import org.apache.ibatis.annotations.Mapper;
+
+<span class="hljs-keyword">import java.util.List;
+
+<span class="hljs-meta">@Mapper
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">OrderPresentInfoMapper {
+    <span class="hljs-function"><span class="hljs-keyword">int <span class="hljs-title">deleteByPrimaryKey<span class="hljs-params">(Long id);
+
+    <span class="hljs-function"><span class="hljs-keyword">int <span class="hljs-title">insert<span class="hljs-params">(OrderPresentInfo record);
+
+    <span class="hljs-function"><span class="hljs-keyword">int <span class="hljs-title">insertSelective<span class="hljs-params">(OrderPresentInfo record);
+
+    <span class="hljs-function">OrderPresentInfo <span class="hljs-title">selectByPrimaryKey<span class="hljs-params">(Long id);
+
+    <span class="hljs-function"><span class="hljs-keyword">int <span class="hljs-title">updateByPrimaryKeySelective<span class="hljs-params">(OrderPresentInfo record);
+
+    <span class="hljs-function"><span class="hljs-keyword">int <span class="hljs-title">updateByPrimaryKey<span class="hljs-params">(OrderPresentInfo record);
+
+    <span class="hljs-function">List&lt;OrderPresentInfo&gt; <span class="hljs-title">getAllOrderPresent<span class="hljs-params">();
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="orderpresentinfomapperxml">OrderPresentInfoMapper.xml:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_6" data-tips="复制代码">Copy</div>
+<pre><code class="language-java hljs" id="copy_target_6">&lt;?xml version=<span class="hljs-string">"1.0" encoding=<span class="hljs-string">"UTF-8" ?&gt;
+&lt;!DOCTYPE mapper PUBLIC <span class="hljs-string">"-//mybatis.org//DTD Mapper 3.0//EN" <span class="hljs-string">"http://mybatis.org/dtd/mybatis-3-mapper.dtd" &gt;
+&lt;mapper namespace=<span class="hljs-string">"com.home.orderpresentdemo.mapper.OrderPresentInfoMapper" &gt;
+  &lt;resultMap id=<span class="hljs-string">"BaseResultMap" type=<span class="hljs-string">"com.home.orderpresentdemo.entity.OrderPresentInfo" &gt;
+    &lt;id column=<span class="hljs-string">"ID" property=<span class="hljs-string">"id" jdbcType=<span class="hljs-string">"BIGINT" /&gt;
+    &lt;result column=<span class="hljs-string">"ACTIVITY_NAME" property=<span class="hljs-string">"activityName" jdbcType=<span class="hljs-string">"VARCHAR" /&gt;
+    &lt;result column=<span class="hljs-string">"BEGIN_TIME" property=<span class="hljs-string">"beginTime" jdbcType=<span class="hljs-string">"TIMESTAMP" /&gt;
+    &lt;result column=<span class="hljs-string">"END_TIME" property=<span class="hljs-string">"endTime" jdbcType=<span class="hljs-string">"TIMESTAMP" /&gt;
+    &lt;result column=<span class="hljs-string">"ACTIVITY_STORES_SELECT_TYPE" property=<span class="hljs-string">"activityStoresSelectType" jdbcType=<span class="hljs-string">"INTEGER" /&gt;
+    &lt;result column=<span class="hljs-string">"ACTIVITY_STORES_IDS" property=<span class="hljs-string">"activityStoresIds" jdbcType=<span class="hljs-string">"VARCHAR" /&gt;
+    &lt;result column=<span class="hljs-string">"MEMBER_LEVEL_SELECT_TYPE" property=<span class="hljs-string">"memberLevelSelectType" jdbcType=<span class="hljs-string">"INTEGER" /&gt;
+    &lt;result column=<span class="hljs-string">"MEMBER_LEVEL_IDS" property=<span class="hljs-string">"memberLevelIds" jdbcType=<span class="hljs-string">"VARCHAR" /&gt;
+    &lt;result column=<span class="hljs-string">"ACTIVITY_ORDER_CONSUME" property=<span class="hljs-string">"activityOrderConsume" jdbcType=<span class="hljs-string">"DECIMAL" /&gt;
+    &lt;result column=<span class="hljs-string">"PAYMENT_CHANNEL_IDS" property=<span class="hljs-string">"paymentChannelIds" jdbcType=<span class="hljs-string">"VARCHAR" /&gt;
+    &lt;result column=<span class="hljs-string">"EQUITY_TYPE" property=<span class="hljs-string">"equityType" jdbcType=<span class="hljs-string">"INTEGER" /&gt;
+    &lt;result column=<span class="hljs-string">"COUPON_ID" property=<span class="hljs-string">"couponId" jdbcType=<span class="hljs-string">"BIGINT" /&gt;
+    &lt;result column=<span class="hljs-string">"LUCKY_TURNING_ID" property=<span class="hljs-string">"luckyTurningId" jdbcType=<span class="hljs-string">"BIGINT" /&gt;
+    &lt;result column=<span class="hljs-string">"ACTIVITY_STATUS" property=<span class="hljs-string">"activityStatus" jdbcType=<span class="hljs-string">"INTEGER" /&gt;
+    &lt;result column=<span class="hljs-string">"CREATE_TIME" property=<span class="hljs-string">"createTime" jdbcType=<span class="hljs-string">"TIMESTAMP" /&gt;
+    &lt;result column=<span class="hljs-string">"UPDATE_TIME" property=<span class="hljs-string">"updateTime" jdbcType=<span class="hljs-string">"TIMESTAMP" /&gt;
+  &lt;/resultMap&gt;
+  &lt;sql id=<span class="hljs-string">"Base_Column_List" &gt;
+    ID, ACTIVITY_NAME, BEGIN_TIME, END_TIME, ACTIVITY_STORES_SELECT_TYPE, ACTIVITY_STORES_IDS, 
+    MEMBER_LEVEL_SELECT_TYPE, MEMBER_LEVEL_IDS, ACTIVITY_ORDER_CONSUME, PAYMENT_CHANNEL_IDS, 
+    EQUITY_TYPE, COUPON_ID, LUCKY_TURNING_ID, ACTIVITY_STATUS, CREATE_TIME, UPDATE_TIME
+  &lt;/sql&gt;
+  &lt;select id=<span class="hljs-string">"selectByPrimaryKey" resultMap=<span class="hljs-string">"BaseResultMap" parameterType=<span class="hljs-string">"java.lang.Long" &gt;
+    select 
+    &lt;include refid=<span class="hljs-string">"Base_Column_List" /&gt;
+    from dss_wsh_order_present_info
+    where ID = #{id,jdbcType=BIGINT}
+  &lt;/select&gt;
+  &lt;select id=<span class="hljs-string">"getAllOrderPresent" resultMap=<span class="hljs-string">"BaseResultMap"   &gt;
+    select
+    &lt;include refid=<span class="hljs-string">"Base_Column_List" /&gt;
+    from dss_wsh_order_present_info
+  &lt;/select&gt;
+  &lt;delete id=<span class="hljs-string">"deleteByPrimaryKey" parameterType=<span class="hljs-string">"java.lang.Long" &gt;
+    delete from dss_wsh_order_present_info
+    where ID = #{id,jdbcType=BIGINT}
+  &lt;/delete&gt;
+  &lt;insert id=<span class="hljs-string">"insert" parameterType=<span class="hljs-string">"com.home.orderpresentdemo.entity.OrderPresentInfo" &gt;
+    <span class="hljs-function">insert into <span class="hljs-title">dss_wsh_order_present_info <span class="hljs-params">(ID, ACTIVITY_NAME, BEGIN_TIME, 
+      END_TIME, ACTIVITY_STORES_SELECT_TYPE, ACTIVITY_STORES_IDS, 
+      MEMBER_LEVEL_SELECT_TYPE, MEMBER_LEVEL_IDS, 
+      ACTIVITY_ORDER_CONSUME, PAYMENT_CHANNEL_IDS, 
+      EQUITY_TYPE, COUPON_ID, LUCKY_TURNING_ID, 
+      ACTIVITY_STATUS, CREATE_TIME, UPDATE_TIME
+      )
+    <span class="hljs-title">values <span class="hljs-params">(#{id,jdbcType=BIGINT}, #{activityName,jdbcType=VARCHAR}, #{beginTime,jdbcType=TIMESTAMP}, 
+      #{endTime,jdbcType=TIMESTAMP}, #{activityStoresSelectType,jdbcType=INTEGER}, #{activityStoresIds,jdbcType=VARCHAR}, 
+      #{memberLevelSelectType,jdbcType=INTEGER}, #{memberLevelIds,jdbcType=VARCHAR}, 
+      #{activityOrderConsume,jdbcType=DECIMAL}, #{paymentChannelIds,jdbcType=VARCHAR}, 
+      #{equityType,jdbcType=INTEGER}, #{couponId,jdbcType=BIGINT}, #{luckyTurningId,jdbcType=BIGINT}, 
+      #{activityStatus,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  &lt;/insert&gt;
+  &lt;insert id=<span class="hljs-string">"insertSelective" parameterType=<span class="hljs-string">"com.home.orderpresentdemo.entity.OrderPresentInfo" &gt;
+    insert into dss_wsh_order_present_info
+    &lt;trim prefix=<span class="hljs-string">"(" suffix=<span class="hljs-string">")" suffixOverrides=<span class="hljs-string">"," &gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"id != null" &gt;
+        ID,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityName != null" &gt;
+        ACTIVITY_NAME,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"beginTime != null" &gt;
+        BEGIN_TIME,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"endTime != null" &gt;
+        END_TIME,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStoresSelectType != null" &gt;
+        ACTIVITY_STORES_SELECT_TYPE,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStoresIds != null" &gt;
+        ACTIVITY_STORES_IDS,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"memberLevelSelectType != null" &gt;
+        MEMBER_LEVEL_SELECT_TYPE,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"memberLevelIds != null" &gt;
+        MEMBER_LEVEL_IDS,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityOrderConsume != null" &gt;
+        ACTIVITY_ORDER_CONSUME,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"paymentChannelIds != null" &gt;
+        PAYMENT_CHANNEL_IDS,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"equityType != null" &gt;
+        EQUITY_TYPE,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"couponId != null" &gt;
+        COUPON_ID,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"luckyTurningId != null" &gt;
+        LUCKY_TURNING_ID,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStatus != null" &gt;
+        ACTIVITY_STATUS,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"createTime != null" &gt;
+        CREATE_TIME,
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"updateTime != null" &gt;
+        UPDATE_TIME,
+      &lt;/<span class="hljs-keyword">if&gt;
+    &lt;/trim&gt;
+    &lt;trim prefix=<span class="hljs-string">"values (" suffix=<span class="hljs-string">")" suffixOverrides=<span class="hljs-string">"," &gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"id != null" &gt;
+        #{id,jdbcType=BIGINT},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityName != null" &gt;
+        #{activityName,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"beginTime != null" &gt;
+        #{beginTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"endTime != null" &gt;
+        #{endTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStoresSelectType != null" &gt;
+        #{activityStoresSelectType,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStoresIds != null" &gt;
+        #{activityStoresIds,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"memberLevelSelectType != null" &gt;
+        #{memberLevelSelectType,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"memberLevelIds != null" &gt;
+        #{memberLevelIds,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityOrderConsume != null" &gt;
+        #{activityOrderConsume,jdbcType=DECIMAL},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"paymentChannelIds != null" &gt;
+        #{paymentChannelIds,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"equityType != null" &gt;
+        #{equityType,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"couponId != null" &gt;
+        #{couponId,jdbcType=BIGINT},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"luckyTurningId != null" &gt;
+        #{luckyTurningId,jdbcType=BIGINT},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStatus != null" &gt;
+        #{activityStatus,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"createTime != null" &gt;
+        #{createTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"updateTime != null" &gt;
+        #{updateTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+    &lt;/trim&gt;
+  &lt;/insert&gt;
+  &lt;update id=<span class="hljs-string">"updateByPrimaryKeySelective" parameterType=<span class="hljs-string">"com.home.orderpresentdemo.entity.OrderPresentInfo" &gt;
+    update dss_wsh_order_present_info
+    &lt;set &gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityName != null" &gt;
+        ACTIVITY_NAME = #{activityName,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"beginTime != null" &gt;
+        BEGIN_TIME = #{beginTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"endTime != null" &gt;
+        END_TIME = #{endTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStoresSelectType != null" &gt;
+        ACTIVITY_STORES_SELECT_TYPE = #{activityStoresSelectType,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStoresIds != null" &gt;
+        ACTIVITY_STORES_IDS = #{activityStoresIds,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"memberLevelSelectType != null" &gt;
+        MEMBER_LEVEL_SELECT_TYPE = #{memberLevelSelectType,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"memberLevelIds != null" &gt;
+        MEMBER_LEVEL_IDS = #{memberLevelIds,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityOrderConsume != null" &gt;
+        ACTIVITY_ORDER_CONSUME = #{activityOrderConsume,jdbcType=DECIMAL},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"paymentChannelIds != null" &gt;
+        PAYMENT_CHANNEL_IDS = #{paymentChannelIds,jdbcType=VARCHAR},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"equityType != null" &gt;
+        EQUITY_TYPE = #{equityType,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"couponId != null" &gt;
+        COUPON_ID = #{couponId,jdbcType=BIGINT},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"luckyTurningId != null" &gt;
+        LUCKY_TURNING_ID = #{luckyTurningId,jdbcType=BIGINT},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"activityStatus != null" &gt;
+        ACTIVITY_STATUS = #{activityStatus,jdbcType=INTEGER},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"createTime != null" &gt;
+        CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+      &lt;<span class="hljs-keyword">if test=<span class="hljs-string">"updateTime != null" &gt;
+        UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP},
+      &lt;/<span class="hljs-keyword">if&gt;
+    &lt;/set&gt;
+    where ID = #{id,jdbcType=BIGINT}
+  &lt;/update&gt;
+  &lt;update id=<span class="hljs-string">"updateByPrimaryKey" parameterType=<span class="hljs-string">"com.home.orderpresentdemo.entity.OrderPresentInfo" &gt;
+    update dss_wsh_order_present_info
+    set ACTIVITY_NAME = #{activityName,jdbcType=VARCHAR},
+      BEGIN_TIME = #{beginTime,jdbcType=TIMESTAMP},
+      END_TIME = #{endTime,jdbcType=TIMESTAMP},
+      ACTIVITY_STORES_SELECT_TYPE = #{activityStoresSelectType,jdbcType=INTEGER},
+      ACTIVITY_STORES_IDS = #{activityStoresIds,jdbcType=VARCHAR},
+      MEMBER_LEVEL_SELECT_TYPE = #{memberLevelSelectType,jdbcType=INTEGER},
+      MEMBER_LEVEL_IDS = #{memberLevelIds,jdbcType=VARCHAR},
+      ACTIVITY_ORDER_CONSUME = #{activityOrderConsume,jdbcType=DECIMAL},
+      PAYMENT_CHANNEL_IDS = #{paymentChannelIds,jdbcType=VARCHAR},
+      EQUITY_TYPE = #{equityType,jdbcType=INTEGER},
+      COUPON_ID = #{couponId,jdbcType=BIGINT},
+      LUCKY_TURNING_ID = #{luckyTurningId,jdbcType=BIGINT},
+      ACTIVITY_STATUS = #{activityStatus,jdbcType=INTEGER},
+      CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP}
+    where ID = #{id,jdbcType=BIGINT}
+  &lt;/update&gt;
+&lt;/mapper&gt;
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="sqlmapperconfigxml">SqlMapperConfig.xml:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_7" data-tips="复制代码">Copy</div>
+<pre><code class="language-xml hljs" id="copy_target_7"><span class="hljs-meta">&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+<span class="hljs-meta">&lt;!DOCTYPE <span class="hljs-meta-keyword">configuration <span class="hljs-meta-keyword">PUBLIC <span class="hljs-meta-string">"-//mybatis.org//DTD Config 3.0//EN" <span class="hljs-meta-string">"http://mybatis.org/dtd/mybatis-3-config.dtd"&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">configuration&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">settings&gt;
+        <span class="hljs-comment">&lt;!-- 对在此配置文件下的所有cache进行全局性开/关设置 true|false true --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"cacheEnabled" <span class="hljs-attr">value=<span class="hljs-string">"true" /&gt;
+        <span class="hljs-comment">&lt;!-- 全局性设置懒加载。如果设为‘关',则所有相关联的都会被初始化加载。 --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"lazyLoadingEnabled" <span class="hljs-attr">value=<span class="hljs-string">"true" /&gt;
+        <span class="hljs-comment">&lt;!-- 当设置为‘开’的时候，懒加载的对象可能被任何懒属性全部加载。否则，每个属性都按需加载。 --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"aggressiveLazyLoading" <span class="hljs-attr">value=<span class="hljs-string">"true" /&gt;
+        <span class="hljs-comment">&lt;!-- 允许和不允许单条语句返回多个数据集（取决于驱动需求） --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"multipleResultSetsEnabled" <span class="hljs-attr">value=<span class="hljs-string">"true" /&gt;
+        <span class="hljs-comment">&lt;!-- 使用列标签代替列名称。不用的驱动器有不同的作法。 --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"localCacheScope" <span class="hljs-attr">value=<span class="hljs-string">"STATEMENT" /&gt;
+        <span class="hljs-comment">&lt;!-- 允许JDBC生成主键。需要驱动器支持.如果设为了true，这个设置将强制使用被生成的主键， 有一些驱动器不兼容不过仍然可以执行。 --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"useGeneratedKeys" <span class="hljs-attr">value=<span class="hljs-string">"true" /&gt;
+        <span class="hljs-comment">&lt;!-- 指定MyBatis是否并且如何来自动映射数据表字段与对象的属性。PARTIAL将只自动映射简单的，NONE没有嵌套的结果。 FULL将自动映射所有复杂的结果。 --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"autoMappingBehavior" <span class="hljs-attr">value=<span class="hljs-string">"PARTIAL" /&gt;
+        <span class="hljs-comment">&lt;!-- 配置和设定执行器，SIMPLE执行器执行其它语句。REUSE执行器可能重复使用preparedstatements语句，BATCH执行器可以重复执行语句和批量更新。 --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"defaultExecutorType" <span class="hljs-attr">value=<span class="hljs-string">"SIMPLE" /&gt;
+        <span class="hljs-comment">&lt;!-- 设置一个时限，以决定让驱动器等待数据库回应的多长时间为超时. 正整数 --&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"defaultStatementTimeout" <span class="hljs-attr">value=<span class="hljs-string">"5000" /&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"jdbcTypeForNull" <span class="hljs-attr">value=<span class="hljs-string">"OTHER"/&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">setting <span class="hljs-attr">name=<span class="hljs-string">"logImpl" <span class="hljs-attr">value=<span class="hljs-string">"LOG4J"/&gt;
+    <span class="hljs-tag">&lt;/<span class="hljs-name">settings&gt;
+
+<span class="hljs-tag">&lt;/<span class="hljs-name">configuration&gt;
+
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="indexhtml这里测试写的比较随意可以忽略">index.html(这里测试写的比较随意,可以忽略):</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_8" data-tips="复制代码">Copy</div>
+<pre><code class="language-java hljs" id="copy_target_8">&lt;!DOCTYPE html&gt;
+&lt;html lang=<span class="hljs-string">"en" xmlns:th=<span class="hljs-string">"http://www.w3.org/1999/xhtml"&gt;
+&lt;head&gt;
+    &lt;meta charset=<span class="hljs-string">"UTF-8"&gt;
+    &lt;title&gt;第一个HTML页面&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Hello Spring Boot!!!&lt;/h1&gt;
+
+&lt;a th:href=<span class="hljs-string">"@{/goToAdd}"&gt;添加&lt;/a&gt;
+&lt;p th:text=<span class="hljs-string">"${hello}"&gt;&lt;/p&gt;
+&lt;div&gt;
+    &lt;p th:text=<span class="hljs-string">"${say}"&gt;&lt;/p&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</span></span></span></span></span></span></code></pre>
+<h5 id="applicationproperties">application.properties:</h5>
+<div class="esa-clipboard-button" data-clipboard-target="#copy_target_9" data-tips="复制代码">Copy</div>
+<pre><code class="language-properties hljs" id="copy_target_9"><span class="hljs-comment">#server.port=80
+<span class="hljs-meta">logging.level.org.springframework=<span class="hljs-string">DEBUG
+<span class="hljs-comment">#springboot   mybatis
+<span class="hljs-comment">#jiazai mybatis peizhiwenjian
+<span class="hljs-meta">mybatis.mapper-locations = <span class="hljs-string">classpath:mapper/*Mapper.xml
+<span class="hljs-comment">#mybatis.config-location = classpath:mybatis/sqlMapConfig.xml
+<span class="hljs-comment">#mybatis.type-aliases-package = com.demo.bean
+<span class="hljs-comment">
+#shujuyuan
+<span class="hljs-meta">spring.datasource.driver-class-name= <span class="hljs-string">com.mysql.jdbc.Driver
+<span class="hljs-meta">spring.datasource.url = <span class="hljs-string">jdbc:mysql://localhost:3306/dss_wshop?useUnicode=true&amp;characterEncoding=utf-8
+<span class="hljs-meta">spring.datasource.username = <span class="hljs-string">root
+<span class="hljs-meta">spring.datasource.password = <span class="hljs-string">root
+
+<span class="hljs-meta">spring.thymeleaf.prefix=<span class="hljs-string">classpath:/templates/
+<span class="hljs-comment">
+#禁止thymeleaf缓存（建议：开发环境设置为false，生成环境设置为true）
+<span class="hljs-meta">spring.thymeleaf.cache=<span class="hljs-string">false
+<span class="hljs-comment">
+
+#pagehelper分页插件配置 以下属性不加也可以实现分页功能
+<span class="hljs-meta">pagehelper.helperDialect=<span class="hljs-string">mysql
+<span class="hljs-meta">pagehelper.reasonable=<span class="hljs-string">true
+<span class="hljs-meta">pagehelper.supportMethodsArguments=<span class="hljs-string">true
+<span class="hljs-meta">pagehelper.params=<span class="hljs-string">count=countSql
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h5 id="获得结果如下所示">获得结果如下所示:</h5>
+<p><a data-alt="ZvicLj.png" data-lightbox="roadtrip" data-title="" href="https://upload-images.jianshu.io/upload_images/12057079-40f2d2e979dda5af.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240"><img alt="ZvicLj.png" loading="lazy" src="/images/cnblogs/da44cbbb7f341ea5.webp"/></a></p>
+{% endraw %}

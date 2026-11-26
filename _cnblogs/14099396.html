@@ -1,0 +1,301 @@
+---
+title: "RESTful接口实战"
+date: 2020-12-07 20:20:00 +0800
+tags: ["【微服务】-- 架构思想"]
+excerpt: "原创公众号：bigsai 转载请联系bigsai 文章收藏在回车课堂 前言 在学习RESTful 风格接口之前，即使你不知道它是什么，但你肯定会好奇它能解决什么问题？有什么应用场景？听完下面描述我想你就会明白： 在互联网并没有完全流行的初期，移动端也没有那么盛行，页面请求和并发量也不高，那时候人们对"
+read_minutes: 15
+cnblogs_id: 14099396
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14099396.html"
+---
+{% raw %}
+<blockquote>
+<p>原创公众号：bigsai 转载请联系bigsai</p>
+<p>文章收藏在<a href="https://ke.boxuegu.com/detail/3327.html">回车课堂</a></p>
+</blockquote>
+<h3 id="前言">前言</h3>
+<p>在学习RESTful 风格接口之前，即使你不知道它是什么，但你肯定会好奇它能解决什么问题？有什么应用场景？听完下面描述我想你就会明白：</p>
+<p>在互联网并没有完全流行的初期，移动端也没有那么盛行，页面请求和并发量也不高，那时候人们对接口的要求没那么高，一些动态页面(jsp)就能满足绝大多数的使用需求。</p>
+<p><img alt="image-20201204001441126" loading="lazy" src="/images/cnblogs/2e39b451c21dd2d1.png"/></p>
+<p>但是随着互联网和移动设备的发展，人们对Web应用的使用需求也增加，传统的动态页面由于低效率而渐渐被HTML+JavaScript(Ajax)的前后端分离所取代，并且安卓、IOS、小程序等形式客户端层出不穷，客户端的种类出现多元化，<strong>而客户端和服务端就需要接口进行通信</strong>，但接口的<strong>规范性</strong>就又成了一个问题：</p>
+<p><img alt="image-20201204001702612" loading="lazy" src="/images/cnblogs/829894dd4bd9146d.png"/></p>
+<p>所以一套<strong>结构清晰、符合标准、易于理解、扩展方便</strong>让大部分人都能够理解接受的接口风格就显得越来越重要，而RESTful风格的接口(RESTful API)刚好有以上特点，就逐渐被实践应用而变得流行起来。</p>
+<p><img alt="image-20201204001618944" loading="lazy" src="/images/cnblogs/d52725483eeb4a35.png"/></p>
+<p>现在，RESTful是目前最流行的接口设计规范，在很多公司有着广泛的应用，其中<a href="https://developer.github.com/v3/">Github 的API设计</a>就是很标准的RESTful API，你可以参考学习。</p>
+<p>在开发实践中我们很多人可能还是使用传统API进行请求交互，很多人其实并不特别了解RESTful API，对RESTful API的认知可能会停留在：</p>
+<ul>
+<li>面向资源类型的</li>
+<li>是一种风格</li>
+<li>(误区)接口传递参数使用斜杠(/)分割而不用问号(?)传参。</li>
+</ul>
+<p>而其实一个很大的误区不要认为没有查询字符串就是RESTful API，也不要认为用了查询字符串就不是RESTful API，更不要认为用了JSON传输的API就是RESTful API。</p>
+<p>本教程将带你了解RESTful并用SpringBoot实战RESTful API，在实现本案例前，你需要保证你的电脑上</p>
+<ul>
+<li>拥有IDEA用来编写项目代码</li>
+<li>拥有Postman模拟请求进行测试</li>
+<li>拥有关系数据库MySQL 5.7</li>
+<li>拥有navicat对MySQL进行管理</li>
+</ul>
+<h3 id="一、rest介绍">一、REST介绍</h3>
+<p>REST涉及一些概念性的东西可能比较多，在实战RESTful API之前，要对REST相关的知识有个系统的认知。</p>
+<h4 id="rest的诞生">REST的诞生</h4>
+<p>REST（英文：Representational State Transfer，简称REST，直译过来表现层状态转换）是一种软件架构风格、设计风格，而不是标准，只是提供了一组设计原则和约束条件。它主要用于客户端和服务器交互类的软件。基于这个风格设计的软件可以更简洁，更有层次，更易于实现缓存等机制。</p>
+<p>它首次出现在 2000 年 Roy Thomas Fielding 的博士论文中，这篇论文定义并详细介绍了表述性状态转移（Representational State Transfer，REST）的架构风格，并且描述了 如何使用 REST 来指导现代 Web 架构的设计和开发。用他自己的原话说：</p>
+<blockquote>
+<p>我写这篇文章的目的是：在符合架构原理前提下，理解和评估基于网络的应用软件的架构设计，得到一个功能强、性能好、适宜通信的架构。</p>
+</blockquote>
+<p>需要注意的是<strong>REST并没有一个明确的标准，而更像是一种设计的风格</strong>，满足这种设计风格的程序或接口我们称之为RESTful(从单词字面来看就是一个形容词)。所以RESTful API 就是满足REST架构风格的接口。</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/810fc9e36cdf7545.png"/></p>
+<p>Fielding博士当时提出的是REST架构在很久的时间内并没有被关注太多，而近些年REST在国内才变得越来越流行。下面开始详细学习REST架构特征。</p>
+<h4 id="rest架构特征">REST架构特征</h4>
+<p>既然知道REST和RESTful的联系和区别，现在就要开始好好了解RESTful的一些约束条件和规则，RESTful是一种风格而不是标准，而这个风格大致有以下几个主要<strong>特征</strong>：</p>
+<p><strong>以资源为基础</strong> ：资源可以是一个图片、音乐、一个XML格式、HTML格式或者JSON格式等网络上的一个实体，除了一些二进制的资源外普通的文本资源更多以JSON为载体、面向用户的一组数据(通常从数据库中查询而得到)。<br/><strong>统一接口</strong>: 对资源的操作包括获取、创建、修改和删除，这些操作正好对应HTTP协议提供的GET、POST、PUT和DELETE方法。换言而知，使用RESTful风格的接口但从接口上你可能只能定位其资源，但是无法知晓它具体进行了什么操作，需要具体了解其发生了什么操作动作要从其HTTP请求方法类型上进行判断。具体的HTTP方法和方法含义如下：</p>
+<ul>
+<li>GET（SELECT）：从服务器取出资源（一项或多项）。</li>
+<li>POST（CREATE）：在服务器新建一个资源。</li>
+<li>PUT（UPDATE）：在服务器更新资源（客户端提供完整资源数据）。</li>
+<li>PATCH（UPDATE）：在服务器更新资源（客户端提供需要修改的资源数据）。</li>
+<li>DELETE（DELETE）：从服务器删除资源。</li>
+</ul>
+<p>当然也有很多在具体使用的时候使用PUT表示更新。从请求的流程来看，RESTful API和传统API大致架构如下：<br/><img alt="image-20201204001311359" loading="lazy" src="/images/cnblogs/495c98f40b9cadda.png"/></p>
+<p><strong>URI指向资源</strong>：URI = Universal Resource Identifier 统一资源标志符，用来标识抽象或物理资源的一个紧凑字符串。URI包括URL和URN，在这里更多时候可能代指URL(统一资源定位符)。RESTful是面向资源的，每种资源可能由一个或多个URI对应，但一个URI只指向一种资源。</p>
+<p><strong>无状态</strong>：服务器不能保存客户端的信息， 每一次从客户端发送的请求中，要包含所有必须的状态信息，会话信息由客户端保存， 服务器端根据这些状态信息来处理请求。 当客户端可以切换到一个新状态的时候发送请求信息， 当一个或者多个请求被发送之后, 客户端就处于一个状态变迁过程中。 每一个应用的状态描述可以被客户端用来初始化下一次的状态变迁。</p>
+<h4 id="rest架构限制条件">REST架构限制条件</h4>
+<p>Fielding在论文中提出REST架构的6个<strong>限制条件</strong>，也可称为RESTful 6大原则， 标准的REST约束应满足以下6个原则：</p>
+<p><strong>客户端-服务端（Client-Server）</strong>: 这个更专注客户端和服务端的分离，服务端独立可更好服务于前端、安卓、IOS等客户端设备。</p>
+<p><strong>无状态（Stateless）</strong>：服务端不保存客户端状态，客户端保存状态信息每次请求携带状态信息。</p>
+<p><strong>可缓存性（Cacheability）</strong> ：服务端需回复是否可以缓存以让客户端甄别是否缓存提高效率。</p>
+<p><strong>统一接口（Uniform Interface）</strong>：通过一定原则设计接口降低耦合，简化系统架构，这是RESTful设计的基本出发点。当然这个内容除了上述特点提到部分具体内容比较多详细了解可以参考这篇<a href="https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm">REST论文内容</a>。</p>
+<p><strong>分层系统（Layered System）</strong>：客户端无法直接知道连接的到终端还是中间设备，分层允许你灵活的部署服务端项目。</p>
+<p><strong>按需代码（Code-On-Demand，可选）</strong>：按需代码允许我们灵活的发送一些看似特殊的代码给客户端例如JavaScript代码。</p>
+<p>REST架构的一些风格和限制条件就先介绍到这里，后面就对RESTful风格API具体介绍。</p>
+<h3 id="二、restful-api设计规范">二、RESTful API设计规范</h3>
+<p>既然了解了RESTful的一些规则和特性，那么具体该怎么去设计一个RESTful API呢？要从URL路径、HTTP请求动词、状态码和返回结果等方面详细考虑。至于其他的方面例如错误处理、过滤信息等规范这里就不详细介绍了。</p>
+<h4 id="url设计规范">URL设计规范</h4>
+<p>URL为统一资源定位器 ,接口属于服务端资源，首先要通过URL<s>这个</s>定位到资源才能去访问，而通常一个完整的URL组成由以下几个部分构成：</p>
+<pre><code class="hljs markdown">URI = scheme "://" host  ":"  port "/" path [<span class="hljs-string"> "?" query ][<span class="hljs-symbol"> "#" fragment ]
+</span></span></code></pre>
+<p>scheme: 指底层用的协议，如http、https、ftp<br/>host: 服务器的IP地址或者域名<br/>port: 端口，http默认为80端口<br/>path: 访问资源的路径，就是各种web 框架中定义的route路由<br/>query: 查询字符串，为发送给服务器的参数，在这里更多发送数据分页、排序等参数。<br/>fragment: 锚点，定位到页面的资源</p>
+<p>我们在设计API时URL的path是需要认真考虑的，而RESTful对path的设计做了一些规范，通常一个RESTful API的path组成如下：</p>
+<pre><code class="hljs coffeescript"><span class="hljs-regexp">/{version}/{resources}/{resource_id}
+</span></code></pre>
+<p>version：API版本号，有些版本号放置在头信息中也可以，通过控制版本号有利于应用迭代。<br/>resources：资源，RESTful API推荐用小写英文单词的复数形式。<br/>resource_id：资源的id，访问或操作该资源。</p>
+<p>当然，有时候可能资源级别较大，其下还可细分很多子资源也可以灵活设计URL的path，例如：</p>
+<pre><code class="hljs coffeescript"><span class="hljs-regexp">/{version}/{resources}<span class="hljs-regexp">/{resource_id}/{subresources}/{subresource_id}
+</span></span></code></pre>
+<p>此外，有时可能增删改查无法满足业务要求，可以在URL末尾加上action，例如</p>
+<pre><code class="hljs coffeescript"><span class="hljs-regexp">/{version}/{resources}/{resource_id}/action
+</span></code></pre>
+<p>其中action就是对资源的操作。</p>
+<p>从大体样式了解URL路径组成之后，对于RESTful API的URL具体设计的规范如下：</p>
+<ol>
+<li>不用大写字母，所有单词使用英文且小写。</li>
+<li>连字符用中杠<code>"-"</code>而不用下杠<code>"_"</code></li>
+<li>正确使用 <code>"/"</code>表示层级关系,URL的层级不要过深，并且越靠前的层级应该相对越稳定</li>
+<li>结尾不要包含正斜杠分隔符<code>"/"</code></li>
+<li>URL中不出现动词，用请求方式表示动作</li>
+<li>资源表示用复数不要用单数</li>
+<li>不要使用文件扩展名</li>
+</ol>
+<h4 id="http动词">HTTP动词</h4>
+<p>在RESTful API中，不同的HTTP请求方法有各自的含义，这里就展示GET,POST,PUT,DELETE几种请求API的设计与含义分析。针对不同操作，具体的含义如下：</p>
+<pre><code class="hljs properties"><span class="hljs-attr">GET <span class="hljs-string">/collection：从服务器查询资源的列表（数组）
+<span class="hljs-attr">GET <span class="hljs-string">/collection/resource：从服务器查询单个资源
+<span class="hljs-attr">POST <span class="hljs-string">/collection：在服务器创建新的资源
+<span class="hljs-attr">PUT <span class="hljs-string">/collection/resource：更新服务器资源
+<span class="hljs-attr">DELETE <span class="hljs-string">/collection/resource：从服务器删除资源
+</span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>在非RESTful风格的API中，我们通常使用GET请求和POST请求完成增删改查以及其他操作，查询和删除一般使用GET方式请求，更新和插入一般使用POST请求。从请求方式上无法知道API具体是干嘛的，所有在URL上都会有操作的动词来表示API进行的动作，例如：query，add，update，delete等等。</p>
+<p>而RESTful风格的API则要求在URL上都以名词的方式出现，从几种请求方式上就可以看出想要进行的操作，这点与非RESTful风格的API形成鲜明对比。</p>
+<p>在谈及GET,POST,PUT,DELETE的时候，就必须提一下接口的<strong>安全性和幂等性</strong>，其中安全性是指方法不会修改资源状态，即读的为安全的，写的操作为非安全的。而幂等性的意思是操作一次和操作多次的最终效果相同，客户端重复调用也只返回同一个结果。</p>
+<p>上述四个HTTP请求方法的安全性和幂等性如下：</p>
+<table>
+<thead>
+<tr><th>HTTP Method</th><th>安全性</th><th>幂等性</th><th>解释</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>GET</td>
+<td>安全</td>
+<td>幂等</td>
+<td>读操作安全，查询一次多次结果一致</td>
+</tr>
+<tr>
+<td>POST</td>
+<td>非安全</td>
+<td>非幂等</td>
+<td>写操作非安全，每多插入一次都会出现新结果</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>非安全</td>
+<td>幂等</td>
+<td>写操作非安全，一次和多次更新结果一致</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td>非安全</td>
+<td>幂等</td>
+<td>写操作非安全，一次和多次删除结果一致</td>
+</tr>
+</tbody>
+</table>
+<h4 id="状态码和返回数据">状态码和返回数据</h4>
+<p>服务端处理完成后客户端也可能不知道具体成功了还是失败了，服务器响应时，包含<strong>状态码</strong>和<strong>返回数据</strong>两个部分。</p>
+<p><strong>状态码</strong></p>
+<p>我们首先要正确使用各类状态码来表示该请求的处理执行结果。状态码主要分为五大类：</p>
+<blockquote>
+<p>1xx：相关信息<br/>2xx：操作成功<br/>3xx：重定向<br/>4xx：客户端错误<br/>5xx：服务器错误</p>
+</blockquote>
+<p>每一大类有若干小类，状态码的种类比较多，而主要常用状态码罗列在下面：</p>
+<p>200 <code>OK - [GET]</code>：服务器成功返回用户请求的数据，该操作是幂等的（Idempotent）。<br/>201 <code>CREATED - [POST/PUT/PATCH]</code>：用户新建或修改数据成功。<br/>202 <code>Accepted - [*]</code>：表示一个请求已经进入后台排队（异步任务）<br/>204 <code>NO CONTENT - [DELETE]</code>：用户删除数据成功。<br/>400 <code>INVALID REQUEST - [POST/PUT/PATCH]</code>：用户发出的请求有错误，服务器没有进行新建或修改数据的操作，该操作是幂等的。<br/>401 <code>Unauthorized - [*]</code>：表示用户没有权限（令牌、用户名、密码错误）。<br/>403 <code>Forbidden - [*]</code> 表示用户得到授权（与401错误相对），但是访问是被禁止的。<br/>404 <code>NOT FOUND - [*]</code>：用户发出的请求针对的是不存在的记录，服务器没有进行操作，该操作是幂等的。<br/>406 <code>Not Acceptable - [GET]</code>：用户请求的格式不可得（比如用户请求JSON格式，但是只有XML格式）。<br/>410 <code>Gone -[GET]</code>：用户请求的资源被永久删除，且不会再得到的。<br/>422 <code>Unprocesable entity - [POST/PUT/PATCH]</code> 当创建一个对象时，发生一个验证错误。<br/>500 <code>INTERNAL SERVER ERROR - [*]</code>：服务器发生错误，用户将无法判断发出的请求是否成功。</p>
+<p><strong>返回结果</strong></p>
+<p>针对不同操作，服务器向用户返回数据，而各个团队或公司封装的返回实体类也不同，但都返回JSON格式数据给客户端。</p>
+<h3 id="第三关-一个restful-api案例">第三关 一个RESTful API案例</h3>
+<p>上面讲了RESTful理论知识，下面动手实现一个小案例吧！</p>
+<h4 id="预备">预备</h4>
+<p>在本案例的实战中，我们访问的RESTful接口都是对数据库真实的操作，新建数据库，创建一个数据库和表(根据自己喜好)。</p>
+<p>选择Maven依赖的时候，只需要勾选其中Spring的Web模块、MySQL驱动以及MyBatis框架。</p>
+<p>本案例的POJO创建Dog.java实体对象，其具体构造为：</p>
+<pre><code class="language-java hljs"><span class="hljs-keyword">package com.restfuldemo.pojo;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Dog {
+    <span class="hljs-keyword">private <span class="hljs-keyword">int id;<span class="hljs-comment">//唯一id标识
+    <span class="hljs-keyword">private String name;<span class="hljs-comment">//名称
+    <span class="hljs-keyword">private  <span class="hljs-keyword">int age;<span class="hljs-comment">//年龄
+    <span class="hljs-comment">//省略get set
+}
+
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>上面创建好了项目，我们就开始构建RESTful风格的API。在具体构建RESTful API的时候，需要对各种请求有更细致的认知，当然，本案例在实现各种请求的时候为了演示的便捷并没有完全遵循RESTful API规范，例如版本号等信息这里就不添加了，案例更侧重于使用SpringBoot实现这个接口。</p>
+<p>本案例实现对dog资源的增删改查，如下是非RESTful 和RESTful接口对比：</p>
+<table>
+<thead>
+<tr><th>API name</th><th>非 RESTful</th><th>RESTful</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>获取dog</td>
+<td><code>/dogs/query/{dogid}</code></td>
+<td>GET： <code>/dogs/{dogid</code>}</td>
+</tr>
+<tr>
+<td>插入dog</td>
+<td><code>/dogs/add</code></td>
+<td>POST： <code>/dogs</code></td>
+</tr>
+<tr>
+<td>更新dog</td>
+<td><code>/dogs/update/{dogid}</code></td>
+<td>PUT：<code>/dogs/{dogid}</code></td>
+</tr>
+<tr>
+<td>删除dog</td>
+<td><code>/dods/delete/{dogid}</code></td>
+<td>DELETE：<code>/dogs/{dogid}</code></td>
+</tr>
+</tbody>
+</table>
+<p>另外在使用postman进行发送请求的时候，有三种常用的文件类型传递到后端：</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/18b9e4a9fddcaafb.png"/><br/><strong>form-data</strong> ： 就是form表单中的multipart/form-data，会将表单数据处理为一条信息，用特定标签符将一条条信息分割开，而这个文件类型通常用来上传二进制文件。</p>
+<p><strong>x-www-form-urlencoded</strong>：就是application/x-www-form-urlencoded，是form表单默认的encType，form表单会将表单内的数据转换为键值对，这种格式不能上传文件。</p>
+<p><strong>raw</strong>：可以上传任意格式的文本，可以上传Text，JSON，XML等，但目前大部分还是上传JSON格式数据。当后端需要接收JSON格式数据处理的时候，可以采用这种格式来测试。</p>
+<p>因为GET请求查询参数在URL上，其他类型请求使用x-www-form-urlencoded方式向后端传值。</p>
+<h4 id="get-post-put-delete请求">GET POST PUT DELETE请求</h4>
+<p><strong>GET请求用来获取资源</strong>：GET请求会向数据库发索取数据的请求，从而来获取资源，该请求就像数据库的select操作一样，只是用来查询数据，不会影响资源的内容。无论进行多少次操作，结果都是一样的。</p>
+<p>并且GET请求会把请求的参数附加在URL后面，但是不同的浏览器对其有不同的大小长度限制。</p>
+<p>在本案例中，我们设计两个GET请求的API。<br/><code>GET /dogs</code> ：用来返回dog资源的列表。<br/><code>GET /dogs/{dogid}</code> ：用来查询此id的单个dog资源。</p>
+<p><strong>POST请求用来新增一个资源</strong> : POST请求向服务器发送数据，但是该请求会改变数据的内容(新添)，就像数据库的<code>insert</code>操作一样，会创建新的内容。且POST请求的请求参数都是请求体中，其大小是没有限制的。</p>
+<p>在本案例中，我们设计以下POST请求的API。<br/><code>POST /dogs</code> ：服务端新增一个dog资源。</p>
+<p><strong>PUT请求用来更新资源</strong>，PUT请求是向服务器端发送数据的， 与POST请求不同的是，<strong>PUT请求侧重于数据的修改</strong> ,就像数据库中update一样，而POST请求侧重于数据的增加。</p>
+<p>在本案例中，我们设计以下POST请求的API。<br/><code>PUT /dogs/{dogid}</code> ：用来更新此id的单个dog资源。</p>
+<p><strong>DELETE 请求用来删除资源</strong>，DELETE请求用途和它字面意思一致，用来删除资源。和数据库中delete相对应。</p>
+<p>在本案例中，我们设计以下DELETE请求的API。<br/><code>DELETE /dogs/{dogid}</code> ：用来删除此id的单个dog资源。</p>
+<p>对应的Mapper文件为：</p>
+<pre><code class="language-java hljs"><span class="hljs-keyword">package com.restfuldemo.mapper;
+
+<span class="hljs-keyword">import com.restfuldemo.pojo.Dog;
+<span class="hljs-keyword">import org.apache.ibatis.annotations.*;
+<span class="hljs-keyword">import java.util.List;
+
+<span class="hljs-meta">@Mapper
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">DogMapper {
+
+    <span class="hljs-meta">@Select("select * from dog")
+    <span class="hljs-function">List&lt;Dog&gt; <span class="hljs-title">getAllDog<span class="hljs-params">();
+
+    <span class="hljs-meta">@Select("select * from dog where id=#{id}")
+    <span class="hljs-function">Dog <span class="hljs-title">getDogById<span class="hljs-params">(<span class="hljs-meta">@Param("id") <span class="hljs-keyword">int id);
+
+    <span class="hljs-meta">@Insert("insert into dog (name,age) values (#{name},#{age})")
+    <span class="hljs-function"><span class="hljs-keyword">boolean <span class="hljs-title">addDog<span class="hljs-params">(Dog dog);
+
+    <span class="hljs-meta">@Update("update dog set name=#{name},age=#{age} where id=#{id}")
+    <span class="hljs-function"><span class="hljs-keyword">boolean <span class="hljs-title">updateDog<span class="hljs-params">(Dog dog);
+
+    <span class="hljs-meta">@Delete("delete  from dog where id=#{id}")
+    <span class="hljs-function"><span class="hljs-keyword">boolean <span class="hljs-title">deleteDogById<span class="hljs-params">(<span class="hljs-keyword">int id);
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>对应controller文件为：</p>
+<pre><code class="language-java hljs"><span class="hljs-keyword">package com.restfuldemo.controller;
+
+<span class="hljs-keyword">import com.restfuldemo.mapper.DogMapper;
+<span class="hljs-keyword">import com.restfuldemo.pojo.Dog;
+<span class="hljs-keyword">import org.springframework.beans.factory.annotation.Autowired;
+<span class="hljs-keyword">import org.springframework.web.bind.annotation.*;
+
+<span class="hljs-keyword">import java.util.Arrays;
+<span class="hljs-keyword">import java.util.List;
+
+<span class="hljs-meta">@RestController
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestController {
+
+    <span class="hljs-meta">@Autowired(required = false)
+    DogMapper dogMapper;
+
+    <span class="hljs-meta">@GetMapping("dogs")
+    <span class="hljs-function"><span class="hljs-keyword">public List&lt;Dog&gt; <span class="hljs-title">getDogs<span class="hljs-params">()
+    {
+        <span class="hljs-keyword">return  dogMapper.getAllDog();
+    }
+
+    <span class="hljs-meta">@GetMapping("dogs/{id}")
+    <span class="hljs-function"><span class="hljs-keyword">public Dog <span class="hljs-title">getDogById<span class="hljs-params">(<span class="hljs-meta">@PathVariable("id") <span class="hljs-keyword">int id)
+    {
+        Dog dog=dogMapper.getDogById(id);
+        <span class="hljs-keyword">return  dog;
+    }
+    <span class="hljs-meta">@PostMapping("dogs")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">boolean <span class="hljs-title">addDog<span class="hljs-params">(Dog dog)
+    {
+        <span class="hljs-keyword">return dogMapper.addDog(dog);
+    }
+    <span class="hljs-meta">@PutMapping("dogs/{id}")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">boolean <span class="hljs-title">updateDog<span class="hljs-params">(<span class="hljs-meta">@PathVariable("id")<span class="hljs-keyword">int id,<span class="hljs-meta">@RequestParam("name")String name,<span class="hljs-meta">@RequestParam("age")<span class="hljs-keyword">int age)
+    {
+
+        Dog dog=dogMapper.getDogById(id);
+        dog.setName(name);
+        dog.setAge(age);
+        <span class="hljs-keyword">return  dogMapper.updateDog(dog);
+    }
+
+    <span class="hljs-meta">@DeleteMapping("dogs/{id}")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">boolean <span class="hljs-title">deleteDog<span class="hljs-params">(<span class="hljs-meta">@PathVariable("id") <span class="hljs-keyword">int id)
+    {
+        <span class="hljs-keyword">return  dogMapper.deleteDogById(id);
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>经过笔者测试一切都是ok的，如果要项目源文件请联系笔者发你哈！</p>
+<h3 id="总结">总结</h3>
+<p>RESTful风格的API 固然很好很规范，但大多数互联网公司并没有按照或者完全按照其规则来设计，因为REST是一种风格，而不是一种约束或规则，过于理想的RESTful API 会付出太多的成本。</p>
+<p>比如RESTful API也有一些缺点</p>
+<ul>
+<li>比如操作方式繁琐，RESTful API通常根据GET、POST、PUT、DELETE 来区分操作资源的动作，而HTTP Method 本身不可直接见，是隐藏的，而如果将动作放到URL的path上反而清晰可见，更利于团队的理解和交流。</li>
+<li>并且有些浏览器对GET,POST之外的请求支持不太友好，还需要特殊额外的处理。</li>
+<li>过分强调资源，而实际业务API可能有各种需求比较复杂，单单使用资源的增删改查可能并不能有效满足使用需求，强行使用RESTful风格API只会增加开发难度和成本。</li>
+</ul>
+<p>所以，当你或你们的技术团队在设计API的时候，如果使用场景和REST风格很匹配，那么你们可以采用RESTful 风格API。但是如果业务需求和RESTful风格API不太匹配或者很麻烦，那也可以不用RESTful风格API或者可以借鉴一下，毕竟无论那种风格的API都是为了方便团队开发、协商以及管理，不能墨守成规。<br/><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/eeaabaa2734be6fb.png"/><br/>到这里RESTful API的介绍和实战就结束啦，本篇首先从RESTful的一些特点进行介绍，再到SpringBoot实战RESTful API，最后也说了一些RESTful API并不完美的地方，相信睿智的你对RESTful 一定有了很深刻的理解。在以后项目的API设计上定能有所优化。</p>
+<p>不同的人对RESTful API可能有着不同的理解，但存在即合理，RESTful API有着其鲜明的优势和特点，目前也是一种API设计的主要选型之一，所以掌握和理解RESTful API还是相当重要的!<br/><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/0070a8647c0775f9.png"/></p>
+{% endraw %}

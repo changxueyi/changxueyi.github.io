@@ -1,0 +1,90 @@
+---
+title: "PHP中json_encode与json_decode"
+date: 2021-06-26 18:45:00 +0800
+tags: ["【PHP】-- PHP基础"]
+excerpt: "一、json_encode() 对变量进行JSON编码， 语法： json_encode ( $value [, $options = 0 ] ) 注意：1、$value为要编码的值，且该函数只对UTF8编码的数据有效； 2、options:由以下常量组成的二进制掩码：JSON_HEX_QUOT,"
+read_minutes: 1
+cnblogs_id: 14938714
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14938714.html"
+tags_inferred: true
+---
+{% raw %}
+<p><img alt="" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/5b0c547efbb5ad52.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>一、json_encode() 对变量进行JSON编码，</p>
+<ul>
+<li>语法：<span class="kwd"><span class="pln"> json_encode <span class="pun">(<span class="pln"> $value <span class="pun">[,<span class="pln"> $options <span class="pun">=<span class="pln"> <span class="lit">0<span class="pln"> <span class="pun">]<span class="pln"> <span class="pun">)</span></span></span></span></span></span></span></span></span></span></span></span></span></li>
+<li><span class="kwd">注意：1、$value为要编码的值，且该函数只对UTF8编码的数据有效；</span></li>
+</ul>
+<p><span class="kwd">　　　　　　2、<strong>options</strong>:由以下常量组成的二进制掩码：JSON_HEX_QUOT, JSON_HEX_TAG, JSON_HEX_AMP, 　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　JSON_HEX_APOS, JSON_NUMERIC_CHECK,JSON_PRETTY_PRINT, JSON_UNESCAPED_SLASHES, JSON_FORCE_OBJECT；</span></p>
+<p><span class="kwd">　　　　　　3、第二个参数一般不需要；</span></p>
+<p><span class="kwd">　　　　　　4、json数据其实就是一个string，可以用var_dump()打印出来看数据类型；</span></p>
+<p><span class="kwd">　　　　　　5、执行成功返回JSON数据，否则返回FALSE。</span></p>
+<ul>
+<li><span class="kwd">示例：</span></li>
+</ul>
+<div class="cnblogs_code">
+<pre>$book = array('a'=&gt;'xiyouji','b'=&gt;'sanguo','c'=&gt;'shuihu','d'=&gt;'hongloumeng');
+$json = json_encode($book);
+echo $json;</pre>
+</div>
+<p>　　浏览器打印出的结果如下：</p>
+<div class="cnblogs_code">
+<pre>{"a":"xiyouji","b":"sanguo","c":"shuihu","d":"hongloumeng"}</pre>
+</div>
+<p>二、json_decode() 对JSON数据进行解码，转换为PHP变量</p>
+<ul>
+<li>语法：<span class="pln">json_decode <span class="pun">(<span class="pln">$json <span class="pun">[,<span class="pln">$assoc <span class="pun">=<span class="pln"> <span class="kwd">false<span class="pln"> <span class="pun">[,<span class="pln"> $depth <span class="pun">=<span class="pln"> <span class="lit">512<span class="pln"> <span class="pun">[,<span class="pln"> $options <span class="pun">=<span class="pln"> <span class="lit">0<span class="pln"> <span class="pun">]]])</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></li>
+<li>注意：1、$json 为待解码的数据，必须为utf8编码的数据；</li>
+</ul>
+<p>　　　　　　2、$assoc 值为TRUE时返回数组，FALSE时返回对象；</p>
+<p>　　　　　　3、$depth 为递归深度；</p>
+<p>　　　　　　4、$option 二进制掩码，目前只支持 JSON_BIGINT_AS_STRING；</p>
+<p>　　　　　　5、一般只用前面两个参数，如果要数据类型的数据要加一个参数true。</p>
+<ul>
+<li>示例：
+<div class="cnblogs_code">
+
+
+<pre>$book = array('a'=&gt;'xiyouji','b'=&gt;'sanguo','c'=&gt;'shuihu','d'=&gt;'hongloumeng');
+        $json = json_encode($book);
+        
+        $array = json_decode($json,TRUE);
+        $obj = json_decode($json);
+        var_dump($array);
+        var_dump($obj);</pre>
+
+
+</div>
+<p>浏览器打印出的结果如下：</p>
+<div class="cnblogs_code">
+<pre>array(4) { ["a"]=&gt; string(7) "xiyouji" ["b"]=&gt; string(6) "sanguo" ["c"]=&gt; string(6) "shuihu" ["d"]=&gt; string(11) "hongloumeng" }
+object(stdClass)#2 (4) { ["a"]=&gt; string(7) "xiyouji" ["b"]=&gt; string(6) "sanguo" ["c"]=&gt; string(6) "shuihu" ["d"]=&gt; string(11) "hongloumeng" } </pre>
+</div>
+<p>两个结果看起来没多大区别，<strong>但调用里面的元素时，array和obj的方式是不同的</strong>。　　</p>
+</li>
+</ul>
+<div class="cnblogs_code">
+
+
+<pre>$book = array('a'=&gt;'xiyouji','b'=&gt;'sanguo','c'=&gt;'shuihu','d'=&gt;'hongloumeng');
+        $json = json_encode($book);
+        
+        $array = json_decode($json,TRUE);
+        $obj = json_decode($json);
+        var_dump($array['b']);//调用数组元素
+        echo '&lt;br/&gt;';
+        var_dump($obj-&gt;c);//调用对象元素</pre>
+
+
+</div>
+<p>　　</p>
+<p>　打印结果如下：</p>
+<div class="cnblogs_code">
+<p>string(6) "sanguo" string(6) "shuihu"</p>
+</div>
+{% endraw %}

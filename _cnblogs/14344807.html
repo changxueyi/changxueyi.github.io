@@ -1,0 +1,136 @@
+---
+title: "Nginx负载均衡反向代理服务器，究竟是什么，如何用？"
+date: 2021-01-29 14:38:00 +0800
+tags: ["【运维】-- Linux"]
+excerpt: "Nginx是什么!? Nginx是一款web反向代理服务器软件 他的特点是: 轻量级! 高性能! 可以瞬间重启! Nginx能干什么!? 1.0 Nginx可以反向代理 静态资源 作为静态资源服务器 2.0 Nginx可以反向代理 不同的访问路径,让这些访问路径对外 提供统一规范的 入口 (这种形式"
+read_minutes: 3
+cnblogs_id: 14344807
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14344807.html"
+---
+{% raw %}
+<h2>Nginx是什么!?</h2>
+<p>Nginx是一款web反向代理服务器软件</p>
+<p>他的特点是: 轻量级!   高性能!   可以瞬间重启!</p>
+<p> </p>
+<h2>Nginx能干什么!?</h2>
+<p>1.0 Nginx可以反向代理 静态资源  作为静态资源服务器</p>
+<p> </p>
+<p>2.0 Nginx可以反向代理 不同的访问路径,让这些访问路径对外 提供统一规范的 入口  (这种形式也可以用来结果浏览器跨域问题)</p>
+<p> </p>
+<p>3.0 Nginx可以反向代理 tomcat服务器集群,并且在代理tomcat们的时候对他们进行 服务端负载均衡</p>
+<p> </p>
+<p>4.0 Nginx加载插件后 可以代理Lua脚本,当接收某个url请求时可以执行Lua脚本</p>
+<p> </p>
+<p> </p>
+<h2>Nginx怎么操作!?</h2>
+<p>首先看一下 Nginx 安装 好后的 目录结构</p>
+<p>这个是Windows版的 目录结构如下　　　　　　　　　　　　　　　　这个是Linux版的 目录结构如下</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/c9454bb9be10413c.png"/>　　　　　　　　　　　　　　　　　　<img alt="" height="254" loading="lazy" src="/images/cnblogs/8d8fd96727ddd65d.png" width="256"/></p>
+<p> </p>
+<h2>以下讲解是基于Linux版的 </h2>
+<h2>在sbin目录内 可以 操作 Nginx 启动 停止  重启</h2>
+<p>启动<br/>./nginx<br/>停止<br/>./nginx -s stop<br/>重启<br/>./nginx -s reload</p>
+<p> </p>
+<p>查看服务状态<br/>ps -ef | grep nginx</p>
+<p> </p>
+<p>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;</p>
+<h2>1.0 利用Nginx 发布静态资源 </h2>
+<p>I</p>
+<p>将静态资源 安放在 Linux中的某个目录下, 比如说  我把我要发布的静态资源 放在 这个 /root/ng4do    目录下,</p>
+<p>可以让认为 ng4do  是一个web项目</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/a10208c16d9d6eaa.png"/>　　　　<img alt="" loading="lazy" src="/images/cnblogs/354ecf95809bd47e.png"/></p>
+<p>这里的重点是   这个项目是 ng4do   相对于这个项目来说!!!! 注意是相对于这个项目来说  项目的根目录是 /root/ng4do</p>
+<p> </p>
+<p>II</p>
+<p>修改 Nginx 的 配置文件   在nginx 安装目录下 conf 目录内 </p>
+<p>找到nginx.conf   配置文件 </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d0de8662d9ae398c.png"/></p>
+<p> </p>
+<p>nginx.conf.default  是对nginx.conf文件的备份,就是怕你 经常改动 nginx.conf 文件后    不知道了 nginx.conf   原本最初的 样子</p>
+<p>vi nginx.conf     修改这个配置文件</p>
+<p>找到 server{</p>
+<p>　　　　listen        80;</p>
+<p>　　　　.......</p>
+<p>}</p>
+<p>这里</p>
+<p>此图是尚未做修改的 状态</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/9882ea5f19c0e5cb.png"/></p>
+<p> </p>
+<p> </p>
+<p>在server {里面  替换  为如下内容}</p>
+<p>location / {<br/>　　　　root   /root/ng4do;　　　　　　#左边的 root  代表 声明 此处是根目录   右边 /root/ng4do     是项目的根目录<br/>　　　　index /root/ng4do/day01.html;   #左边声明 默认页是这个页面 <br/>}</p>
+<p>修改后是这个样子</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/da917955d5d201cb.png"/></p>
+<p>vi编辑文件是Linux基本操作,编辑Linux文件的基本操作,在此不做赘述;</p>
+<p> </p>
+<p>还有一个主意配置文件要改的地方是 第一行  user  root;</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/e0c136d77b9480b6.png"/></p>
+<p> </p>
+<p>不然访问报403 说没有权限访问</p>
+<p> </p>
+<p>配置文件改好后,</p>
+<p>重启Nginx即可</p>
+<p> </p>
+<p>我静态资源的目录结构是这样</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/9990d172ba54969a.png"/></p>
+<p> </p>
+<p>url 访问 这个地址就可以访问到静态资源</p>
+<p><a href="http://58.87.122.18/day02/day02.html">http://58.87.122.88/day01/day01.html</a> </p>
+<p>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;</p>
+<p> </p>
+<p> </p>
+<h2>1.5 利用Nginx 发布  多个  静态资源  (多个静态资源 使用不同的端口号)</h2>
+<p>前言 : 在上文中,已经发布了一个 静态资源 端口号 是80 资源内容放在 /root/ng4do   目录下</p>
+<p>　　　现在我们 发布<strong>第二个</strong> 资源 端口号是81</p>
+<p> </p>
+<p>I</p>
+<p>先把静态资源放置在 某个目录下,本文中是 放在/root/ng4dy   目录下</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/ea5f2c381636e9dc.png"/>　　　　　　　　　　<img alt="" loading="lazy" src="/images/cnblogs/d7aa2760360645d5.png"/></p>
+<p>II</p>
+<p>更改nginx.conf配置文件 </p>
+<p>新增一个</p>
+<p>server{</p>
+<p>　　　　listen        81;</p>
+<p>　　　　.......</p>
+<p>}</p>
+<p>配置文件改好后是这个样子的</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d8002a004a716ee5.png"/></p>
+<p> </p>
+<p>III</p>
+<p>重启Nginx 服务器</p>
+<p> </p>
+<p>如此完成</p>
+<p>我们试着访问一下   <a href="http://58.87.122.18:81/day06/day06.html">http://58.87.122.88:81/day06/day06.html</a>               这个81端口的 静态资源也发布好了</p>
+<p> </p>
+<p>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;</p>
+<p> </p>
+<h2>2.0 提供统一的 端口,  在这个端口上可以接受 不同的rul请求,</h2>
+<h2>      根据 不同 的url 路径   路由到 与之对应的 资源上</h2>
+<p>I</p>
+<p>在上文基础上,我们已经发布了 两个 静态资源  端口号 分别是80   与   81</p>
+<p>更改nginx.conf配置文件</p>
+<p>增加如下内容</p>
+<p>server {<br/>　　listen 88;        #对外提供一个端口88的 服务<br/>　　server_name daili;   #取名 代理</p>
+<p>　　location / {<br/><br/>　　　　if ($uri = /do) { rewrite /do http://$host:80/day01/day01.html; }   #如果访问的url是 <a href="http://58.87.122.18:88/do">http://58.87.122.88:88/do</a>   则路由到  80 端口 那个静态资源上<br/>　　　　if ($uri = /dy) { rewrite /dy http://$host:81/day04/day04.html; }   #如果访问的url是 <a href="http://58.87.122.18:88/do">http://58.87.122.88:88/dy</a>   则路由到  81 端口 那个静态资源上</p>
+<p>　　　　}<br/><br/>　　　　error_page 500 502 503 504 /50x.html;<br/>　　　　location = /50x.html {<br/>　　　　root html;<br/>　　　　　　}</p>
+<p>　　　　}</p>
+<p>更改号的配置文件是这个样子</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/0cdb2a5af21568d1.png"/></p>
+<h2>2.5 Nginx路由tomcat动态资源一样可以</h2>
+<p>在我的服务器里同时还在跑一个tomcat服务器,这个对外提供的访问端口是   http://58.87.122.88:6868/</p>
+<p>我把它们给定一个同一的入口,改配置文件如下</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/04f3f1f475e9fbec.png"/></p>
+<p> </p>
+<p>我访问这个 <a href="http://58.87.122.18/">http://58.87.122.88</a>:88/tomcat  就可以路由到我的tomcat服务器 上去</p>
+<p> </p>
+<p>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;</p>
+<p> </p>
+<h2>3.0 Nginx 对tomcat集群 提供负载均衡</h2>
+<p>请移步<a href="https://www.cnblogs.com/cjd01/p/14104951.html" target="_blank">&gt;&gt;&gt;&gt;&gt;</a></p>
+<p> </p>
+<p>&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;</p>
+<p> </p>
+<p> </p>
+<h2>4.0 Nginx 代理Lua脚本 执行功能</h2>
+<p>请移步<a href="https://www.cnblogs.com/cjd01/p/14081817.html" target="_blank">&gt;&gt;&gt;&gt;&gt;</a></p>
+{% endraw %}

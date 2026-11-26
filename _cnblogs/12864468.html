@@ -1,0 +1,102 @@
+---
+title: "一维数组的创建及使用"
+date: 2020-05-10 18:21:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "1. 创建一维数组 数组作为对象允许使用new关键字进行内存分配。在使用数组之前，必须首先定义数组变量所属的类型。一维数组的创建有两种形式。 a. 先声明，再用new运算符进行内存分配 声明一维数组有以下两种方式： 数组元素类型 数组名字[]; 数组元素类型[] 数组名字; 数组元素类型决定了数组的"
+read_minutes: 3
+cnblogs_id: 12864468
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12864468.html"
+---
+{% raw %}
+<h4 id="1-创建一维数组">1. 创建一维数组</h4>
+<p>数组作为对象允许使用new关键字进行内存分配。在使用数组之前，必须首先定义数组变量所属的类型。一维数组的创建有两种形式。</p>
+<h5 id="a-先声明再用new运算符进行内存分配">a. 先声明，再用new运算符进行内存分配</h5>
+<p>声明一维数组有以下两种方式：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">数组元素类型 数组名字[];
+
+数组元素类型[] 数组名字;</span></pre>
+</div>
+<pre class="prettyprint" name="code"><em>数组元素类型决定了数组的数据类型。它可以是Java中任意的数据类型，包括简单类型和组合类型。数组名字为一个合法的标识符，符号“[ ]”指明该变量是一个数组类型变量。单个”[ ]”表示要创建的数组是一个一维数组。<br/><br/></em></pre>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">int</span> arr[]; <span style="color: #008000;">//</span><span style="color: #008000;">声明是int型数组，数组中的每个元素都是int型值</span>
+String str[]; <span style="color: #008000;">//</span><span style="color: #008000;">声明String数组，数组中的每个元素都是String型数值</span></pre>
+</div>
+<p>声明数组后，还不能立即访问他的任何元素，因为声明数组只是给出了数组名字和元素的数据类型，要想真正的使用数组，还要为它分配内存空间。在为数组分配空间时必须指明数组的长度，为数组分配内存的语法格式为：</p>
+<div class="cnblogs_code">
+<pre>数组名字  = <span style="color: #0000ff;">new</span> 数组元素的类型[数组元素的个数];</pre>
+</div>
+<p>数组名字：被连接到数组变量的名称。<br/>数组元素的个数：指定数组中的个数，即数组的长度。</p>
+<p>使用new关键字分配数组时，必须指定数组元素的类型和数组元素的个数，即数组的长度。</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">数组名字：被连接到数组变量的名称。
+数组元素的个数：指定数组中的个数，即数组的长度。
+使用new关键字分配数组时，必须指定数组元素的类型和数组元素的个数，即数组的长度。</span></pre>
+</div>
+<p><span class="hljs-comment">//为数组分配内存 arr = <span class="hljs-keyword">new <span class="hljs-keyword">int[<span class="hljs-number">5];</span></span></span></span></p>
+<p>以上代码表示要创建一个有5个元素的整型数组，并且将创建的数组对象赋给引用变量arr，即引用变量arr引用这个数组。如下图所示：</p>
+<p><br/>在图中arr为数组名称，方括号“[ ]” 中的值为数组的下标。数组通过下标来区分数组中的不同元素。数组的下标是从0开始的。由于创建的数组arr中有5个元素，因此数组中元素的下标为0~4.<br/>使用new关键字为数组分配内存时，整型数组中各个元素的初始值都为0。</p>
+<p>2. 声明的同时为数组分配内存<br/>这种创建数组的方法是将数组的声明和内存的分配合在一起执行。语法如下所示：</p>
+<div class="cnblogs_code">
+<pre>数组元素的类型 数组名 = <span style="color: #0000ff;">new</span><span style="color: #000000;"> 数组元素的类型[数组元素的个数];
+</span><span style="color: #008000;">//</span><span style="color: #008000;">声明并为数组分配内存</span>
+<span style="color: #0000ff;">int</span> month[ ] =<span style="color: #0000ff;">new</span> <span style="color: #0000ff;">int</span>[<span style="color: #800080;">12</span>];</pre>
+</div>
+<p>上面代码创建数组month，并指定了数组的长度为12。<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/a4ce66df7650d64d.png" title=""/></p>
+<h4 id="2-初始化一维数组">2. 初始化一维数组</h4>
+<p>数组与基本数据类型一样可以进行初始化操作。数组的初始化操作可分别初始化数组中的每个元素。数组的初始化有以下两种形式</p>
+<pre class="prettyprint" name="code"><em> </em></pre>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">int</span> arr[]=<span style="color: #0000ff;">new</span> <span style="color: #0000ff;">int</span>[]{<span style="color: #800080;">1</span>,<span style="color: #800080;">2</span>,<span style="color: #800080;">3</span>,<span style="color: #800080;">4</span>,<span style="color: #800080;">5</span>}; <span style="color: #008000;">//</span><span style="color: #008000;">第一种初始化方式</span>
+<span style="color: #0000ff;">int</span> arr2[] ={<span style="color: #800080;">12</span>,<span style="color: #800080;">34</span>,<span style="color: #800080;">29</span>,<span style="color: #800080;">22</span>}; <span style="color: #008000;">//</span><span style="color: #008000;">第二种初始化方式</span></pre>
+</div>
+<p>从中可以看出，数组的初始化就是包括大括号之内用都好分开的表达式列表。用括号( , )分割数组中的元素，系统自动为数组分配一定的空间。用第一种初始化方式，将创建5个元素的数组，依次为1、2、3、4、5。第二种初始化方式，会创建4个元素的数组，依次为12、34、29、22。</p>
+<p>3. 使用一维数组<br/>在Java集合中一维数组是常见的一种数据结构。通过使用一维数组来对其进一步了解。</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> Day{<span style="color: #008000;">//</span><span style="color: #008000;">创建类</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] args){<span style="color: #008000;">//</span><span style="color: #008000;">主方法
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">创建并初始化一维数组</span>
+        <span style="color: #0000ff;">int</span> day[]=<span style="color: #0000ff;">new</span> <span style="color: #0000ff;">int</span>[]{<span style="color: #800080;">31</span>,<span style="color: #800080;">28</span>,<span style="color: #800080;">31</span>,<span style="color: #800080;">30</span>,<span style="color: #800080;">31</span>,<span style="color: #800080;">30</span>,<span style="color: #800080;">31</span>,<span style="color: #800080;">30</span>,<span style="color: #800080;">31</span>,<span style="color: #800080;">31</span>,<span style="color: #800080;">30</span>,<span style="color: #800080;">31</span><span style="color: #000000;">};
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">利用for循环将信息输出</span>
+        <span style="color: #0000ff;">for</span>(<span style="color: #0000ff;">int</span> i=<span style="color: #800080;">0</span>; i &lt;<span style="color: #800080;">12</span>;i++<span style="color: #000000;">){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">输出的信息</span>
+            System.<span style="color: #0000ff;">out</span>.println((i+<span style="color: #800080;">1</span>)+<span style="color: #800000;">"</span><span style="color: #800000;">月有</span><span style="color: #800000;">"</span>+day[i]+<span style="color: #800000;">"</span><span style="color: #800000;">天</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+        }
+    }
+}</span></pre>
+</div>
+<p>运行结果如下：</p>
+<pre class="prettyprint" name="code"><em><img alt="" loading="lazy" src="/images/cnblogs/7c24eeeceb67b442.png"/></em></pre>
+<p> </p>
+<p> </p>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">//</span><span style="color: #008000;">声明</span>
+<span style="color: #0000ff;">int</span><span style="color: #000000;">[] a;
+</span><span style="color: #0000ff;">int</span><span style="color: #000000;"> b[];
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">创建数组对象</span>
+a = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">int</span>[<span style="color: #800080;">4</span><span style="color: #000000;">];
+b </span>= <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">int</span>[<span style="color: #800080;">5</span><span style="color: #000000;">];
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">动态初始化：</span>
+<span style="color: #0000ff;">for</span>(<span style="color: #0000ff;">int</span> i=<span style="color: #800080;">0</span>;i&lt;a.length;i++<span style="color: #000000;">){
+    a[i]</span>=i*<span style="color: #800080;">12</span><span style="color: #000000;">;
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">静态初始化</span>
+<span style="color: #0000ff;">int</span> c[]= {<span style="color: #800080;">23</span>,<span style="color: #800080;">43</span>,<span style="color: #800080;">56</span>,<span style="color: #800080;">78</span>}; <span style="color: #008000;">//</span><span style="color: #008000;">内存中开辟空间的同时赋值；长度是4，索引范围是0~3</span>
+<span style="color: #000000;">
+Car[] cars </span>=<span style="color: #000000;"> {
+        </span><span style="color: #0000ff;">new</span> Car(<span style="color: #800000;">"</span><span style="color: #800000;">奔驰</span><span style="color: #800000;">"</span><span style="color: #000000;">),
+        </span><span style="color: #0000ff;">new</span> Car(<span style="color: #800000;">"</span><span style="color: #800000;">宝马</span><span style="color: #800000;">"</span><span style="color: #000000;">),
+        </span><span style="color: #0000ff;">new</span> Car(<span style="color: #800000;">"</span><span style="color: #800000;">奥迪</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+          };
+
+
+Car c2 </span>= <span style="color: #0000ff;">new</span> Car(<span style="color: #800000;">"</span><span style="color: #800000;">奔驰</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">接下来，可以验证上面的两个奔驰是否相等</span>
+System.<span style="color: #0000ff;">out</span>.println(c2== cars[<span style="color: #800080;">0</span>]);</pre>
+</div>
+<pre class="prettyprint" name="code"><em id="__mceDel"> </em></pre>
+{% endraw %}

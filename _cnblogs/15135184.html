@@ -1,0 +1,71 @@
+---
+title: "【Python】import和form...import的区别"
+date: 2021-08-12 22:36:00 +0800
+tags: ["【Python】Python基础"]
+excerpt: "普通区别# import 使用import导入，后续要加上前缀才能调用 import a a.zx() from...import... from...import...然后他就不需要加前缀了,直接调用 from a import zx zx() 高级区别# 关于高级部分的区别很少有人明白，但是还是"
+read_minutes: 1
+cnblogs_id: 15135184
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15135184.html"
+---
+{% raw %}
+<h4 id="普通区别">普通区别<a class="esa-anchor" href="https://www.cnblogs.com/zx125/p/12055570.html#%E6%99%AE%E9%80%9A%E5%8C%BA%E5%88%AB">#</a></h4>
+<p>import</p>
+<p>使用import导入，后续要加上前缀才能调用</p>
+<pre><code class="hljs swift hljsln"><span class="ln-bg"><span class="ln-num" data-num="1"><span class="hljs-keyword">import a
+<span class="ln-num" data-num="2">a.zx()
+</span></span></span></span></code></pre>
+<p>from...import...</p>
+<p>from...import...然后他就不需要加前缀了,直接调用</p>
+<pre><code class="hljs coffeescript hljsln"><span class="ln-bg"><span class="ln-num" data-num="1"><span class="hljs-keyword">from a <span class="hljs-keyword">import zx
+<span class="ln-num" data-num="2">zx()
+</span></span></span></span></span></code></pre>
+<h4 id="高级区别">高级区别<a class="esa-anchor" href="https://www.cnblogs.com/zx125/p/12055570.html#%E9%AB%98%E7%BA%A7%E5%8C%BA%E5%88%AB">#</a></h4>
+<p>关于高级部分的区别很少有人明白，但是还是很有必要的</p>
+<p>import</p>
+<pre><code class="hljs haskell hljsln"><span class="ln-bg"><span class="ln-num" data-num="1"><span class="hljs-keyword">import a
+<span class="ln-num" data-num="2">
+<span class="ln-num" data-num="3"><span class="hljs-title">print(<span class="hljs-class"><span class="hljs-keyword">type(<span class="hljs-title">a))
+<span class="ln-num" data-num="4">
+<span class="ln-num" data-num="5"><span class="hljs-meta">#打印结果是一个模块对象，说明引用着另一个模块的内存
+<span class="ln-num" data-num="6">&lt;<span class="hljs-keyword">class '<span class="hljs-keyword">module'&gt;
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>此时的内存图应该是这样的,如果去改变zx的值，也是改变b模块的值</p>
+<p><a data-alt="" data-lightbox="roadtrip" data-title="" href="https://images.cnblogs.com/cnblogs_com/zx125/1512921/o_191217085236import_01.JPG"><img alt="" loading="lazy" src="/images/cnblogs/3c5b032dd60f112b.jpg"/></a></p>
+<p>from...import...</p>
+<p>from...import...的原理如下图，它不是通过引用的方式的，而是直接把b的值复制一份过来，直接就变成了a的东西了</p>
+<p><a data-alt="" data-lightbox="roadtrip" data-title="" href="https://images.cnblogs.com/cnblogs_com/zx125/1512921/o_191217085241from_01.JPG"><img alt="" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/d05405908e2a1b67.jpg"/></a></p>
+<p>重名问题</p>
+<p>要是b的变量名和a的变量名冲突会怎么样？</p>
+<pre><code class="hljs coffeescript hljsln"><span class="ln-bg"><span class="ln-num" data-num="1"><span class="hljs-comment">#b的zx为100
+<span class="ln-num" data-num="2">
+<span class="ln-num" data-num="3">zx = <span class="hljs-number">200
+<span class="ln-num" data-num="4"><span class="hljs-keyword">from b <span class="hljs-keyword">import zx
+<span class="ln-num" data-num="5"><span class="hljs-built_in">print(zx)
+<span class="ln-num" data-num="6">
+<span class="ln-num" data-num="7"><span class="hljs-number">200
+<span class="ln-num" data-num="8">
+<span class="ln-num" data-num="9">
+<span class="ln-num" data-num="10"><span class="hljs-keyword">from b <span class="hljs-keyword">import zx
+<span class="ln-num" data-num="11">zx = <span class="hljs-number">200
+<span class="ln-num" data-num="12"><span class="hljs-built_in">print(zx)
+<span class="ln-num" data-num="13">
+<span class="ln-num" data-num="14"><span class="hljs-number">100
+<span class="ln-num" data-num="15">
+<span class="ln-num" data-num="16"><span class="hljs-comment">#你会发现这完全遵循的就是普通的赋值规律，后赋值的优先，所以from text2 import zx就可以看做一条赋值语句zx=b.zx
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="重载">重载<a class="esa-anchor" href="https://www.cnblogs.com/zx125/p/12055570.html#%E9%87%8D%E8%BD%BD">#</a></h4>
+<p>import</p>
+<pre><code class="hljs swift hljsln"><span class="ln-bg"><span class="ln-num" data-num="1">from importlib <span class="hljs-keyword">import reload
+<span class="ln-num" data-num="2">
+<span class="ln-num" data-num="3"><span class="hljs-keyword">import b
+<span class="ln-num" data-num="4">text2.zx = <span class="hljs-number">200
+<span class="ln-num" data-num="5"><span class="hljs-built_in">print(b.zx)
+<span class="ln-num" data-num="6">reload(b)
+<span class="ln-num" data-num="7"><span class="hljs-built_in">print(b.zx)
+<span class="ln-num" data-num="8">
+<span class="ln-num" data-num="9"><span class="hljs-number">200 
+<span class="ln-num" data-num="10"><span class="hljs-number">100
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>from...import...</p>
+<p>无法重载...</p>
+{% endraw %}

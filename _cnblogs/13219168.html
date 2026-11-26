@@ -1,0 +1,574 @@
+---
+title: "Spring AOP——Spring 中面向切面编程"
+date: 2020-07-01 14:41:00 +0800
+tags: ["【框架】-- Spring"]
+excerpt: "Spring AOP——Spring 中面向切面编程 前面两篇文章记录了 Spring IOC 的相关知识，本文记录 Spring 中的另一特性 AOP 相关知识。 部分参考资料：《Spring实战（第4版）》《轻量级 JavaEE 企业应用实战（第四版）》Spring 官方文档W3CSchool"
+read_minutes: 16
+cnblogs_id: 13219168
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13219168.html"
+tags_inferred: true
+---
+{% raw %}
+<h1 class="postTitle"><a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/joy99/p/10941543.html" id="cb_post_title_url">Spring AOP——Spring 中面向切面编程</a></h1>
+<div class="clear"> </div>
+<div class="postBody">
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<p>前面两篇文章记录了 Spring IOC 的相关知识，本文记录 Spring 中的另一特性 AOP 相关知识。</p>
+<blockquote>
+<p>部分参考资料：<br/>《Spring实战（第4版）》<br/>《轻量级 JavaEE 企业应用实战（第四版）》<br/><a href="https://docs.spring.io/spring/docs/5.0.6.RELEASE/spring-framework-reference/core.html#spring-core">Spring 官方文档</a><br/><a href="https://www.w3cschool.cn/wkspring/">W3CSchool Spring教程</a><br/><a href="https://www.yiibai.com/spring/">易百教程 Spring教程</a></p>
+</blockquote>
+<h1 id="esa_index_0">一、AOP——另一种编程思想</h1>
+<h2 id="esa_index_1">1.1 什么是 AOP</h2>
+<p>AOP （Aspect Orient Programming）,直译过来就是 面向切面编程。AOP 是一种编程思想，是面向对象编程（OOP）的一种补充。面向对象编程将程序抽象成各个层次的对象，而面向切面编程是将程序抽象成各个切面。<br/>从《Spring实战（第4版）》图书中扒了一张图：<br/><img alt="" loading="lazy" src="/images/cnblogs/2eccbeea115b8d76.png"/></p>
+<p>从该图可以很形象地看出，所谓切面，相当于应用对象间的横切点，我们可以将其单独抽象为单独的模块。</p>
+<h2 id="esa_index_2">1.2 为什么需要 AOP</h2>
+<p>想象下面的场景，开发中在多个模块间有某段重复的代码，我们通常是怎么处理的？显然，没有人会靠“复制粘贴”吧。在传统的面向过程编程中，我们也会将这段代码，抽象成一个方法，然后在需要的地方分别调用这个方法，这样当这段代码需要修改时，我们只需要改变这个方法就可以了。然而需求总是变化的，有一天，新增了一个需求，需要再多出做修改，我们需要再抽象出一个方法，然后再在需要的地方分别调用这个方法，又或者我们不需要这个方法了，我们还是得删除掉每一处调用该方法的地方。实际上涉及到多个地方具有相同的修改的问题我们都可以通过 AOP 来解决。</p>
+<h2 id="esa_index_3">1.3 AOP 实现分类</h2>
+<p>AOP 要达到的效果是，保证开发者不修改源代码的前提下，去为系统中的业务组件添加某种通用功能。AOP 的本质是由 AOP 框架修改业务组件的多个方法的源代码，看到这其实应该明白了，AOP 其实就是前面一篇文章讲的代理模式的典型应用。<br/>按照 AOP 框架修改源代码的时机，可以将其分为两类：</p>
+<ul>
+<li>静态 AOP 实现， AOP 框架在编译阶段对程序源代码进行修改，生成了静态的 AOP 代理类（生成的 *.class 文件已经被改掉了，需要使用特定的编译器），比如 AspectJ。</li>
+<li>动态 AOP 实现， AOP 框架在运行阶段对动态生成代理对象（在内存中以 JDK 动态代理，或 CGlib 动态地生成 AOP 代理类），如 SpringAOP。</li>
+</ul>
+<p>下面给出常用 AOP 实现比较<br/><img alt="" loading="lazy" src="/images/cnblogs/3c82883c0a9dbb6d.png"/></p>
+<p>如不清楚动态代理的，可参考我前面的一篇文章，有讲解静态代理、JDK动态代理和 CGlib 动态代理。<br/><a href="https://www.cnblogs.com/joy99/p/10865391.html">静态代理和动态代理 https://www.cnblogs.com/joy99/p/10865391.html</a></p>
+<h1 id="esa_index_4">二、AOP 术语</h1>
+<p>AOP 领域中的特性术语：</p>
+<ul>
+<li>通知（Advice）: AOP 框架中的增强处理。通知描述了切面何时执行以及如何执行增强处理。</li>
+<li>连接点（join point）: 连接点表示应用执行过程中能够插入切面的一个点，这个点可以是方法的调用、异常的抛出。在 Spring AOP 中，连接点总是方法的调用。</li>
+<li>切点（PointCut）: 可以插入增强处理的连接点。</li>
+<li>切面（Aspect）: 切面是通知和切点的结合。</li>
+<li>引入（Introduction）：引入允许我们向现有的类添加新的方法或者属性。</li>
+<li>织入（Weaving）: 将增强处理添加到目标对象中，并创建一个被增强的对象，这个过程就是织入。</li>
+</ul>
+<p>概念看起来总是有点懵，并且上述术语，不同的参考书籍上翻译还不一样，所以需要慢慢在应用中理解。</p>
+<h1 id="esa_index_5">三、初步认识 Spring AOP</h1>
+<h2 id="esa_index_6">3.1 Spring AOP 的特点</h2>
+<p>AOP 框架有很多种，1.3节中介绍了 AOP 框架的实现方式有可能不同， Spring 中的 AOP 是通过动态代理实现的。不同的 AOP 框架支持的连接点也有所区别，例如，AspectJ 和 JBoss,除了支持方法切点，它们还支持字段和构造器的连接点。而 Spring AOP 不能拦截对对象字段的修改，也不支持构造器连接点,我们无法在 Bean 创建时应用通知。</p>
+<h2 id="esa_index_7">3.2 Spring AOP 的简单例子</h2>
+<p>下面先上代码，对着代码说比较好说，看下面这个例子：<br/>这个例子是基于gradle创建的，首先 build.gradle 文件添加依赖：</p>
+<pre><code class="hljs nginx"><span class="hljs-section">dependencies {
+    <span class="hljs-attribute">compile <span class="hljs-string">'org.springframework:spring-context:5.0.6.RELEASE'
+}
+</span></span></span></code></pre>
+<p>首先创建一个接口 IBuy.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">IBuy {
+    <span class="hljs-function">String <span class="hljs-title">buy<span class="hljs-params">();
+}
+</span></span></span></span></span></span></span></span></code></pre>
+<p>Boy 和 Gril 两个类分别实现了这个接口：<br/>Boy.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Boy <span class="hljs-keyword">implements <span class="hljs-title">IBuy {
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">buy<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"男孩买了一个游戏机");
+        <span class="hljs-keyword">return <span class="hljs-string">"游戏机";
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>Girl.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Girl <span class="hljs-keyword">implements <span class="hljs-title">IBuy {
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">buy<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"女孩买了一件漂亮的衣服");
+        <span class="hljs-keyword">return <span class="hljs-string">"衣服";
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>配置文件, AppConfig.java</p>
+<pre><code class="hljs css"><span class="hljs-selector-tag">package <span class="hljs-selector-tag">com<span class="hljs-selector-class">.sharpcj<span class="hljs-selector-class">.aopdemo;
+
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.ComponentScan;
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.Configuration;
+
+@<span class="hljs-keyword">Configuration
+@ComponentScan(basePackageClasses = {<span class="hljs-selector-tag">com<span class="hljs-selector-class">.sharpcj<span class="hljs-selector-class">.aopdemo<span class="hljs-selector-class">.test1<span class="hljs-selector-class">.IBuy<span class="hljs-selector-class">.class})
+<span class="hljs-selector-tag">public <span class="hljs-selector-tag">class <span class="hljs-selector-tag">AppConfig {
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>测试类， AppTest.java</p>
+<pre><code class="hljs groovy"><span class="hljs-keyword">package com.sharpcj.aopdemo;
+
+<span class="hljs-keyword">import com.sharpcj.aopdemo.test1.Boy;
+<span class="hljs-keyword">import com.sharpcj.aopdemo.test1.Girl;
+<span class="hljs-keyword">import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">AppTest {
+    <span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void main(String[] args) {
+        AnnotationConfigApplicationContext context = <span class="hljs-keyword">new AnnotationConfigApplicationContext(AppConfig.<span class="hljs-keyword">class);
+        Boy boy = context.getBean(<span class="hljs-string">"boy",Boy.<span class="hljs-keyword">class);
+        Girl girl = (Girl) context.getBean(<span class="hljs-string">"girl");
+        boy.buy();
+        girl.buy();
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>运行结果：<br/><img alt="" loading="lazy" src="/images/cnblogs/3bf77391692bb3ec.png"/></p>
+<p>这里运用SpringIOC里的自动部署。现在需求改变了，我们需要在男孩和女孩的 buy 方法之前，需要打印出“男孩女孩都买了自己喜欢的东西”。用 Spring AOP 来实现这个需求只需下面几个步骤：<br/>1、 <strong>既然用到 Spring AOP, 首先在 <code>build.gralde</code> 文件中引入相关依赖：</strong></p>
+<pre><code class="hljs nginx"><span class="hljs-section">dependencies {
+    <span class="hljs-attribute">compile <span class="hljs-string">'org.springframework:spring-context:5.0.6.RELEASE'
+    compile <span class="hljs-string">'org.springframework:spring-aspects:5.0.6.RELEASE'
+}
+</span></span></span></span></code></pre>
+<p>2、 <strong>定义一个切面类，BuyAspectJ.java</strong></p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.aspectj.lang.annotation.Aspect;
+<span class="hljs-keyword">import org.aspectj.lang.annotation.Before;
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Aspect
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">BuyAspectJ {
+    <span class="hljs-meta">@Before(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">haha<span class="hljs-params">(){
+        System.out.println(<span class="hljs-string">"男孩女孩都买自己喜欢的东西");
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>这个类，我们使用了注解 <code>@Component</code> 表明它将作为一个Spring Bean 被装配，使用注解 <code>@Aspect</code> 表示它是一个切面。<br/>类中只有一个方法 <code>haha</code> 我们使用 <code>@Before</code> 这个注解，表示他将在方法执行之前执行。关于这个注解后文再作解释。<br/>参数<code>("execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")</code> 声明了切点，表明在该切面的切点是<code>com.sharpcj.aopdemo.test1.Ibuy</code>这个接口中的<code>buy</code>方法。至于为什么这么写，下文再解释。<br/>3、 <strong>在配置文件中启用AOP切面功能</strong></p>
+<pre><code class="hljs css"><span class="hljs-selector-tag">package <span class="hljs-selector-tag">com<span class="hljs-selector-class">.sharpcj<span class="hljs-selector-class">.aopdemo;
+
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.ComponentScan;
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.Configuration;
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.EnableAspectJAutoProxy;
+
+@<span class="hljs-keyword">Configuration
+@ComponentScan(basePackageClasses = {<span class="hljs-selector-tag">com<span class="hljs-selector-class">.sharpcj<span class="hljs-selector-class">.aopdemo<span class="hljs-selector-class">.test1<span class="hljs-selector-class">.IBuy<span class="hljs-selector-class">.class})
+@<span class="hljs-keyword">EnableAspectJAutoProxy(<span class="hljs-keyword">proxyTargetClass = true)
+public class AppConfig {
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>我们在配置文件类增加了<code>@EnableAspectJAutoProxy</code>注解，启用了 AOP 功能，参数<code>proxyTargetClass</code>的值设为了 true 。默认值是 false，两者的区别下文再解释。<br/>OK，下面只需测试代码,运行结果如下：<br/><img alt="" loading="lazy" src="/images/cnblogs/7faaaff63ddd0394.png"/></p>
+<p>我们看到，结果与我们需求一致，我们并没有修改 Boy 和 Girl 类的 Buy 方法，也没有修改测试类的代码，几乎是完全无侵入式地实现了需求。这就是 AOP 的“神奇”之处。</p>
+<h1 id="esa_index_8">四、通过注解配置 Spring AOP</h1>
+<h2 id="esa_index_9">4.1 通过注解声明切点指示器</h2>
+<p>Spring AOP 所支持的 AspectJ 切点指示器<br/><img alt="" loading="lazy" src="/images/cnblogs/47e87d0cc4fb3f07.png"/><br/>在spring中尝试使用AspectJ其他指示器时，将会抛出IllegalArgumentException异常。</p>
+<p>当我们查看上面展示的这些spring支持的指示器时，注意只有execution指示器是唯一的执行匹配，而其他的指示器都是用于限制匹配的。这说明execution指示器是我们在编写切点定义时最主要使用的指示器，在此基础上，我们使用其他指示器来限制所匹配的切点。</p>
+<p>下图的切点表达式表示当Instrument的play方法执行时会触发通知。<br/><img alt="" loading="lazy" src="/images/cnblogs/44185dc059a54e4b.png"/><br/>我们使用execution指示器选择Instrument的play方法，方法表达式以 <code>*</code> 号开始，标识我们不关心方法的返回值类型。然后我们指定了全限定类名和方法名。对于方法参数列表，我们使用 <code>..</code> 标识切点选择任意的play方法，无论该方法的入参是什么。<br/>多个匹配之间我们可以使用链接符 <code>&amp;&amp;</code>、<code>||</code>、<code>！</code>来表示 “且”、“或”、“非”的关系。但是在使用 XML 文件配置时，这些符号有特殊的含义，所以我们使用 “and”、“or”、“not”来表示。</p>
+<p>举例：<br/>限定该切点仅匹配的包是 <code>com.sharpcj.aopdemo.test1</code>,可以使用<br/><code>execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..)) &amp;&amp; within(com.sharpcj.aopdemo.test1.*)</code><br/>在切点中选择 bean,可以使用<br/><code>execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..)) &amp;&amp; bean(girl)</code><br/>修改 BuyAspectJ.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.aspectj.lang.annotation.Aspect;
+<span class="hljs-keyword">import org.aspectj.lang.annotation.Before;
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Aspect
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">BuyAspectJ {
+    <span class="hljs-meta">@Before(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..)) &amp;&amp; within(com.sharpcj.aopdemo.test1.*) &amp;&amp; bean(girl)")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">hehe<span class="hljs-params">(){
+        System.out.println(<span class="hljs-string">"男孩女孩都买自己喜欢的东西");
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>此时，切面只会对 <code>Girl.java</code> 这个类生效，执行结果：<br/><img alt="" loading="lazy" src="/images/cnblogs/574adb57f688def7.png"/></p>
+<p>细心的你，可能发现了，切面中的方法名，已经被我悄悄地从<code>haha</code>改成了<code>hehe</code>，丝毫没有影响结果，说明方法名没有影响。和 Spring IOC 中用 java 配置文件装配 Bean 时，用<code>@Bean</code> 注解修饰的方法名一样，没有影响。</p>
+<h2 id="esa_index_10">4.2 通过注解声明 5 种通知类型</h2>
+<p>Spring AOP 中有 5 中通知类型，分别如下：<br/><img alt="" loading="lazy" src="/images/cnblogs/b5aaf7df6983346c.png"/></p>
+<p>下面修改切面类：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.aspectj.lang.ProceedingJoinPoint;
+<span class="hljs-keyword">import org.aspectj.lang.annotation.*;
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Aspect
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">BuyAspectJ {
+    <span class="hljs-meta">@Before(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">hehe<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"before ...");
+    }
+
+    <span class="hljs-meta">@After(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">haha<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"After ...");
+    }
+
+    <span class="hljs-meta">@AfterReturning(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">xixi<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"AfterReturning ...");
+    }
+
+    <span class="hljs-meta">@Around(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">xxx<span class="hljs-params">(ProceedingJoinPoint pj) {
+        <span class="hljs-keyword">try {
+            System.out.println(<span class="hljs-string">"Around aaa ...");
+            pj.proceed();
+            System.out.println(<span class="hljs-string">"Around bbb ...");
+        } <span class="hljs-keyword">catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+    }
+
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>为了方便看效果,我们测试类中，只要 Boy 类:</p>
+<pre><code class="hljs groovy"><span class="hljs-keyword">package com.sharpcj.aopdemo;
+
+<span class="hljs-keyword">import com.sharpcj.aopdemo.test1.Boy;
+<span class="hljs-keyword">import com.sharpcj.aopdemo.test1.Girl;
+<span class="hljs-keyword">import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">AppTest {
+    <span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void main(String[] args) {
+        AnnotationConfigApplicationContext context = <span class="hljs-keyword">new AnnotationConfigApplicationContext(AppConfig.<span class="hljs-keyword">class);
+        Boy boy = context.getBean(<span class="hljs-string">"boy",Boy.<span class="hljs-keyword">class);
+        Girl girl = (Girl) context.getBean(<span class="hljs-string">"girl");
+        boy.buy();
+        <span class="hljs-comment">// girl.buy();
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>执行结果如下：<br/><img alt="" loading="lazy" src="/images/cnblogs/5cae6084837d8619.png"/></p>
+<p>结果显而易见。指的注意的是 <code>@Around</code> 修饰的环绕通知类型，是将整个目标方法封装起来了，在使用时，我们传入了 <code>ProceedingJoinPoint</code> 类型的参数，这个对象是必须要有的，并且需要调用 <code>ProceedingJoinPoint</code> 的 <code>proceed()</code> 方法。 如果没有调用 该方法，执行结果为 ：</p>
+<pre><code class="hljs r">Around aaa <span class="hljs-keyword">...
+Around bbb <span class="hljs-keyword">...
+After <span class="hljs-keyword">...
+AfterReturning <span class="hljs-keyword">...
+</span></span></span></span></code></pre>
+<p>可见，如果不调用该对象的 proceed() 方法，表示原目标方法被阻塞调用，当然也有可能你的实际需求就是这样。</p>
+<h2 id="esa_index_11">4.3 通过注解声明切点表达式</h2>
+<p>如你看到的，上面我们写的多个通知使用了相同的切点表达式，对于像这样频繁出现的相同的表达式，我们可以使用 <code>@Pointcut</code>注解声明切点表达式，然后使用表达式，修改代码如下：<br/>BuyAspectJ.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.aspectj.lang.ProceedingJoinPoint;
+<span class="hljs-keyword">import org.aspectj.lang.annotation.*;
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Aspect
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">BuyAspectJ {
+
+    <span class="hljs-meta">@Pointcut(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">point<span class="hljs-params">(){}
+
+    <span class="hljs-meta">@Before(<span class="hljs-string">"point()")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">hehe<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"before ...");
+    }
+
+    <span class="hljs-meta">@After(<span class="hljs-string">"point()")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">haha<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"After ...");
+    }
+
+    <span class="hljs-meta">@AfterReturning(<span class="hljs-string">"point()")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">xixi<span class="hljs-params">() {
+        System.out.println(<span class="hljs-string">"AfterReturning ...");
+    }
+
+    <span class="hljs-meta">@Around(<span class="hljs-string">"point()")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">xxx<span class="hljs-params">(ProceedingJoinPoint pj) {
+        <span class="hljs-keyword">try {
+            System.out.println(<span class="hljs-string">"Around aaa ...");
+            pj.proceed();
+            System.out.println(<span class="hljs-string">"Around bbb ...");
+        } <span class="hljs-keyword">catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>程序运行结果没有变化。<br/>这里，我们使用</p>
+<pre><code class="hljs java"><span class="hljs-meta">@Pointcut(<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">point<span class="hljs-params">(){}
+</span></span></span></span></span></span></span></code></pre>
+<p>声明了一个切点表达式，该方法 point 的内容并不重要，方法名也不重要，实际上它只是作为一个标识，供通知使用。</p>
+<h2 id="esa_index_12">4.4 通过注解处理通知中的参数</h2>
+<p>上面的例子，我们要进行增强处理的目标方法没有参数，下面我们来说说有参数的情况，并且在增强处理中使用该参数。<br/>下面我们给接口增加一个参数，表示购买所花的金钱。通过AOP 增强处理，如果女孩买衣服超过了 68 元，就可以赠送一双袜子。<br/>更改代码如下：<br/>IBuy.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">IBuy {
+    <span class="hljs-function">String <span class="hljs-title">buy<span class="hljs-params">(<span class="hljs-keyword">double price);
+}
+</span></span></span></span></span></span></span></span></span></code></pre>
+<p>Girl.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Girl <span class="hljs-keyword">implements <span class="hljs-title">IBuy {
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">buy<span class="hljs-params">(<span class="hljs-keyword">double price) {
+        System.out.println(String.format(<span class="hljs-string">"女孩花了%s元买了一件漂亮的衣服", price));
+        <span class="hljs-keyword">return <span class="hljs-string">"衣服";
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>Boy.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Boy <span class="hljs-keyword">implements <span class="hljs-title">IBuy {
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">buy<span class="hljs-params">(<span class="hljs-keyword">double price) {
+        System.out.println(String.format(<span class="hljs-string">"男孩花了%s元买了一个游戏机", price));
+        <span class="hljs-keyword">return <span class="hljs-string">"游戏机";
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>再看 BuyAspectJ 类，我们将之前的通知都注释掉。用一个环绕通知来实现这个功能：</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.aspectj.lang.ProceedingJoinPoint;
+<span class="hljs-keyword">import org.aspectj.lang.annotation.*;
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Aspect
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">BuyAspectJ {
+
+    <span class="hljs-comment">/*
+    @Pointcut("execution(* com.sharpcj.aopdemo.test1.IBuy.buy(..))")
+    public void point(){}
+
+    @Before("point()")
+    public void hehe() {
+        System.out.println("before ...");
+    }
+
+    @After("point()")
+    public void haha() {
+        System.out.println("After ...");
+    }
+
+    @AfterReturning("point()")
+    public void xixi() {
+        System.out.println("AfterReturning ...");
+    }
+
+    @Around("point()")
+    public void xxx(ProceedingJoinPoint pj) {
+        try {
+            System.out.println("Around aaa ...");
+            pj.proceed();
+            System.out.println("Around bbb ...");
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+    }
+    */
+
+
+    <span class="hljs-meta">@Pointcut(<span class="hljs-string">"execution(String com.sharpcj.aopdemo.test1.IBuy.buy(double)) &amp;&amp; args(price) &amp;&amp; bean(girl)")
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">gif<span class="hljs-params">(<span class="hljs-keyword">double price) {
+    }
+
+    <span class="hljs-meta">@Around(<span class="hljs-string">"gif(price)")
+    <span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">hehe<span class="hljs-params">(ProceedingJoinPoint pj, <span class="hljs-keyword">double price){
+        <span class="hljs-keyword">try {
+            pj.proceed();
+            <span class="hljs-keyword">if (price &gt; <span class="hljs-number">68) {
+                System.out.println(<span class="hljs-string">"女孩买衣服超过了68元，赠送一双袜子");
+                <span class="hljs-keyword">return <span class="hljs-string">"衣服和袜子";
+            }
+        } <span class="hljs-keyword">catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+        <span class="hljs-keyword">return <span class="hljs-string">"衣服";
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>前文提到，当不关心方法返回值的时候，我们在编写切点指示器的时候使用了 <code>*</code> ， 当不关心方法参数的时候，我们使用了 <code>..</code>。现在如果我们需要传入参数，并且有返回值的时候，则需要使用对应的类型。在编写通知的时候，我们也需要声明对应的返回值类型和参数类型。</p>
+<p>测试类：AppTest.java</p>
+<pre><code class="hljs swift">package com.sharpcj.aopdemo;
+
+<span class="hljs-keyword">import com.sharpcj.aopdemo.test1.Boy;
+<span class="hljs-keyword">import com.sharpcj.aopdemo.test1.Girl;
+<span class="hljs-keyword">import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">AppTest {
+    <span class="hljs-keyword">public <span class="hljs-keyword">static void main(<span class="hljs-type">String[] args) {
+        <span class="hljs-type">AnnotationConfigApplicationContext context = new <span class="hljs-type">AnnotationConfigApplicationContext(<span class="hljs-type">AppConfig.<span class="hljs-keyword">class);
+        <span class="hljs-type">Boy boy = context.getBean(<span class="hljs-string">"boy",<span class="hljs-type">Boy.<span class="hljs-keyword">class);
+        <span class="hljs-type">Girl girl = (<span class="hljs-type">Girl) context.getBean(<span class="hljs-string">"girl");
+        <span class="hljs-type">String boyBought = boy.buy(<span class="hljs-number">35);
+        <span class="hljs-type">String girlBought = girl.buy(<span class="hljs-number">99.8);
+
+        <span class="hljs-type">System.out.<span class="hljs-built_in">println(<span class="hljs-string">"男孩买到了：" + boyBought);
+        <span class="hljs-type">System.out.<span class="hljs-built_in">println(<span class="hljs-string">"女孩买到了：" + girlBought);
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>测试结果：<br/><img alt="" loading="lazy" src="/images/cnblogs/8b5db9066285b422.png"/><br/>可以看到，我们成功通过 AOP 实现了需求，并将结果打印了出来。</p>
+<h2 id="esa_index_13">4.5 通过注解配置织入的方式</h2>
+<p>前面还有一个遗留问题，在配置文件中，我们用注解 <code>@EnableAspectJAutoProxy()</code> 启用Spring AOP 的时候，我们给参数 <code>proxyTargetClass</code> 赋值为 <code>true</code>,如果我们不写参数，默认为 false。这个时候运行程序，程序抛出异常<br/><img alt="" loading="lazy" src="/images/cnblogs/a7c8b7c4cfbbd46b.png"/></p>
+<p>这是一个强制类型转换异常。为什么会抛出这个异常呢？或许已经能够想到，这跟Spring AOP 动态代理的机制有关，这个 <code>proxyTargetClass</code> 参数决定了代理的机制。当这个参数为 false 时，<br/>通过jdk的基于接口的方式进行织入，这时候代理生成的是一个接口对象，将这个接口对象强制转换为实现该接口的一个类，自然就抛出了上述类型转换异常。<br/>反之，<code>proxyTargetClass</code> 为 <code>true</code>，则会使用 cglib 的动态代理方式。这种方式的缺点是拓展类的方法被<code>final</code>修饰时，无法进行织入。<br/>测试一下，我们将 <code>proxyTargetClass</code> 参数设为 <code>true</code>，同时将 Girl.java 的 Buy 方法用 <code>final</code> 修饰：<br/>AppConfig.java</p>
+<pre><code class="hljs css"><span class="hljs-selector-tag">package <span class="hljs-selector-tag">com<span class="hljs-selector-class">.sharpcj<span class="hljs-selector-class">.aopdemo;
+
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.ComponentScan;
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.Configuration;
+<span class="hljs-selector-tag">import <span class="hljs-selector-tag">org<span class="hljs-selector-class">.springframework<span class="hljs-selector-class">.context<span class="hljs-selector-class">.annotation<span class="hljs-selector-class">.EnableAspectJAutoProxy;
+
+@<span class="hljs-keyword">Configuration
+@ComponentScan(basePackageClasses = {<span class="hljs-selector-tag">com<span class="hljs-selector-class">.sharpcj<span class="hljs-selector-class">.aopdemo<span class="hljs-selector-class">.test1<span class="hljs-selector-class">.IBuy<span class="hljs-selector-class">.class})
+@<span class="hljs-keyword">EnableAspectJAutoProxy(<span class="hljs-keyword">proxyTargetClass = true)
+public class AppConfig {
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>Girl.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test1;
+
+<span class="hljs-keyword">import org.springframework.stereotype.Component;
+
+<span class="hljs-meta">@Component
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Girl <span class="hljs-keyword">implements <span class="hljs-title">IBuy {
+    <span class="hljs-meta">@Override
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">final String <span class="hljs-title">buy<span class="hljs-params">(<span class="hljs-keyword">double price) {
+        System.out.println(String.format(<span class="hljs-string">"女孩花了%s元买了一件漂亮的衣服", price));
+        <span class="hljs-keyword">return <span class="hljs-string">"衣服";
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>此时运行结果：<br/><img alt="" loading="lazy" src="/images/cnblogs/a1bf10a523d8b389.png"/></p>
+<p>可以看到，我们的切面并没有织入生效。</p>
+<h1 id="esa_index_14">五、通过 XML 配置文件声明切面</h1>
+<p>前面的示例中，我们已经展示了如何通过注解配置去声明切面，下面我们看看如何在 XML 文件中声明切面。下面先列出 XML 中声明 AOP 的常用元素：<br/><img alt="" loading="lazy" src="/images/cnblogs/85ae8da7767608f3.png"/></p>
+<p>我们依然可以使用 <code>&lt;aop:aspectj-autoproxy&gt;</code> 元素，他能够自动代理AspectJ注解的通知类。</p>
+<h2 id="esa_index_15">5.1 XML 配置文件中切点指示器</h2>
+<p>在XML配置文件中，切点指示器表达式与通过注解配置的写法基本一致，区别前面有提到，即XML文件中需要使用 “and”、“or”、“not”来表示 “且”、“或”、“非”的关系。</p>
+<h2 id="esa_index_16">5.2 XML 文件配置 AOP 实例</h2>
+<p>下面我们不使用任何注解改造上面的例子：<br/>BuyAspectJ.java</p>
+<pre><code class="hljs cs">package com.sharpcj.aopdemo.test2;
+
+import org.aspectj.lang.ProceedingJoinPoint;
+
+<span class="hljs-keyword">public <span class="hljs-keyword">class <span class="hljs-title">BuyAspectJ {
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">hehe(<span class="hljs-params">) {
+        System.<span class="hljs-keyword">out.println(<span class="hljs-string">"before ...");
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">haha(<span class="hljs-params">) {
+        System.<span class="hljs-keyword">out.println(<span class="hljs-string">"After ...");
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">xixi(<span class="hljs-params">) {
+        System.<span class="hljs-keyword">out.println(<span class="hljs-string">"AfterReturning ...");
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">xxx(<span class="hljs-params">ProceedingJoinPoint pj) {
+        <span class="hljs-keyword">try {
+            System.<span class="hljs-keyword">out.println(<span class="hljs-string">"Around aaa ...");
+            pj.proceed();
+            System.<span class="hljs-keyword">out.println(<span class="hljs-string">"Around bbb ...");
+        } <span class="hljs-keyword">catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>在 Resource 目录下新建一个配置文件 aopdemo.xml ：</p>
+<pre><code class="hljs xml"><span class="php"><span class="hljs-meta">&lt;?xml version=<span class="hljs-string">"1.0" encoding=<span class="hljs-string">"UTF-8"<span class="hljs-meta">?&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">beans <span class="hljs-attr">xmlns=<span class="hljs-string">"http://www.springframework.org/schema/beans"
+       <span class="hljs-attr">xmlns:xsi=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance" <span class="hljs-attr">xmlns:aop=<span class="hljs-string">"http://www.springframework.org/schema/aop"
+       <span class="hljs-attr">xsi:schemaLocation=<span class="hljs-string">"http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd"&gt;
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"boy" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.Boy"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"girl" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.Girl"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"buyAspectJ" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.BuyAspectJ"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">aop:config <span class="hljs-attr">proxy-target-class=<span class="hljs-string">"true"&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">aop:aspect <span class="hljs-attr">id=<span class="hljs-string">"qiemian" <span class="hljs-attr">ref=<span class="hljs-string">"buyAspectJ"&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:before <span class="hljs-attr">pointcut=<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test2.IBuy.buy(..))" <span class="hljs-attr">method=<span class="hljs-string">"hehe"/&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:after <span class="hljs-attr">pointcut=<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test2.IBuy.buy(..))" <span class="hljs-attr">method=<span class="hljs-string">"haha"/&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:after-returning <span class="hljs-attr">pointcut=<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test2.IBuy.buy(..))" <span class="hljs-attr">method=<span class="hljs-string">"xixi"/&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:around <span class="hljs-attr">pointcut=<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test2.IBuy.buy(..))" <span class="hljs-attr">method=<span class="hljs-string">"xxx"/&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-name">aop:aspect&gt;
+    <span class="hljs-tag">&lt;/<span class="hljs-name">aop:config&gt;
+<span class="hljs-tag">&lt;/<span class="hljs-name">beans&gt;
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>这里分别定义了一个切面，里面包含四种类型的通知。<br/>测试文件中，使用</p>
+<pre><code class="hljs verilog">ClassPathXmlApplicationContext <span class="hljs-keyword">context = <span class="hljs-keyword">new ClassPathXmlApplicationContext(<span class="hljs-string">"aopdemo.xml");
+</span></span></span></code></pre>
+<p>来获取 ApplicationContext，其它代码不变。</p>
+<h2 id="esa_index_17">5.3 XML 文件配置声明切点</h2>
+<p>对于频繁重复使用的切点表达式，我们也可以声明成切点。<br/>配置文件如下：aopdemo.xml</p>
+<pre><code class="hljs xml"><span class="php"><span class="hljs-meta">&lt;?xml version=<span class="hljs-string">"1.0" encoding=<span class="hljs-string">"UTF-8"<span class="hljs-meta">?&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">beans <span class="hljs-attr">xmlns=<span class="hljs-string">"http://www.springframework.org/schema/beans"
+       <span class="hljs-attr">xmlns:xsi=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance" <span class="hljs-attr">xmlns:aop=<span class="hljs-string">"http://www.springframework.org/schema/aop"
+       <span class="hljs-attr">xsi:schemaLocation=<span class="hljs-string">"http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd"&gt;
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"boy" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.Boy"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"girl" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.Girl"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"buyAspectJ" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.BuyAspectJ"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">aop:config <span class="hljs-attr">proxy-target-class=<span class="hljs-string">"true"&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">aop:pointcut <span class="hljs-attr">id=<span class="hljs-string">"apoint" <span class="hljs-attr">expression=<span class="hljs-string">"execution(* com.sharpcj.aopdemo.test2.IBuy.buy(..))"/&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">aop:aspect <span class="hljs-attr">id=<span class="hljs-string">"qiemian" <span class="hljs-attr">ref=<span class="hljs-string">"buyAspectJ"&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:before <span class="hljs-attr">pointcut-ref=<span class="hljs-string">"apoint" <span class="hljs-attr">method=<span class="hljs-string">"hehe"/&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:after <span class="hljs-attr">pointcut-ref=<span class="hljs-string">"apoint" <span class="hljs-attr">method=<span class="hljs-string">"haha"/&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:after-returning <span class="hljs-attr">pointcut-ref=<span class="hljs-string">"apoint" <span class="hljs-attr">method=<span class="hljs-string">"xixi"/&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:around <span class="hljs-attr">pointcut-ref=<span class="hljs-string">"apoint" <span class="hljs-attr">method=<span class="hljs-string">"xxx"/&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-name">aop:aspect&gt;
+    <span class="hljs-tag">&lt;/<span class="hljs-name">aop:config&gt;
+<span class="hljs-tag">&lt;/<span class="hljs-name">beans&gt;
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h2 id="esa_index_18">5.4 XML文件配置为通知传递参数</h2>
+<p>BuyAspectJ.java</p>
+<pre><code class="hljs java"><span class="hljs-keyword">package com.sharpcj.aopdemo.test2;
+
+<span class="hljs-keyword">import org.aspectj.lang.ProceedingJoinPoint;
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">BuyAspectJ {
+<span class="hljs-function"><span class="hljs-keyword">public String <span class="hljs-title">hehe<span class="hljs-params">(ProceedingJoinPoint pj, <span class="hljs-keyword">double price){
+        <span class="hljs-keyword">try {
+            pj.proceed();
+            <span class="hljs-keyword">if (price &gt; <span class="hljs-number">68) {
+                System.out.println(<span class="hljs-string">"女孩买衣服超过了68元，赠送一双袜子");
+                <span class="hljs-keyword">return <span class="hljs-string">"衣服和袜子";
+            }
+        } <span class="hljs-keyword">catch (Throwable throwable) {
+            throwable.printStackTrace();
+        }
+        <span class="hljs-keyword">return <span class="hljs-string">"衣服";
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>aopdemo.xml</p>
+<pre><code class="hljs xml"><span class="php"><span class="hljs-meta">&lt;?xml version=<span class="hljs-string">"1.0" encoding=<span class="hljs-string">"UTF-8"<span class="hljs-meta">?&gt;
+<span class="hljs-tag">&lt;<span class="hljs-name">beans <span class="hljs-attr">xmlns=<span class="hljs-string">"http://www.springframework.org/schema/beans"
+       <span class="hljs-attr">xmlns:xsi=<span class="hljs-string">"http://www.w3.org/2001/XMLSchema-instance" <span class="hljs-attr">xmlns:aop=<span class="hljs-string">"http://www.springframework.org/schema/aop"
+       <span class="hljs-attr">xsi:schemaLocation=<span class="hljs-string">"http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd"&gt;
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"boy" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.Boy"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"girl" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.Girl"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-name">bean <span class="hljs-attr">id=<span class="hljs-string">"buyAspectJ" <span class="hljs-attr">class=<span class="hljs-string">"com.sharpcj.aopdemo.test2.BuyAspectJ"&gt;<span class="hljs-tag">&lt;/<span class="hljs-name">bean&gt;
+
+    <span class="hljs-tag">&lt;<span class="hljs-name">aop:config <span class="hljs-attr">proxy-target-class=<span class="hljs-string">"true"&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">aop:pointcut <span class="hljs-attr">id=<span class="hljs-string">"apoint" <span class="hljs-attr">expression=<span class="hljs-string">"execution(String com.sharpcj.aopdemo.test2.IBuy.buy(double)) and args(price) and bean(girl)"/&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-name">aop:aspect <span class="hljs-attr">id=<span class="hljs-string">"qiemian" <span class="hljs-attr">ref=<span class="hljs-string">"buyAspectJ"&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-name">aop:around <span class="hljs-attr">pointcut-ref=<span class="hljs-string">"apoint" <span class="hljs-attr">method=<span class="hljs-string">"hehe"/&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-name">aop:aspect&gt;
+    <span class="hljs-tag">&lt;/<span class="hljs-name">aop:config&gt;
+<span class="hljs-tag">&lt;/<span class="hljs-name">beans&gt;
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h2 id="esa_index_19">5.5 Xml 文件配置织入的方式</h2>
+<p>同注解配置类似,<br/>CGlib 代理方式：</p>
+<pre><code class="hljs javascript">&lt;aop:config proxy-target-<span class="hljs-class"><span class="hljs-keyword">class=<span class="hljs-string">"true"&gt; <span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">aop:config&gt;
+
+</span></span></span></span></span></span></code></pre>
+<p>JDK 代理方式：</p>
+<pre><code class="hljs javascript">&lt;aop:config proxy-target-<span class="hljs-class"><span class="hljs-keyword">class=<span class="hljs-string">"false"&gt; <span class="xml"><span class="hljs-tag">&lt;/<span class="hljs-name">aop:config&gt;
+</span></span></span></span></span></span></code></pre>
+<h1 id="esa_index_20">六、总结</h1>
+<p>本文简单记录了 AOP 的编程思想，然后介绍了 Spring 中 AOP 的相关概念，以及通过注解方式和XML配置文件两种方式使用 Spring AOP进行编程。 相比于 AspectJ 的面向切面编程，Spring AOP 也有一些局限性，但是已经可以解决开发中的绝大多数问题了，如果确实遇到了 Spring AOP 解决不了的场景，我们依然可以在 Spring 中使用 AspectJ 来解决。</p>
+</div>
+</div>
+{% endraw %}

@@ -1,0 +1,32 @@
+---
+title: "StringUtils.isBlank()的使用"
+date: 2020-10-12 18:01:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "在校验一个String类型的变量是否为空时，通常存在3中情况 是否为 null 是否为 “” 是否为空字符串(引号中间有空格) 如： \" \"。 制表符、换行符、换页符和回车 StringUtils的isBlank()方法可以一次性校验这三种情况，返回值都是true,否则为false StringUt"
+read_minutes: 1
+cnblogs_id: 13804317
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13804317.html"
+---
+{% raw %}
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">在校验一个String类型的变量是否为空时，通常存在3中情况
+
+是否为 </span><span style="color: #0000ff;">null</span><span style="color: #000000;">
+是否为 “”
+是否为空字符串(引号中间有空格) 如： </span>" "<span style="color: #000000;">。
+制表符、换行符、换页符和回车
+
+StringUtils的isBlank()方法可以一次性校验这三种情况，返回值都是true,否则为false
+
+StringUtils.isBlank(image);
+如果image为空，返回值为true
+如果返回值不为空，返回值为false
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">想要判断是不是空 一般下面两个就可以了</span>
+<span style="color: #0000ff;">if</span>(<span style="color: #0000ff;">null</span> == image ||<span style="color: #000000;"> StringUtils.isBlank(image.getImage())){
+map.put(“code”,“</span>0<span style="color: #000000;">”);
+map.put(“msg”,“数据为空”);
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> map;
+}</span></pre>
+</div>
+{% endraw %}

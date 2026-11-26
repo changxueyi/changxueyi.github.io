@@ -1,0 +1,18 @@
+---
+title: "ibatIS中的isNotNull、isEqual、isEmpty"
+date: 2020-06-14 17:40:00 +0800
+tags: ["【数据库】-- Mysql", "【Java】-- Java基础"]
+excerpt: "isNull判断property字段是否是null，用isEmpty更方便，包含了null和空字符串 例子一：isEqual相当于equals，数字用得多些，一般都是判断状态值<isEqual property=\"state\" compareValue=\"0\">< /isEqual>或<isEqua"
+read_minutes: 1
+cnblogs_id: 13125798
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13125798.html"
+tags_inferred: true
+---
+{% raw %}
+<p>isNull判断property字段是否是null，用isEmpty更方便，包含了null和空字符串</p>
+<p> </p>
+<p>例子一：<br/>isEqual相当于equals，数字用得多些，一般都是判断状态值<br/>&lt;isEqual property="state" compareValue="0"&gt;<br/>&lt; /isEqual&gt;<br/>或<br/>&lt;isEqual property="state" compareProperty="nextState"&gt;<br/>&lt; /isEqual&gt;</p>
+<p> </p>
+<p>例子一：</p>
+<p>传入的map或者类的属性name等于"1"吗，是就附加and和vvvv = '哈哈'<br/>&lt;isEqual property="name" compareValue="1" prepend="and"&gt;<br/>vvvv = '哈哈'<br/>&lt; /isEqual&gt;<br/><br/>传入的map或者类的属性name是null吗，是就附加and和vvvv = null<br/>&lt; isNull property="name" prepend="and"&gt;<br/>vvvv = null<br/>&lt; /isNull&gt;</p>
+{% endraw %}

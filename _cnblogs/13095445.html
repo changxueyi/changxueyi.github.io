@@ -1,0 +1,370 @@
+---
+title: "四种常见的 POST 提交数据方式 专题"
+date: 2020-06-11 19:09:00 +0800
+tags: ["【计算机网络】-- 网络"]
+excerpt: "定义和用法 enctype 属性规定在发送到服务器之前应该如何对表单数据进行编码。默认地，表单数据会编码为 \"application/x-www-form-urlencoded\"。就是说，在发送到服务器之前，所有字符都会进行编码（空格转换为 \"+\" 加号，特殊符号转换为 ASCII HEX 值）。"
+read_minutes: 21
+cnblogs_id: 13095445
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13095445.html"
+tags_inferred: true
+---
+{% raw %}
+<h2>定义和用法</h2>
+<p>enctype 属性规定在<strong>发送到服务器之前</strong>应该如何<strong>对表单数据</strong>进行<strong>编码</strong>。<br/>默认地，表单数据会编码为 "application/x-www-form-urlencoded"。就是说，在发送到服务器之前，所有字符都会进行编码（空格转换为 "+" 加号，特殊符号转换为 ASCII HEX 值）。</p>
+<h3>enctype属性值</h3>
+<table>
+<tbody>
+<tr><th>值</th><th>描述</th></tr>
+<tr>
+<td>application/x-www-form-urlencoded</td>
+<td>在发送前编码所有字符（默认）</td>
+</tr>
+<tr>
+<td>multipart/form-data</td>
+<td>
+<p>不对字符编码。</p>
+<p>在使用包含文件上传控件的表单时，必须使用该值。</p>
+</td>
+</tr>
+<tr>
+<td>text/plain</td>
+<td>空格转换为 "+" 加号，但不对特殊字符编码。<br/><br/></td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+<p><a href="http://www.ietf.org/rfc/rfc2616.txt">HTTP/1.1 协议</a>规定的 HTTP 请求方法有 OPTIONS、GET、HEAD、POST、PUT、DELETE、TRACE、CONNECT 这几种。<br/>其中 POST 一般用来向服务端提交数据，本文主要讨论 POST 提交数据的几种方式。</p>
+<p>我们知道，HTTP 协议是以 <strong>ASCII 码</strong>传输，建立在 TCP/IP 协议之上的应用层规范。<br/>规范把 HTTP 请求分为三个部分：状态行、请求头、消息主体。类似于下面这样：</p>
+<pre><strong class="name">BASH</strong><code class="lang-bash hljs">&lt;method&gt; &lt;request-URL&gt; &lt;version&gt;
+&lt;headers&gt;
+
+&lt;entity-body&gt;
+</code></pre>
+<p>协议规定 POST 提交的数据必须放在消息主体（entity-body）中，但协议并没有规定数据必须<strong>使用什么编码方式</strong>。实际上，开发者完全可以自己决定消息主体的格式，只要最后发送的 HTTP 请求满足上面的格式就可以。</p>
+<p>但是，数据发送出去，还要服务端解析成功才有意义。一般服务端语言如 php、python 等，以及它们的 framework，都内置了自动解析常见数据格式的功能。<br/>服务端通常是根据请求头（headers）中的<strong> Content-Type</strong> 字段来获知请求中的消息主体是用何种方式编码，再对主体进行解析。<br/>所以说到 POST 提交数据方案，包含了 Content-Type 和消息主体编码方式两部分。<br/>下面就正式开始介绍它们。</p>
+<h3>application/x-www-form-urlencoded</h3>
+<p>这应该是最常见的 POST 提交数据的方式了。浏览器的原生 &lt;form&gt; 表单，如果<strong>不设置 <code>enctype</code> 属性</strong>，那么最终就会以 application/x-www-form-urlencoded 方式提交数据。</p>
+<div class="cnblogs_code">
+<pre>&lt;form action="form_action.asp" enctype="text/plain"&gt;
+  &lt;p&gt;First name: &lt;input type="text" name="fname" /&gt;&lt;/p&gt;
+  &lt;p&gt;Last name: &lt;input type="text" name="lname" /&gt;&lt;/p&gt;
+  &lt;input type="submit" value="Submit" /&gt;
+&lt;/form&gt;</pre>
+</div>
+<p>此时Form提交的请求数据，抓包时看到的请求会是这样的内容（无关的请求头在本文中都省略掉了）：</p>
+<p><strong class="name">BASH</strong><code class="lang-bash">POST</code><code class="lang-bash"> h</code><code class="lang-bash">ttp://www.example.com</code><code class="lang-bash"> HTTP/<span class="hljs-number">1.1<br/></span></code><code class="lang-bash"><span class="hljs-number">   Content-Type: application/x-www-form-urlencoded;charset=utf-<span class="hljs-number">8<br/></span></span></code><code class="lang-bash">  </code><code class="lang-bash"> </code><code class="lang-bash"><span class="hljs-number"><span class="hljs-number">title=<span class="hljs-built_in">test&amp;sub%<span class="hljs-number">5B%<span class="hljs-number">5D=<span class="hljs-number">1&amp;sub%<span class="hljs-number">5B%<span class="hljs-number">5D=<span class="hljs-number">2&amp;sub%<span class="hljs-number">5B%<span class="hljs-number">5D=<span class="hljs-number">3</span></span></span></span></span></span></span></span></span></span></span></span></code></p>
+<p>首先，Content-Type 被指定为 application/x-www-form-urlencoded；其次，提交的数据按照<strong> key1=val1&amp;key2=val2 的方式进行编码</strong>，key 和 val 都进行了 URL 转码。<br/>大部分服务端语言都对这种方式有很好的支持。例如 PHP 中，$_POST['title'] 可以获取到 title 的值，$_POST['sub'] 可以得到 sub 数组。</p>
+<p>很多时候，我们用 Ajax 提交数据时，也是使用这种方式。<br/>例如 <a href="http://jquery.com/">JQuery</a> 和 <a href="http://www.qwrap.com/">QWrap</a> 的 Ajax，Content-Type <strong>默认值</strong>都是「application/<strong>x-www-form-urlencoded</strong>;charset=utf-8」。</p>
+<h3>multipart/form-data</h3>
+<p>这又是一个常见的 POST 数据提交的方式。我们使用表单<strong>上传文件</strong>时，必须让 &lt;form&gt; 表单的enctype 等于 multipart/form-data。直接来看一个请求示例：</p>
+<pre><strong class="name">BASH</strong><code class="lang-bash hljs">POST http://www.example.com HTTP/<span class="hljs-number">1.1
+Content-Type:multipart/form-data; boundary=----WebKitFormBoundaryrGKCBY7qhFd3TrwA
+
+------WebKitFormBoundaryrGKCBY7qhFd3TrwA
+Content-Disposition: form-data; name=<span class="hljs-string"><span class="hljs-string">"text"
+
+title
+------WebKitFormBoundaryrGKCBY7qhFd3TrwA
+Content-Disposition: form-data; name=<span class="hljs-string"><span class="hljs-string">"file"; filename=<span class="hljs-string"><span class="hljs-string">"chrome.png"
+Content-Type: image/png
+
+PNG ... content of chrome.png ...
+------WebKitFormBoundaryrGKCBY7qhFd3TrwA--
+</span></span></span></span></span></span></span></code></pre>
+<p>这个例子稍微复杂点。首先生成了一个 boundary 用于分割不同的字段，为了避免与正文内容重复，boundary 很长很复杂。然后 Content-Type 里指明了数据是以 multipart/form-data 来编码，本次请求的 boundary 是什么内容。消息主体里按照字段个数又分为多个结构类似的部分，每部分都是以 <code>--boundary</code> 开始，紧接着是内容描述信息，然后是回车，最后是字段具体内容（文本或二进制）。如果传输的是文件，还要包含文件名和文件类型信息。消息主体最后以 <code>--boundary--</code> 标示结束。<br/>关于 multipart/form-data 的详细定义，请前往 <a href="http://www.ietf.org/rfc/rfc1867.txt">rfc1867</a> 查看。</p>
+<p>这种方式一般用来上传文件，各大服务端语言对它也有着良好的支持。</p>
+<p>上面提到的这两种 POST 数据的方式，都是浏览器原生支持的，而且现阶段标准中原生 &lt;form&gt; 表单也<a href="http://www.w3.org/TR/html401/interact/forms.html#h-17.13.4">只支持这两种方式</a>（通过 &lt;form&gt; 元素的 <code>enctype</code> 属性指定，默认为 <code>application/x-www-form-urlencoded</code>。其实 <code>enctype</code> 还支持 <code>text/plain</code>，不过用得非常少）。</p>
+<p>随着越来越多的 Web 站点，尤其是 WebApp，全部使用 Ajax 进行数据交互之后，我们完全可以定义新的数据提交方式，给开发带来更多便利。</p>
+<h3>application/json</h3>
+<p>application/json 这个 Content-Type 作为响应头大家肯定不陌生。实际上，现在越来越多的人把它作为请求头，用来告诉服务端消息主体是序列化后的 JSON 字符串。由于 JSON 规范的流行，除了低版本 IE 之外的各大浏览器都原生支持 JSON.stringify，服务端语言也都有处理 JSON 的函数，使用 JSON 不会遇上什么麻烦。</p>
+<p>JSON 格式支持比键值对复杂得多的结构化数据，这一点也很有用。记得我几年前做一个项目时，需要提交的数据层次非常深，我就是把数据 JSON 序列化之后来提交的。不过当时我是把 JSON 字符串作为 val，仍然放在键值对里，以 x-www-form-urlencoded 方式提交。</p>
+<p>Google 的 <a href="http://angularjs.org/">AngularJS</a> 中的 Ajax 功能，默认就是提交 JSON 字符串。例如下面这段代码：</p>
+<div class="cnblogs_code">
+<pre>JSvar data = {'title':'test', 'sub' : [1,2,3]};
+$http.post(url, data).success(function(result) {
+    ...
+});</pre>
+</div>
+<p> </p>
+<p>最终发送的请求是：</p>
+<div class="cnblogs_code">
+<pre>BASHPOST http://www.example.com HTTP/1.1 
+Content-Type: application/json;charset=utf-8
+
+{"title":"test","sub":[1,2,3]}</pre>
+</div>
+<p> </p>
+<p>这种方案，可以方便的提交复杂的结构化数据，特别适合 RESTful 的接口。各大抓包工具如 Chrome 自带的开发者工具、Firebug、Fiddler，都会以树形结构展示 JSON 数据，非常友好。但也有些服务端语言还没有支持这种方式，例如 php 就无法通过 $_POST 对象从上面的请求中获得内容。这时候，需要自己动手处理下：在请求头中 Content-Type 为 application/json 时，从 <code>php://input</code> 里获得原始输入流，再 <code>json_decode</code> 成对象。一些 php 框架已经开始这么做了。</p>
+<p>当然 AngularJS 也可以配置为使用 x-www-form-urlencoded 方式提交数据。如有需要，可以参考<a href="http://victorblog.com/2012/12/20/make-angularjs-http-service-behave-like-jquery-ajax/">这篇文章</a>。</p>
+<h3>text/xml</h3>
+<p>我的博客之前<a href="http://www.imququ.com/post/64.html">提到过 XML-RPC</a>（XML Remote Procedure Call）。它是一种使用 HTTP 作为传输协议，XML 作为编码方式的远程调用规范。典型的 XML-RPC 请求是这样的：</p>
+<div class="cnblogs_code">
+
+<pre>HTMLPOST http://www.example.com HTTP/1.1 
+Content-Type: text/xml
+
+&lt;?xml version="1.0"?&gt;
+&lt;methodCall&gt;
+    &lt;methodName&gt;examples.getStateName&lt;/methodName&gt;
+    &lt;params&gt;
+        &lt;param&gt;
+            &lt;value&gt;&lt;i4&gt;41&lt;/i4&gt;&lt;/value&gt;
+        &lt;/param&gt;
+    &lt;/params&gt;
+&lt;/methodCall&gt;</pre>
+
+</div>
+<p>XML-RPC 协议简单、功能够用，各种语言的实现都有。它的使用也很广泛，如 WordPress 的 <a href="http://codex.wordpress.org/XML-RPC_WordPress_API">XML-RPC Api</a>，搜索引擎的 <a href="http://help.baidu.com/question?prod_en=master&amp;class=476&amp;id=1000423">ping 服务</a>等等。JavaScript 中，也有<a href="http://plugins.jquery.com/xmlrpc/">现成的库</a>支持以这种方式进行数据交互，能很好的支持已有的 XML-RPC 服务。不过，我个人觉得 XML 结构还是过于臃肿，一般场景用 JSON 会更灵活方便。</p>
+<p><a href="https://imququ.com/post/four-ways-to-post-data-in-http.html" rel="bookmark" title="Permalink to 四种常见的 POST 提交数据方式">https://imququ.com/post/four-ways-to-post-data-in-http.html</a></p>
+<h1 class="postTitle"><a class="postTitle2" href="http://www.cnblogs.com/ASPNET2008/p/5744815.html" id="cb_post_title_url">rest api参数与content-type</a></h1>
+<div id="cnblogs_post_body">
+<p><img alt="" height="115" loading="lazy" src="/images/cnblogs/c799f514fcba43eb.jpg" width="784"/></p>
+<p>最近为项目组提供rest api 时遇到了关于接口参数的传递问题，主要是没有充分考虑到第三方调用者的使用方式，应该尽量的去兼容公司之前提供出去的接口调用方式，这样可以降低第三方调用者的学习成本，尽管之前的方式并不是那么的推荐，好的做法是即兼容老的做法也支持推荐的做法。<br/><br/>对于基于http post接口，Content-type我会优先选择application/json,但公司之前提供的接口恰恰采用了application/x-www-form-urlencoded，它是表单默认的提交类型，基于key/value形式提交到服务端的。<br/>spring mvc是如何接收下面两种经典数据的? (至于form-data，它即可以传键值对也可以上传文件，这里不涉及到文件所以只讨论下面两种)：</p>
+<ul>
+<li>Content-type=application/json：需要在参数上增加@RequestBody这个注解，说明参数是从http的requestbody中获取。</li>
+</ul>
+<p><img alt="" height="60" loading="lazy" src="/images/cnblogs/7eacc7f860deee63.jpg" width="988"/></p>
+<p>下图中的参数，是标准的json格式，对前端js非常友好。</p>
+<p><img alt="" height="287" loading="lazy" src="/images/cnblogs/23d168857777a15e.jpg" width="1220"/></p>
+<ul>
+<li>Content-type=application/x-www-form-urlencoded，参数上不能增加@RequestBody的注解</li>
+</ul>
+<p>下图的可以看出参数形式与get请求时，URL后面的参数格式</p>
+<p><img alt="" height="199" loading="lazy" src="/images/cnblogs/140115c473568145.jpg" width="1266"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/e6d83f7ca141f698.jpg"/><br/>为什么不推荐采用application/x-www-form-urlencoded这种类型，它有如下问题：</p>
+<ul>
+<li>测试困难,就别想通过postman这类工具测试：提交到服务端实际上是一个MultiValueMap(org.springframework.util.MultiValueMap或org.springframework.util.LinkedMultiValueMap)，<br/>如果value中的对象也是一个对象，那么在构建这个参数时就非常困难，看下它的过程
+<ul>
+<li>采用key1=value1&amp;key2=value2这种形式将所有参数拼接起来，从一长串字符中想了解每个参数的含义没有个好眼力怕是不行。</li>
+<li>value要进行编码，编码之后的对调试者不友好。</li>
+<li>value是复杂对象的情况更加糟糕，一般只能通过程序来序列化得到参数，想手写基本不可能。</li>
+</ul>
+</li>
+<li>客户端调用复杂</li>
+</ul>
+<p><br/>需要去构建List&lt;NameValuePair&gt;，一般页面传递的参数都是一个实体对象Model，需要额外的将这个Model转换成List&lt;NameValuePair&gt;，如果这个对象复杂，那么构建这个Key/Value就够人烦的了。<br/>这里给一个java通过apache httpclient调用的对比，看看哪一个简单。</p>
+<ul>
+<li>application/x-www-form-urlencoded</li>
+</ul>
+<p>需要手工将model转换成NameValuePair。</p>
+<p><img alt="" height="345" loading="lazy" src="/images/cnblogs/ff086deeac479e76.jpg" width="837"/></p>
+<ul>
+<li>application/json</li>
+</ul>
+<p>这里只需要Model即可，不需要二次转换，结构也非常清楚。</p>
+<p><img alt="" height="350" loading="lazy" src="/images/cnblogs/e86957dd2450d3b1.jpg" width="776"/></p>
+<ul>
+<li>key/value的语言表达形式没有json强，下面两种你更加喜欢哪一个呢？</li>
+<li>字符串</li>
+</ul>
+<p><img alt="" height="46" loading="lazy" src="/images/cnblogs/07fdb9be200bae8f.jpg" width="1226"/></p>
+<p>post man这类模似http请求的工具中，如果key对应的value是个对象，那么你需要通过工具得到它的序列化之后的字符串然后填写到字段中，想想都烦。如果你说我不需要通过这些模似工具测试，那就另当别论</p>
+<p><img alt="" height="199" loading="lazy" src="/images/cnblogs/26870eec616ba4bc.jpg" width="1239"/></p>
+<ul>
+<li>
+<ul>
+<li>json</li>
+</ul>
+</li>
+</ul>
+<p><img alt="" height="436" loading="lazy" src="/images/cnblogs/422364e435049a83.jpg" width="421"/></p>
+<ul>
+<li>数据结构更加复杂</li>
+</ul>
+<p>如果需要提交的对象非常复杂，属性非常多，如果将所有的属性都构建到MultiValueMap中，那个Map的构建会非常复杂，试想如果对象有多级嵌套对象呢。所有为了避免这个问题，我们将需要提交的业务对象做为一个key来存储，value就是对象序列化之后的字符串。再加了一些非业务参数，比如安全方面的token等参数，有效的降低了MultiValueMap构建的复杂度。但这种方式相对于json的传递方式来讲层次更深。如下图，我们的参数多了一层,jsonParam。</p>
+<p><img alt="" height="253" loading="lazy" src="/images/cnblogs/5a03a7bff4c84158.jpg" width="843"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4ea86e8b61e0b8d1.png"/><br/><br/>如果解决呢？<br/>不能不兼容现有的模式，但又想支持json，焦点就是在参数的接收上，让其能够完美的兼容上述两种参数传递，这里可以从HttpMessageConverter着手，这个就是用来将请求的参数映射到spring mvc方法中的实体参数的。我们可以编写一个自定义的类，内部借用FormHttpMessageConverter来接收MultiValueMap，即使方法参数上增加了@RequestBody的注解，也会走我们自定义的converter，就有机会去重新给参数赋值。</p>
+<p>这个方法中需要解决一个问题，就是客户端传递时每个参数都是当成字符串来处理的，这种导致我们通过FormHtppMessageConverter转换成Map时，原本是对象的属性被识别成字符串，而不是object，结果就是在反序列化时会出错。好在，上面我们将需要提交的对象包装了一次，产生一个公共的object参数jsonParam，只需要处理这一个特殊对象。做法就是从Map取出jsonParam，然后对其内容进行反序列化，更新Map值，再次进行反序列化就正常了。<br/><br/><img alt="" height="325" loading="lazy" src="/images/cnblogs/52acbd6604826973.jpg" width="990"/><br/>上图中的做法目前有如下问题</p>
+<ul>
+<li>序列化的字段是约定好的，也是基于我们的post model基本上来处理的，是针对性的converter</li>
+<li>代码最后面调用的jackon的convertValue，对需要反序列化的对象类型有要求，好像不支持泛型类型，比如这种类型的就不行： CommonParamInfoDto&lt;SearchParamInfo&lt;ProductSearchInfo&gt;&gt;</li>
+</ul>
+<p>完整的conveter代码如下，其实主要代码就是上图贴图中的那么对特定字段的序列化处理，其它的方法都是默认即可。</p>
+<div class="cnblogs_code">
+
+<pre>public class ObjectHttpMessageConverter implements HttpMessageConverter&lt;Object&gt; {
+
+    private final FormHttpMessageConverter formHttpMessageConverter = new FormHttpMessageConverter();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final LinkedMultiValueMap&lt;String, ?&gt; LINKED_MULTI_VALUE_MAP = new LinkedMultiValueMap&lt;&gt;();
+    private static final Class&lt;? extends MultiValueMap&lt;String, ?&gt;&gt; LINKED_MULTI_VALUE_MAP_CLASS
+            = (Class&lt;? extends MultiValueMap&lt;String, ?&gt;&gt;) LINKED_MULTI_VALUE_MAP.getClass();
+
+    @Override
+    public boolean canRead(Class clazz, MediaType mediaType) {
+        return objectMapper.canSerialize(clazz) &amp;&amp; formHttpMessageConverter.canRead(MultiValueMap.class, mediaType);
+    }
+
+    @Override
+    public boolean canWrite(Class clazz, MediaType mediaType) {
+        return false;
+    }
+
+    @Override
+    public List&lt;MediaType&gt; getSupportedMediaTypes() {
+        return formHttpMessageConverter.getSupportedMediaTypes();
+    }
+
+
+    @Override
+    public Object read(Class clazz, HttpInputMessage inputMessage) throws IOException, HttpMessageNotReadableException {
+        Map input = formHttpMessageConverter.read(LINKED_MULTI_VALUE_MAP_CLASS, inputMessage).toSingleValueMap();
+        String jsonParamKey="jsonParam";
+        if(input.containsKey(jsonParamKey)) {
+            String jsonParam = input.get(jsonParamKey).toString();
+            SearchParamInfo&lt;Object&gt; searchParamInfo = new SearchParamInfo&lt;Object&gt;();
+            Object jsonParamObj = JsonHelper.json2Object(jsonParam, searchParamInfo.getClass());
+            input.put("jsonParam", jsonParamObj);
+        }
+        Object objResult= objectMapper.convertValue(input, clazz);
+        return objResult;
+    }
+
+    @Override
+    public void write(Object o, MediaType contentType, HttpOutputMessage outputMessage) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("");
+    }
+}</pre>
+
+</div>
+<p> </p>
+<p>配置，写好了conveter之后，需要在配置文件中配置上才能生效。</p>
+<p><img alt="" height="124" loading="lazy" src="/images/cnblogs/156dbd5301b416d7.jpg" width="894"/></p>
+<p> </p>
+<p>最后，我们的方法就可以这样写，即可以支持 key/value对，也支持json</p>
+<p><img alt="" height="76" loading="lazy" src="/images/cnblogs/f455446280f7f271.jpg" width="1261"/></p>
+<p>我的目的在于api的参数即能支持application/x-www-form-urlencoded也能支持application/json，上面是我目前能想到的办法，如果大家有其它更好的办法多多指点。<br/><br/>根据上面的描述，可以得到以下结论：<br/>对象将转换成什么样的内容类型很大程序上取决于传递给put方法的类型，<br/>如果给定一个String值，那么将会使用StringHttpMessageConverter，这个值直接被写到请求体中，内容类型设置为"text/plain"<br/>如果给定一个MultiValueMap&lt;String,String&gt;，那么这个Map中的值会被FormHttpMessageConverter以“application/x-www-form-urlencoded”的格式写到请求体中<br/>因为给定的是一个自定义对象，所以需要一个能够处理任意对象的信息转换器。如果在类路径下包含Jackson2库，那么MappingJacksonHttpMessageConverter将以application/json格式将自定义对象写到请求中<br/><br/></p>
+<p> </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/a5a099999469b5bd.jpg"/></p>
+<p>我又可以愉快的使用post man测试了。而且可以推荐第三方调用者优先使用json，我相信这种即能简化编程又方便调试的优点应该能够吸引它们。</p>
+</div>
+<p>http://www.cnblogs.com/ASPNET2008/p/5744815.html</p>
+<p><br/>postman中 form-data、x-www-form-urlencoded、raw、binary的区别</p>
+<p>1、form-data:<br/>就是http请求中的multipart/form-data,它会将表单的数据处理为一条消息，以标签为单元，用分隔符分开。既可以上传键值对，也可以上传文件。当上传的字段是文件时，会有Content-Type来表名文件类型；content-disposition，用来说明字段的一些信息；<br/>由于有boundary隔离，所以multipart/form-data既可以上传文件，也可以上传键值对，它采用了键值对的方式，所以可以上传多个文件。<br/><img alt="" loading="lazy" src="/images/cnblogs/8604dd91d9140fe6.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/110b265562085b36.png"/></p>
+<p>新版本Postman在此处查看：<br/><img alt="" loading="lazy" src="/images/cnblogs/150788f67fea6307.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/0771658c00f41287.png"/></p>
+<p> </p>
+<p><br/>2、x-www-form-urlencoded：<br/>就是application/x-www-from-urlencoded,会将表单内的数据转换为键值对，比如,name=java&amp;age = 23</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/8a403e462059c1af.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/203a711ce329a7b0.png"/></p>
+<p>3、raw<br/>可以上传任意格式的文本，可以上传text、json、xml、html等</p>
+<p><br/><img alt="" loading="lazy" src="/images/cnblogs/6027501e1ab85067.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/0350264bbb1195fb.png"/></p>
+<p> </p>
+<p>4、binary<br/>相当于Content-Type:application/octet-stream,从字面意思得知，只可以上传二进制数据，通常用来上传文件，由于没有键值，所以，一次只能上传一个文件。</p>
+<p><br/>multipart/form-data与x-www-form-urlencoded区别<br/>multipart/form-data：既可以上传文件等二进制数据，也可以上传表单键值对，只是最后会转化为一条信息；<br/>x-www-form-urlencoded：只能上传键值对，并且键值对都是间隔分开的。</p>
+<p>http://blog.csdn.net/ye1992/article/details/49998511<br/> </p>
+<p> </p>
+<p>上传文件的表单中&lt;form&gt;要加属性enctype="multipart/form-data",很多人只是死记硬背知道上传表单要这么 写，知其然而不知其所以然。那到底为什么要添加这个属性呢？它是什么意思呢？它又有什么其他可选值呢？ 其实form表单在你不写enctype属性时，也默认为其添加了enctype属性值，默认值是enctype="application/x- www-form-urlencoded".这个属性管理的是表单的MIME编码，共有三个值可选：<br/>　　①application/x-www-form-urlencoded (默认值)<br/>　　②multipart/form-data<br/>　　③text/plain</p>
+<p>　　其中①application/x-www-form-urlencoded是默认值，大家可能在AJAX里见过这 个：xmlHttp.setRequestHeader("Content-Type","application/x-www-form- urlencoded"); 这两个要做的是同一件事情，就是设置表单传输的编码。在AJAX里不写有可能会报错，但是在HTML的form表单里是可以不写 enctype="application/x-www-form-urlencoded"的，因为默认HTML表单就是这种传输编码类型。而 ②multipart-form-data是用来指定传输数据的特殊类型的，主要就是我们上传的非文本的内容，比如图片或者mp3等等。 ③text/plain是纯文本传输的意思，在发送邮件时要设置这种编码类型，否则会出现接收时编码混乱的问题，网络上经常拿text/plain和 text/html做比较，其实这两个很好区分，前者用来传输纯文本文件，后者则是传递html代码的编码类型，在发送头文件时才用得上。①和③都不能用 于上传文件，只有multipart/form-data才能完整的传递文件数据。<br/><br/>　　上面提到的MIME，它的英文全称是"Multipurpose Internet Mail Extensions" 多功能Internet 邮件扩充服务，它是一种多用途网际邮件扩充协议，在1992年最早应用于电子邮件系统，但后来也应用到浏览器。服务器会将它们发送的多媒体数据的类型告诉 浏览器，而通知手段就是说明该多媒体数据的MIME类型，从而让浏览器知道接收到的信息哪些是MP3文件，哪些是Shockwave文件等等。服务器将 MIME标志符放入传送的数据中来告诉浏览器使用哪种插件读取相关文件。<br/><br/>　　简单说，MIME类型就是设定某种扩展名的文件用一种应用程序来打开的方式类型，当该扩展名文件被访问的时候，浏览器会自动使用指定应用程序来打开。多用于指定一些客户端自定义的文件名，以及一些媒体文件打开方式。<br/><br/>　　浏览器接收到文件后，会进入插件系统进行查找，查找出哪种插件可以识别读取接收到的文件。如果浏览器不清楚调用哪种插件系统，它可能会告诉用户缺少某 插件，或者直接选择某现有插件来试图读取接收到的文件，后者可能会导致系统的崩溃。传输的信息中缺少MIME标识可能导致的情况很难估计，因为某些计算机 系统可能不会出现什么故障，但某些计算机可能就会因此而崩溃。<br/><br/><br/>检查一个服务器是否正确设置了MIME类型的步骤是：<br/><br/>　　1. 在Netscape浏览器中打开服务器网页<br/>　　2. 进入"View"菜单，选择"Page Info"<br/>　　3. 在弹出的窗口中点击上层框架中的"EMBED"<br/>　　4. 在下层框架中查看MIME的类型是否为"application/x-director"或"application/x-shockwave- flash"，如果是上述信息的话表明服务器已经正确设置了MIME类型；<br/>          而如果MIME类型列出的是文本内容、八位一组的数据或是其它形式均表明服务器 的MIME类型没有设置正确。<br/><br/>　　如果服务器没有正确标明其发送的数据的类型，服务器管理员应该正确添加相关信息，具体操作方法非常简单快捷。<br/><br/>　　每个MIME类型由<strong>两部分组成</strong>，前面是数据的<strong>大类别</strong>，例如声音audio、图象image等，后面定义<strong>具体的种类</strong>。<br/><br/>　　<strong>常见的MIME类型<br/><br/>　　</strong>　　超文本标记语言文本 .html,.html text/html<br/><br/>　　　　普通文本 .txt text/plain<br/><br/>　　　　RTF文本 .rtf application/rtf<br/><br/>　　　　GIF图形 .gif image/gif<br/><br/>　　　　JPEG图形 .jpeg,.jpg image/jpeg<br/><br/>　　　　au声音文件 .au audio/basic<br/><br/>　　　　MIDI音乐文件 mid,.midi audio/midi,audio/x-midi<br/><br/>　　　　RealAudio音乐文件 .ra, .ram audio/x-pn-realaudio<br/><br/>　　　　MPEG文件 .mpg,.mpeg video/mpeg<br/><br/>　　　　AVI文件 .avi video/x-msvideo<br/><br/>　　　　GZIP文件 .gz application/x-gzip<br/><br/>　　　　TAR文件 .tar application/x-tar<br/><br/>Internet中有一个专门组织IANA来确认标准的MIME类型，但Internet发展的太快，很多应用程序等不及IANA来确认他们使用 的MIME类型为标准类型。因此他们使用在类别中以x-开头的方法标识这个类别还没有成为标准，例如：x-gzip，x-tar等。事实上这些类型运用的 很广泛，已经成为了事实标准。只要客户机和服务器共同承认这个MIME类型，即使它是不标准的类型也没有关系，客户程序就能根据MIME类型，采用具体的 处理手段来处理数据。而Web服务器和浏览器（包括操作系统）中，缺省都设置了标准的和常见的MIME类型，只有对于不常见的 MIME类型，才需要同时设置服务器和客户浏览器，以进行识别。<br/>----------------------------------------------------------------<br/>表单中enctype="multipart/form-data"的意思，是设置表单的MIME编码。默认情况，<br/>这个编码格式是application/x-www-form-urlencoded，不能用于文件上传；<br/>只有使用了multipart/form-data，才能完整的传递文件数据，进行下面的操作.<br/>enctype="multipart/form-data"是上传二进制数据; form里面的input的值以2进制的方式传过去。<br/>form里面的input的值以2进制的方式传过去，<br/>所以request就得不到值了。也就是说加了这段代码,用request就会传递不成功,取表单值加入数据库时，用到下面的：<br/><br/></p>
+<div class="cnblogs_code">
+<pre>SmartUpload su = new SmartUpload();//新建一个SmartUpload对象
+su.getRequest().getParameterValues();取数组值
+su.getRequest().getParameter( );取单个参数单个值</pre>
+</div>
+<p> </p>
+<p> </p>
+<h1 class="postTitle">ajax中的application/x-www-form-urlencoded中的使用</h1>
+<p>一，HTTP上传的基本知识</p>
+<p>在Form元素的语法中，EncType表明提交数据的格式 用 Enctype 属性指定将数据回发到服务器时浏览器使用的编码类型。下边是说明： application/x-www-form-urlencoded： 窗体数据被编码为名称/值对。这是标准的编码格式。 multipart/form-data： 窗体数据被编码为一条消息，页上的每个控件对应消息中的一个部分。 text/plain：窗体数据以纯文本形式进行编码，其中不含任何控件或格式字符。<br/>补充<br/>form的enctype属性为编码方式，常用有两种：application/x-www-form-urlencoded和multipart/form-data，默认为application /x-www-form-urlencoded。</p>
+<p>当action为get时候，浏览器用x-www-form-urlencoded的编码方式把form数据转换成一个字串（name1=value1&amp; amp; amp;name2=value2...），然后把这个字串append到url后面，用?分割，加载这个新的url。</p>
+<p>当action为<strong>post</strong>时候，浏览器把<strong>form数据封装到http body中</strong>，然后发送到server。</p>
+<p>如果没有type=file的控件，用默认的application/x-www-form-urlencoded就可以了。但是如果<strong>有 type=file</strong>的话，就要用到<strong>multipart/form-data</strong>了。<br/>浏览器会把整个表单以控件为单位分割，并为每个部分加上 Content-Disposition(form-data或者file),Content-Type(默认为text/plain),name(控件 name)等信息，并加上分割符(boundary)。</p>
+<p>二，使用中需要注意的地方</p>
+<p>在AJAX往服务器上传数据是，设置了content-type为application/x-www-form-urlencoded，此时是对整个发 送内容作了编码，并不是对名字对应的值做了编码。因此，在服务器端，通过request.getParameter("name")的方式取值，是有问题 的。</p>
+<p>有两种解法办法：</p>
+<p>1）改服务器端： 采用流的方式硬编码</p>
+<div class="cnblogs_code">
+
+<pre>InputStream stream=request.getInputStream();
+InputStreamReader isr=new InputStreamReader(stream);
+BufferedReader br=new BufferedReader(isr);
+String str=br.readLine(); 
+System.out.println(str);
+
+str=URLDecoder.decode(str,"gb2312");
+System.out.println(str);
+br.close();</pre>
+
+</div>
+<p> </p>
+<p>2）改客户端：更改数据发送结构</p>
+<p>在往服务器上发数据的时候，使用name=escape(value)的方式组对</p>
+<p>此时在服务器代码中，通过request.getParameter("name")获得的数值，就不用编码了</p>
+<p>application/x-www-form-urlencoded、multipart/form-data、text/plain</p>
+<p>http://www.cnblogs.com/mumue/archive/2012/05/24/2515984.html</p>
+<p><br/>org.springframework.web.HttpMediaTypeNotSupportedException: Content type 'multipart/form-data;boundary<strong>=----WebKitFormBoundaryRAYPKeHKTYSNdzc1;charset=UTF-8</strong>' not supported</p>
+<p>最近同事在做一个图片上传功能、在入参 body 中同时传入文件和其它基本信息结果出现如题异常、在此记录下解决办法、以做记录。</p>
+<p>controller 代码如下：</p>
+<div class="cnblogs_code">
+
+<pre>@RequestMapping(value = "/upload", method =RequestMethod.POST)
+@ResponseBody
+public String upload(@RequestParam("file") MultipartFile file, @RequestBody User user) {
+// 业务处理
+......
+......
+
+}</pre>
+
+</div>
+<p>在使用工具测试（Postman、 swagger ）时报如下异常</p>
+<div class="cnblogs_code">
+
+<pre>  "timestamp": 1473349676109,
+  "status": 415,
+  "error": "Unsupported Media Type",
+  "exception": "org.springframework.web.HttpMediaTypeNotSupportedException",
+  "message": "Content type 'multipart/form-data;boundary=----WebKitFormBoundaryTVc9eDC2a2elulOx;charset=UTF-8' not supported",
+  "path": "/upload"</pre>
+
+</div>
+<p>解决方案：</p>
+<p>去掉 @RequestBody 注解就行了<br/>原因： 使用在进行图片或者文件上传时 multipart/form-data 类型时、 数据会自动进行映射不要添加任何注解。<br/>加了@RequestBody后，所以参数都会转换成JSON,会影响 POST中上报数据流的格式<br/>https://www.cnblogs.com/yueli/p/7552888.html</p>
+<p>关键词：理解 http 消息头<br/>使用 multipart form-data 上传 文件<br/>以前的章节已经介绍过了form传输表单的形式，但是在使用过程中仍然有很多问题，这里再向大家详细介绍一下。</p>
+<p>multipart/form-data是上传文件的一种方式。multipart/form-data其实就是浏览器用表单上传文件的方式。<br/>最常见的情境是：在写邮件时，向邮件后添加附件，附件通常使用表单添加，也就是用multipart/form-data格式上传到服务器。</p>
+<p>具体的步骤如下：</p>
+<p>1、客户端和服务器建立链接（tcp协议）<br/>2、客户端可以向服务器发送数据<br/>3、客户端按照符合multipart/form-data的格式发送数据</p>
+<p>post /top/router/rest ?timestamp=2013-05-24%2010%3a14%3a48&amp;method=taobao.item.update&amp;title=title%20998&amp;session=610231517b65e4e4e82575817e2d9169eeaac271cb91c55378591009&amp;app_key=10011050&amp;v=2.0&amp;num_iid=13068812771&amp;format=js on&amp;sign=6570c00315a94edac47414b6e9b681e0 http/1.0<br/>content-type: multipart/form-data; boundary=------webkitformboundaryx3mhup4uhvo8zy3o<br/>accept-charset: utf-8<br/>host: gw.api.taobao.com<br/>connection: close<br/>content-length: 58294</p>
+<p>--------webkitformboundaryx3mhup4uhvo8zy3o<br/>content-disposition: form-data; name="image"; filename="path\ddd.jpg"<br/>content-type: image/gif</p>
+<p>......jfif.............c..................................省略的图片文件信息<br/>--------webkitformboundaryx3mhup4uhvo8zy3o--<br/>解释说明</p>
+<p>content-type: multipart/form-data; boundary=------webkitformboundaryx3mhup4uhvo8zy3o<br/>说明的是multipart/form-data格式的请求，boundary是一个字符串，用来切分数据。<br/>仔细查看，会发现body里面的bounday比header里面的前面都多了“--”。这是一个坑，我被搬到过。</p>
+<p>需要注意的是，在html协议中换行使用的是:"\r\n"，这我也被绊倒过。</p>
+<p>下面是lua拼写的上传服务器的代码：</p>
+<p>body = "--------webkitformboundaryx3mhup4uhvo8zy3o\r\ncontent-disposition: form-data; name=\"image\"; filename=\"path\\ddd.jpg\"\r\ncontent-type: image/gif\r\n\r\n" .. body;<br/>body = body .. "\r\n--------webkitformboundaryx3mhup4uhvo8zy3o--\r\n";</p>
+<p><br/>搜索此文相关文章：理解HTTP消息头 五——使用multipart/form-data上传文件<br/>此文链接：http://www.makaidong.com/%E5%8D%9A%E5%AE%A2%E5%9B%AD%E6%90%9C/30170.shtml</p>
+<p> </p>
+<p>postman进行访问服务器时，使用浏览器的url可以正常返回结果，但是postman却显示Could not get any response<br/><img alt="" loading="lazy" src="/images/cnblogs/cede58f388cdb691.png"/></p>
+<div class="cnblogs_code">
+
+<pre>Could not get any response  
+This seems to be like an error connecting to http://pc.oma.com:9090/oma/venue/updateVenue.  
+Why this might have happened:  
+The server couldn't send a response:  
+Ensure that the backend is working properly  
+SSL connections are being blocked:  
+Fix this by importing SSL certificates in Chrome  
+Cookies not being sent:  
+Use the Postman Interceptor extension  
+Request timeout:  
+Change request timeout in Settings &gt; General  </pre>
+
+</div>
+<p>解决办法：</p>
+<p>关闭防火墙。<br/>https://blog.csdn.net/sunny_12138/article/details/79196107</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre>        MultiValueMap&lt;String, String&gt; body = new LinkedMultiValueMap&lt;&gt;();
+        body.add("keyword", req.getKeyword());
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        HttpEntity&lt;MultiValueMap&lt;String, String&gt;&gt; request = new HttpEntity&lt;&gt;(body, httpHeaders);</pre>
+</div>
+<p> </p>
+<p> </p>
+<p>补充：postman在Oauth2中的应用：<br/><img alt="" loading="lazy" src="/images/cnblogs/1f23f4c0a881f925.png"/></p>
+<p> </p>
+<p><br/>按上面的办法点code也看到实际请求的header头：<br/><img alt="" loading="lazy" src="/images/cnblogs/611ca83b35da7e9a.png"/></p>
+{% endraw %}

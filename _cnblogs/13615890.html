@@ -1,0 +1,111 @@
+---
+title: "RocketMQ(1)-架构原理----通用MQ知识点"
+date: 2020-09-04 19:51:00 +0800
+tags: ["【中间件】-- MQ"]
+excerpt: "RocketMQ(1)-架构原理 RocketMQ是阿里开源的分布式消息中间件，跟其它中间件相比，RocketMQ的特点是纯JAVA实现；集群和HA实现相对简单；在发生宕机和其它故障时消息丢失率更低。 一、RocketMQ专业术语 先讲专业术语的含义，后面会画流程图来更好的去理解它们。 Produc"
+read_minutes: 7
+cnblogs_id: 13615890
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13615890.html"
+---
+{% raw %}
+<center>RocketMQ(1)-架构原理</center>
+<p>RocketMQ是阿里开源的分布式消息中间件，跟其它中间件相比，RocketMQ的特点是<strong>纯JAVA实现</strong>；<strong>集群和HA实现相对简单</strong>；<strong>在发生宕机和其它故障时消息丢失率更低</strong>。</p>
+<h2 id="blogTitle0"><span style="color: #ffd700;">一、RocketMQ专业术语</span></h2>
+<p>先讲专业术语的含义，后面会画流程图来更好的去理解它们。</p>
+<h4 id="blogTitle1">Producer</h4>
+<p>消息生产者，位于用户的进程内，<code>Producer通过NameServer获取所有Broker的路由信息</code>，根据负载均衡策略选择将消息发到哪个Broker，然后调用Broker接口提交消息。</p>
+<h4 id="blogTitle2">Producer Group</h4>
+<p>生产者组，简单来说就是多个发送同一类消息的生产者称之为一个生产者组。</p>
+<h4 id="blogTitle3">Consumer</h4>
+<p>消息消费者，位于用户进程内。Consumer通过NameServer获取所有broker的路由信息后，向Broker发送Pull请求来获取消息数据。Consumer可以以两种模式启动，<strong>广播（Broadcast）和集群（Cluster）</strong>，<strong>广播模式下，一条消息会发送给所有Consumer，集群模式下消息只会发送给一个Consumer</strong>。</p>
+<h4 id="blogTitle4">Consumer Group</h4>
+<p>消费者组，和生产者类似，消费同一类消息的多个 Consumer 实例组成一个消费者组。</p>
+<h4 id="blogTitle5">Topic</h4>
+<p>Topic用于将消息按主题做划分，<strong>Producer将消息发往指定的Topic，Consumer订阅该Topic就可以收到这条消息</strong>。Topic跟发送方和消费方都没有强关联关系，发送方可以同时往多个Topic投放消息，消费方也可以订阅多个Topic的消息。在RocketMQ中，<strong>Topic是一个上逻辑概念。消息存储不会按Topic分开</strong>。</p>
+<h4 id="blogTitle6">Message</h4>
+<p>代表一条消息，使用<code>MessageId</code>唯一识别，用户在发送时可以设置messageKey，便于之后查询和跟踪。一个 Message 必须指定 Topic，相当于寄信的地址。Message 还有一个可选的 Tag 设置，以便消费端可以基于 Tag 进行过滤消息。也可以添加额外的键值对，例如你需要一个业务 key 来查找 Broker 上的消息，方便在开发过程中诊断问题。</p>
+<h4 id="blogTitle7">Tag</h4>
+<p>标签可以被认为是对 Topic 进一步细化。一般在相同业务模块中通过引入标签来标记不同用途的消息。</p>
+<h4 id="blogTitle8">Broker</h4>
+<p>Broker是RocketMQ的核心模块，<code>负责接收并存储消息</code>，同时提供Push/Pull接口来将消息发送给Consumer。Consumer可选择从Master或者Slave读取数据。多个主/从组成Broker集群，集群内的Master节点之间不做数据交互。Broker同时提供消息查询的功能，可以通过MessageID和MessageKey来查询消息。Borker会将自己的Topic配置信息实时同步到NameServer。</p>
+<h4 id="blogTitle9">Queue</h4>
+<p><strong>Topic和Queue是1对多的关系</strong>，<strong>一个Topic下可以包含多个Queue</strong>，主要用于负载均衡。发送消息时，用户只指定Topic，Producer会根据Topic的路由信息选择具体发到哪个Queue上。Consumer订阅消息时，会根据负载均衡策略决定订阅哪些Queue的消息。</p>
+<h4 id="blogTitle10">Offset</h4>
+<p>RocketMQ在存储消息时会为每个Topic下的每个Queue生成一个消息的索引文件，每个Queue都对应一个Offset<strong>记录当前Queue中消息条数</strong>。</p>
+<h4 id="blogTitle11">NameServer</h4>
+<p>NameServer可以看作是RocketMQ的注册中心，它管理两部分数据：集群的Topic-Queue的路由配置；Broker的实时配置信息。其它模块通过Nameserv提供的接口获取最新的Topic配置和路由信息。</p>
+<ul>
+<li><code>Producer/Consumer</code> ：通过查询接口获取Topic对应的Broker的地址信息</li>
+<li><code>Broker</code> ： 注册配置信息到NameServer， 实时更新Topic信息到NameServer</li>
+</ul>
+<p> </p>
+<h2 id="blogTitle12"><span style="color: #ffd700;">二、流程图</span></h2>
+<p>我们由简单到复杂的来理解，它的一些核心概念<br/><img alt="" loading="lazy" src="/images/cnblogs/7c5e2726ea2c7528.jpg"/></p>
+<p>这个图很好理解，消息先发到Topic，然后消费者去Topic拿消息。只是Topic在这里只是个概念，那它到底是怎么存储消息数据的呢，这里就要引入Broker概念。</p>
+<h4 id="blogTitle13">2、Topic的存储</h4>
+<p>​ Topic是一个逻辑上的概念，实际上Message是在每个Broker上以Queue的形式记录。<br/><img alt="" loading="lazy" src="/images/cnblogs/cbe5a36e691dd139.jpg"/></p>
+<p>从上面的图片可以总结下几条结论。</p>
+<pre><code class="hljs cmake"><span class="hljs-number">1、消费者发送的<span class="hljs-keyword">Message会在Broker中的Queue队列中记录。
+<span class="hljs-number">2、一个Topic的数据可能会存在多个Broker中。
+<span class="hljs-number">3、一个Broker存在多个Queue。
+<span class="hljs-number">4、单个的Queue也可能存储多个Topic的消息。
+</span></span></span></span></span></code></pre>
+<p>也就是说每个Topic在Broker上会划分成几个逻辑队列，每个逻辑队列保存一部分消息数据，但是保存的消息数据实际上不是真正的消息数据，而是指向commit log的消息索引。</p>
+<p><code>Queue不是真正存储Message的地方，真正存储Message的地方是在CommitLog</code>。</p>
+<p>如图（盗图）<br/><img alt="" loading="lazy" src="/images/cnblogs/72837de6ec58b391.jpg"/></p>
+<p>左边的是CommitLog。这个是真正存储消息的地方。RocketMQ所有生产者的消息都是往这一个地方存的。</p>
+<p>右边是ConsumeQueue。这是一个逻辑队列。和上文中Topic下的Queue是一一对应的。消费者是直接和ConsumeQueue打交道。ConsumeQueue记录了消费位点，这个消费位点关联了commitlog的位置。所以即使ConsumeQueue出问题，只要commitlog还在，消息就没丢，可以恢复出来。还可以通过修改消费位点来重放或跳过一些消息。</p>
+<h4 id="blogTitle14">3、部署模型</h4>
+<p>在部署RocketMQ时，会部署两种角色。NameServer和Broker。如图（盗图）<br/><img alt="" loading="lazy" src="/images/cnblogs/e7043117d8172951.png"/></p>
+<p>针对这张图做个说明</p>
+<pre><code class="hljs cmake"><span class="hljs-number">1、Product和consumer集群部署，是你开发的项目进行集群部署。
+<span class="hljs-number">2、Broker 集群部署是为了高可用，因为Broker是真正存储<span class="hljs-keyword">Message的地方，集群部署是为了避免一台挂掉，导致整个项目KO.
+</span></span></span></code></pre>
+<p>那Name SerVer是做什么用呢，它和Product、Consumer、Broker之前存在怎样的关系呢？</p>
+<p>先简单概括Name Server的特点</p>
+<pre><code class="hljs basic"><span class="hljs-number">1、<span class="hljs-keyword">Name Server是一个几乎无状态节点，可集群部署，节点之间无任何信息同步。
+<span class="hljs-number">2、每个Broker与<span class="hljs-keyword">Name Server集群中的所有节点建立长连接，定时注册Topic信息到所有<span class="hljs-keyword">Name Server。
+<span class="hljs-number">3、Producer与<span class="hljs-keyword">Name Server集群中的其中一个节点（随机选择）建立长连接，定期从<span class="hljs-keyword">Name Server取Topic路由信息。
+<span class="hljs-number">4、Consumer与<span class="hljs-keyword">Name Server集群中的其中一个节点（随机选择）建立长连接，定期从<span class="hljs-keyword">Name Server取Topic路由信息。
+</span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>这里面最核心的是<code>每个Broker与Name Server集群中的所有节点建立长连接</code>这样做好处多多。</p>
+<p>1、这样可以使Name Server之间可以没有任何关联，因为它们绑定的Broker是一致的。</p>
+<p>2、作为Producer或者Consumer可以绑定任何一个Name Server 因为它们都是一样的。</p>
+<p> </p>
+<h2 id="blogTitle15"><span style="color: #ffd700;">三、详解Broker</span></h2>
+<h4 id="blogTitle16">1、Broker与Name Server关系</h4>
+<p><strong>1）连接</strong> 单个Broker和所有Name Server保持长连接。</p>
+<p><strong>2）心跳</strong></p>
+<p><strong>心跳间隔</strong>：每隔<strong>30秒</strong>向所有NameServer发送心跳，心跳包含了自身的Topic配置信息。</p>
+<p><strong>心跳超时</strong>：NameServer每隔<strong>10秒</strong>，扫描所有还存活的Broker连接，若某个连接2分钟内没有发送心跳数据，则断开连接。</p>
+<p><strong>3）断开</strong>：当Broker挂掉；NameServer会根据心跳超时主动关闭连接,一旦连接断开，会更新Topic与队列的对应关系，但不会通知生产者和消费者。</p>
+<h4 id="blogTitle17">2、 负载均衡</h4>
+<p>一个Topic分布在多个Broker上，一个Broker可以配置多个Topic，它们是多对多的关系。<br/>如果某个Topic消息量很大，应该给它多配置几个Queue，并且尽量多分布在不同Broker上，减轻某个Broker的压力。</p>
+<h4 id="blogTitle18">3 、可用性</h4>
+<p>由于消息分布在各个Broker上，一旦某个Broker宕机，则该Broker上的消息读写都会受到影响。</p>
+<p>所以RocketMQ提供了Master/Slave的结构，Salve定时从Master同步数据，如果Master宕机，则Slave提供消费服务，但是不能写入消息，此过程对应用透明，由RocketMQ内部解决。<br/>有两个关键点：<br/><code>思考1</code>一旦某个broker master宕机，生产者和消费者多久才能发现？</p>
+<p>受限于Rocketmq的网络连接机制，默认情况下最多需要<strong>30秒</strong>，因为消费者每隔30秒从nameserver获取所有topic的最新队列情况，这意味着某个broker如果宕机，客户端最多要30秒才能感知。</p>
+<p><code>思考2</code> master恢复恢复后，消息能否恢复。<br/>消费者得到Master宕机通知后，转向Slave消费，但是Slave不能保证Master的消息100%都同步过来了，因此会有少量的消息丢失。但是消息最终不会丢的，一旦Master恢复，未同步过去的消息会被消费掉。</p>
+<p> </p>
+<h2 id="blogTitle19"><span style="color: #ffd700;">四 Consumer (消费者)</span></h2>
+<h4 id="blogTitle20">1 、Consumer与Name Server关系</h4>
+<p><strong>1）连接</strong> : 单个Consumer和一台NameServer保持长连接，如果该NameServer挂掉，消费者会自动连接下一个NameServer，直到有可用连接为止，并能自动重连。<br/><strong>2）心跳</strong>: 与NameServer没有心跳<br/><strong>3）轮询时间</strong> : 默认情况下，消费者每隔<strong>30秒</strong>从NameServer获取所有Topic的最新队列情况，这意味着某个Broker如果宕机，客户端最多要30秒才能感知。</p>
+<h4 id="blogTitle21">2、 Consumer与Broker关系</h4>
+<p><strong>1）连接</strong> :单个消费者和该消费者关联的所有broker保持长连接。</p>
+<h4 id="blogTitle22">3、 负载均衡</h4>
+<p>集群消费模式下，一个消费者集群多台机器共同消费一个Topic的多个队列，一个队列只会被一个消费者消费。如果某个消费者挂掉，分组内其它消费者会接替挂掉的消费者继续消费。</p>
+<p> </p>
+<h2 id="blogTitle23"><span style="color: #ffd700;">五、 Producer(生产者)</span></h2>
+<h4 id="blogTitle24">1、 Producer与Name Server关系</h4>
+<p><strong>1）连接</strong> 单个Producer和一台NameServer保持长连接，如果该NameServer挂掉，生产者会自动连接下一个NameServer，直到有可用连接为止，并能自动重连。<br/><strong>2）轮询时间</strong> 默认情况下，生产者每隔30秒从NameServer获取所有Topic的最新队列情况，这意味着某个Broker如果宕机，生产者最多要30秒才能感知，在此期间，<br/>发往该broker的消息发送失败。<br/><strong>3）心跳</strong> 与nameserver没有心跳</p>
+<h4 id="blogTitle25">2、 与broker关系</h4>
+<p><strong>连接</strong> 单个生产者和该生产者关联的所有broker保持长连接。</p>
+<p> </p>
+<h3 id="参考"><span style="color: #ffd700;">参考</span></h3>
+<p><a href="http://jm.taobao.org/2017/01/12/rocketmq-quick-start-in-10-minutes/">1、十分钟入门RocketMQ</a></p>
+<p><a href="https://blog.csdn.net/linyaogai/article/details/77876078">2、RocketMQ nameserver、broker之间的关系</a></p>
+<p><a href="https://www.jianshu.com/p/3d8d594d9161">3、RocketMQ-NameServer</a></p>
+<p>
+<br/><br/></p>
+<pre><code class="hljs">只要自己变优秀了，其他的事情才会跟着好起来（中将8）</code></pre>
+{% endraw %}

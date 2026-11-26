@@ -1,0 +1,79 @@
+---
+title: "【golang】Go语言中interface类型怎么使用"
+date: 2023-12-28 15:14:00 +0800
+tags: ["【golang】高级"]
+excerpt: "1、Go语言中interface类型的定义 在Go语言中，interface类型是一个抽象的类型，它是一组方法签名的集合，只要某个类型实现了这些方法，它就属于该interface类型。 在Go语言中定义一个interface类型的方法，需要使用 interface 关键字。下面是interface类"
+read_minutes: 2
+cnblogs_id: 17932784
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/17932784.html"
+---
+{% raw %}
+<p><span style="font-size: 15px;"><strong>1、Go语言中interface类型的定义</strong></span></p>
+<p> </p>
+<p>在Go语言中，interface类型是一个抽象的类型，它是一组方法签名的集合，只要某个类型实现了这些方法，它就属于该interface类型。</p>
+<p>在Go语言中定义一个interface类型的方法，需要使用 interface 关键字。下面是interface类型的完整定义方式：</p>
+<pre>type interface_name interface {
+    method_name1 [return_type]
+    method_name2 [return_type]
+    method_name3 [return_type]
+    ...
+    method_namen [return_type]
+}</pre>
+<p>其中，interface_name 表示定义的接口名称。method_name 表示接口中的方法名，如果方法有返回值，则需要加上返回值类型。这里需要特别注意，接口定义的方法并不需要实现，只是需要在接口类型中定义方法签名。</p>
+<p><strong><span style="font-size: 15px;">2、Go语言中interface类型的实现</span></strong></p>
+<p> </p>
+<p>在Go语言中实现某个interface类型的变量，只需要实现该接口中的所有方法。例如，下面代码实现了一个简单的接口：</p>
+<pre>type student struct {
+    name string
+    age  int
+}
+
+type studentInterface interface {
+    GetName() string
+    GetAge()  int
+}
+
+func (s student) GetName() string {
+    return s.name
+}
+
+func (s student) GetAge() int {
+    return s.age
+}
+
+func main() {
+    stu := student{"John", 18}
+    var varStu studentInterface = stu
+
+    fmt.Println(varStu.GetName())
+    fmt.Println(varStu.GetAge())
+}</pre>
+<p>在上面代码中，我们实现了一个接口 studentInterface，其定义了两个方法，GetName和GetAge。同时，我们也定义了一个struct类型 student，包含name和age两个字段。</p>
+<p>在接口实现过程中，我们通过定义一个student类型的变量stu，来实现了studentInterface类型的变量varStu。通过调用varStu对象的方法GetName和GetAge，我们可以获得stu对象中的name和age字段值。</p>
+<p>需要注意的是，在实现interface类型时，需要将实现的方法定义在接口实现的类型上。例如，在上面代码中，我们将GetName和GetAge这两个方法定义在student类型上。</p>
+<p> </p>
+<p><strong><span style="font-size: 15px;">3、Go语言中其他类型转化为interface类型</span></strong></p>
+<p> </p>
+<p>在Go语言中，我们可以将其他类型的数据转换为interface类型的数据。在转换过程中，我们可以通过赋值方式将某个具体的类型赋值给空接口类型，从而将该类型数据转换为interface类型的数据。</p>
+<pre>// 通过实现Stringer接口将自定义类型转化为interface类型
+type People struct {
+    name string
+    age int
+}
+
+func (p People) String() string {
+    return fmt.Sprintf("%v (%v years)", p.name, p.age)
+}
+
+func main() {
+    john := People{"John", 18}
+    fmt.Println(john)
+
+    var varObj interface{}
+    varObj = john
+
+    fmt.Printf("varObj is: %v\n", varObj)
+}</pre>
+<p>在上面的代码中，我们先定义一个自定义类型People，包含name和age两个字段。我们通过实现方法Stringer，将该类型转化为interface类型，之后将People类型变量john转化为interface类型变量varObj。</p>
+<iframe style="display: none !important;"></iframe>
+{% endraw %}

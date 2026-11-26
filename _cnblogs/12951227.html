@@ -1,0 +1,310 @@
+---
+title: "MySQL的MVCC机制，详细解答"
+date: 2020-05-24 15:49:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "目录 1.1 MVCC是什么？ 1.2 MVCC是为了解决什么？ 1.3 MVCC实现 2.1简单的小例子 1、MVCC简介 回到顶部 1.1 MVCC是什么？ MVCC，Multi-Version Concurrency Control，多版本并发控制。MVCC 是一种并发控制的方法，一般在数据库"
+read_minutes: 7
+cnblogs_id: 12951227
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12951227.html"
+tags_inferred: true
+---
+{% raw %}
+<div id="navCategory">
+<p><strong>目录</strong></p>
+<ul>
+<li><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_label0">1.1 MVCC是什么？</a></li>
+<li><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_label1">1.2 MVCC是为了解决什么？</a></li>
+<li><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_label2">1.3 MVCC实现</a></li>
+<li><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_label3">2.1简单的小例子</a></li>
+</ul>
+</div>
+<p> </p>
+<hr/>
+<h1>1、MVCC简介</h1>
+<div><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_labelTop">回到顶部</a><a name="_label0"></a></div>
+<h2>1.1 MVCC是什么？</h2>
+<p>MVCC，Multi-Version Concurrency Control，多版本并发控制。MVCC 是一种并发控制的方法，一般在数据库管理系统中，实现对数据库的并发访问；</p>
+<div><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_labelTop">回到顶部</a><a name="_label1"></a></div>
+<h2>1.2 MVCC是为了解决什么？</h2>
+<ul>
+<li>大多数的MYSQL事务型存储引擎,如,InnoDB，Falcon以及PBXT都不使用一种简单的行锁机制.事实上,他们都和MVCC–多版本并发控制来一起使用</li>
+<li>大家都应该知道,锁机制可以控制并发操作,但是其系统开销较大,而MVCC可以在大多数情况下代替行级锁,使用MVCC,能降低其系统开销</li>
+</ul>
+<p>　　众所周知，在MYSQL中，MyISAM使用的是表锁，InnoDB使用的是行锁。而InnoDB的事务分为四个隔离级别，其中默认的隔离级别REPEATABLE READ需要两个不同的事务相互之间不能影响，而且还能支持并发，这点悲观锁是达不到的，所以REPEATABLE READ采用的就是乐观锁，而乐观锁的实现采用的就是MVCC。正是因为有了MVCC，才造就了InnoDB强大的事务处理能力。</p>
+<p> </p>
+<div>
+<div><strong>MVCC解决的问题是读写互相不阻塞的问题，每次更新都产生一个新的版本，读的话可以读历史版本。试想，如果一个数据只有一个版本，那么多个事务对这个数据进行读写是不是需要读写锁来保护?</strong></div>
+<div><strong>一个读写事务在运行的过程中在访问数据之前先加读/写锁这种实现叫做悲观锁，悲观体现在，先加锁，独占数据，防止别人加锁。</strong></div>
+<div><strong>乐观锁呢，读写事务，在真正的提交之前，不加读/写锁，而是先看一下数据的版本/时间戳，等到真正提交的时候再看一下版本/时间戳，如果两次相同，说明别人期间没有对数据进行过修改，那么就可以放心提交。</strong></div>
+<div><strong>乐观体现在，访问数据时不提前加锁。在资源冲突不激烈的场合，用乐观锁性能较好。如果资源冲突严重，乐观锁的实现会导致事务提交的时候经常看到别人在他之前已经修改了数据，然后要进行回滚或者重试，还不如一上来就加锁。</strong></div>
+<br/><strong>所以通常我们把没有开启MVCC特性的，使用原来的锁机制来保证数据一致性的这种锁叫悲观锁，</strong><br/><strong>而对开启MVCC机制的锁，叫做乐观锁。</strong><br/><br/></div>
+<div><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_labelTop">回到顶部</a><a name="_label2"></a></div>
+<h2>1.3 MVCC实现</h2>
+<p>　　MVCC是通过保存数据在某个时间点的快照来实现的. 不同存储引擎的MVCC实现是不同的,典型的有乐观并发控制和悲观并发控制.</p>
+<h1>2、MVCC具体实现</h1>
+<p>下面,我们通过InnoDB的MVCC实现来分析MVCC使怎样进行并发控制的.<br/>InnoDB的MVCC,是通过在每行记录后面保存两个隐藏的列来实现的,这两个列，分别保存了这个行的创建时间，一个保存的是行的删除时间。这里存储的并不是实际的时间值,而是系统版本号(可以理解为事务的ID)，没开始一个新的事务，系统版本号就会自动递增，事务开始时刻的系统版本号会作为事务的ID.下面看一下在REPEATABLE READ隔离级别下,MVCC具体是如何操作的.</p>
+<div><a href="https://www.cnblogs.com/moershiwei/p/9766916.html#_labelTop">回到顶部</a><a name="_label3"></a></div>
+<h2 id="21简单的小例子">2.1简单的小例子</h2>
+<p>create table yang(<br/>id int primary key auto_increment,<br/>name varchar(20));</p>
+<blockquote>
+<blockquote>
+<p>假设系统的版本号从1开始.</p>
+</blockquote>
+</blockquote>
+<h4 id="insert">INSERT</h4>
+<p>InnoDB为新插入的每一行保存当前系统版本号作为版本号.<br/>第一个事务ID为1；</p>
+<pre class="prettyprint" name="code"><code class="hljs sql has-numbering"><span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">start <span class="hljs-keyword"><span class="hljs-keyword">transaction;
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">insert <span class="hljs-keyword"><span class="hljs-keyword">into yang <span class="hljs-keyword"><span class="hljs-keyword">values(<span class="hljs-keyword"><span class="hljs-literal">NULL,<span class="hljs-string"><span class="hljs-string">'yang') ;
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">insert <span class="hljs-keyword"><span class="hljs-keyword">into yang <span class="hljs-keyword"><span class="hljs-keyword">values(<span class="hljs-keyword"><span class="hljs-literal">NULL,<span class="hljs-string"><span class="hljs-string">'long');
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">insert <span class="hljs-keyword"><span class="hljs-keyword">into yang <span class="hljs-keyword"><span class="hljs-keyword">values(<span class="hljs-keyword"><span class="hljs-literal">NULL,<span class="hljs-string"><span class="hljs-string">'fei');
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">commit;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>对应在数据中的表如下(后面两列是隐藏列,我们通过查询语句并看不到)</p>
+<table>
+<thead>
+<tr><th>id</th><th>name</th><th>创建时间(事务ID)</th><th>删除时间(事务ID)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>yang</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>2</td>
+<td>long</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>3</td>
+<td>fei</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<h4 id="select">SELECT</h4>
+<p>InnoDB会根据以下两个条件检查每行记录:<br/>a.InnoDB只会查找版本早于当前事务版本的数据行(也就是,行的系统版本号小于或等于事务的系统版本号)，这样可以确保事务读取的行，要么是在事务开始前已经存在的，要么是事务自身插入或者修改过的.<br/>b.行的删除版本要么未定义,要么大于当前事务版本号,这可以确保事务读取到的行，在事务开始之前未被删除.<br/>只有a,b同时满足的记录，才能返回作为查询结果.</p>
+<h4 id="delete">DELETE</h4>
+<p>InnoDB会为删除的每一行保存当前系统的版本号(事务的ID)作为删除标识.<br/>看下面的具体例子分析:<br/>第二个事务,ID为2;</p>
+<pre class="prettyprint" name="code"><code class="hljs sql has-numbering"><span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">start <span class="hljs-keyword"><span class="hljs-keyword">transaction;
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">select * <span class="hljs-keyword"><span class="hljs-keyword">from yang;  //(1)
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">select * <span class="hljs-keyword"><span class="hljs-keyword">from yang;  //(2)
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">commit; </span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="假设1">假设1</h4>
+<p>假设在执行这个事务ID为2的过程中,刚执行到(1),这时,有另一个事务ID为3往这个表里插入了一条数据;<br/>第三个事务ID为3;</p>
+<pre class="prettyprint" name="code"><code class="hljs sql has-numbering"><span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">start <span class="hljs-keyword"><span class="hljs-keyword">transaction;
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">insert <span class="hljs-keyword"><span class="hljs-keyword">into yang <span class="hljs-keyword"><span class="hljs-keyword">values(<span class="hljs-keyword"><span class="hljs-literal">NULL,<span class="hljs-string"><span class="hljs-string">'tian');
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">commit;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>这时表中的数据如下:</p>
+<table>
+<thead>
+<tr><th>id</th><th>name</th><th>创建时间(事务ID)</th><th>删除时间(事务ID)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>yang</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>2</td>
+<td>long</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>3</td>
+<td>fei</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>4</td>
+<td>tian</td>
+<td>3</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<p>然后接着执行事务2中的(2),由于id=4的数据的创建时间(事务ID为3),执行当前事务的ID为2,而InnoDB只会查找事务ID小于等于当前事务ID的数据行,所以id=4的数据行并不会在执行事务2中的(2)被检索出来,在事务2中的两条select 语句检索出来的数据都只会下表:</p>
+<table>
+<thead>
+<tr><th>id</th><th>name</th><th>创建时间(事务ID)</th><th>删除时间(事务ID)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>yang</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>2</td>
+<td>long</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>3</td>
+<td>fei</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<h4 id="假设2">假设2</h4>
+<p>假设在执行这个事务ID为2的过程中,刚执行到(1),假设事务执行完事务3后，接着又执行了事务4;<br/>第四个事务:</p>
+<pre class="prettyprint" name="code"><code class="hljs sql has-numbering"><span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">start   <span class="hljs-keyword"><span class="hljs-keyword">transaction;  
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">delete <span class="hljs-keyword"><span class="hljs-keyword">from yang <span class="hljs-keyword"><span class="hljs-keyword">where <span class="hljs-keyword">id=<span class="hljs-number"><span class="hljs-number">1;
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">commit;  </span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>此时数据库中的表如下:</p>
+<table>
+<thead>
+<tr><th>id</th><th>name</th><th>创建时间(事务ID)</th><th>删除时间(事务ID)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>yang</td>
+<td>1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>2</td>
+<td>long</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>3</td>
+<td>fei</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>4</td>
+<td>tian</td>
+<td>3</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<p>接着执行事务ID为2的事务(2),根据SELECT 检索条件可以知道,它会检索创建时间(创建事务的ID)小于当前事务ID的行和删除时间(删除事务的ID)大于当前事务的行,而id=4的行上面已经说过,而id=1的行由于删除时间(删除事务的ID)大于当前事务的ID,所以事务2的(2)select * from yang也会把id=1的数据检索出来.所以,事务2中的两条select 语句检索出来的数据都如下:</p>
+<table>
+<thead>
+<tr><th>id</th><th>name</th><th>创建时间(事务ID)</th><th>删除时间(事务ID)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>yang</td>
+<td>1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>2</td>
+<td>long</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>3</td>
+<td>fei</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<h4 id="update">UPDATE</h4>
+<p>InnoDB执行UPDATE，实际上是新插入了一行记录，并保存其创建时间为当前事务的ID，同时保存当前事务ID到要UPDATE的行的删除时间.</p>
+<h4 id="假设3">假设3</h4>
+<p>假设在执行完事务2的(1)后又执行,其它用户执行了事务3,4,这时，又有一个用户对这张表执行了UPDATE操作:<br/>第5个事务:</p>
+<pre class="prettyprint" name="code"><code class="hljs sql has-numbering"><span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">start  <span class="hljs-keyword"><span class="hljs-keyword">transaction;
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">update yang <span class="hljs-keyword"><span class="hljs-keyword">set <span class="hljs-keyword">name=<span class="hljs-string"><span class="hljs-string">'Long' <span class="hljs-keyword"><span class="hljs-keyword">where <span class="hljs-keyword">id=<span class="hljs-number"><span class="hljs-number">2;
+<span class="hljs-operator"><span class="hljs-keyword"><span class="hljs-keyword">commit;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>根据update的更新原则:会生成新的一行,并在原来要修改的列的删除时间列上添加本事务ID,得到表如下:</p>
+<table>
+<thead>
+<tr><th>id</th><th>name</th><th>创建时间(事务ID)</th><th>删除时间(事务ID)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>yang</td>
+<td>1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>2</td>
+<td>long</td>
+<td>1</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>fei</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>4</td>
+<td>tian</td>
+<td>3</td>
+<td>undefined</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Long</td>
+<td>5</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<p>继续执行事务2的(2),根据select 语句的检索条件,得到下表:</p>
+<table>
+<thead>
+<tr><th>id</th><th>name</th><th>创建时间(事务ID)</th><th>删除时间(事务ID)</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>yang</td>
+<td>1</td>
+<td>4</td>
+</tr>
+<tr>
+<td>2</td>
+<td>long</td>
+<td>1</td>
+<td>5</td>
+</tr>
+<tr>
+<td>3</td>
+<td>fei</td>
+<td>1</td>
+<td>undefined</td>
+</tr>
+</tbody>
+</table>
+<p>还是和事务2中(1)select 得到相同的结果.</p>
+<p><strong> 补充另一个大佬的回答</strong></p>
+<p>Mysql的大多数事务型存储引擎实现的都不是简单的行级锁。基于提升并发性能的考虑，他们一般都同时实现了MVCC.实现了非阻塞的读操作，写操作也只锁定必要的行。</p>
+<p>MVCC的实现，是通过保存数据在某个时间点的快照来实现的。即为：不管需要执行多长时间，每个事务看到的数据都是一致的。</p>
+<p>不同的存储引擎的MVCC实现不同，典型的有乐观并发控制和悲观并发控制。</p>
+<p>innodb的MVCC，是通过在每行记录后面保存两个隐藏的列来实现的。这两个列，一个是行的创建时间，一个保存行的过期时间。存储的是系统版本号，不是真实的时间。每开始一个新的事务，系统版本号都会自动递增。事务开始时刻的系统版本号会作为事务的版本号，用来和查询到的每行记录的版本号进行比较。</p>
+<p>在REPEATABLE READ隔离级别下，MVCC具体操作：</p>
+<p>SELECT</p>
+<p>　　innodb会根据以下两个条件检查每行记录：</p>
+<p>　　　　a.innodb只查找版本号早于当前事务版本的数据行，&lt;=当前事务版本号，这样可以确保事务读取的行，要么是在事务开始前已经存在的，要么是事务自身插入或者修改过的</p>
+<p>　　　　b.行的删除版本要么未定义，要么大于当前的事务版本号。这可以确保事务读取到的行，在事务开始之前未被删除。</p>
+<p>INSERT</p>
+<p>　　INNODB为新插入的每一行保存当前系统版本号作为行版本号</p>
+<p>DELETE</p>
+<p>　　innodb为删除的每一行保存当前系统版本号作为行删除标识</p>
+<p>UPDATE</p>
+<p>　　innodb为插入一行新纪录，保存当前系统版本号为行版本号，同时保存当前系统版本号到原来的行作为行删除标识</p>
+<p>MVCC只在repeatable read和read committed两个隔离级别下工作。其他两个隔离级别和MVCC不兼容。因为READ UNCOMMITTED 总是读取最新的数据行，而不是符合当前事务版本的数据行。而SERIALIZABLE 则会对所有读取的行都加锁。</p>
+{% endraw %}

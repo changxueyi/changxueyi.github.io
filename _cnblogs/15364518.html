@@ -1,0 +1,108 @@
+---
+title: "如何通过 DDD 构建一辆汽车"
+date: 2021-10-03 17:03:00 +0800
+tags: ["【微服务框架】"]
+excerpt: "实际上，本文的正确标题应该是《如何通过 DDD 构建解决快速出行问题的领域模型》。快速出行才是要解决的问题，汽车只是其中一种解决方案或者落地的实现而已。严格区分问题域与解决方案域是实施 DDD 的老大难问题了。需要死磕这个问题的读者可以参考 TW 洞见的这篇文章《当 Subdomain 遇见 Bou"
+read_minutes: 7
+cnblogs_id: 15364518
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15364518.html"
+---
+{% raw %}
+<p data-type="paragraph">实际上，本文的正确标题应该是《如何通过 DDD 构建解决快速出行问题的领域模型》。快速出行才是要解决的问题，汽车只是其中一种解决方案或者落地的实现而已。严格区分问题域与解决方案域是实施 DDD 的老大难问题了。需要死磕这个问题的读者可以参考 TW 洞见的这篇文章《当 Subdomain 遇见 BoundedContext》，这里不展开讨论。本文的目的是要展现一个在非 IT 领域运用 DDD 构建领域模型的例子。</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">先出要解决的业务领域问题：我要实现城市内快速出行。</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph"> 就只有一句话，没有细节信息，感觉什么都做不了。但往往需求都是这样的简单粗暴的（此处泪奔）。好，继续深挖一下需求。要实现城市内快速出行，最简单的要实现 3 点：</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">1.     当我赶时间时，我可以加快速度</p>
+<p data-type="paragraph">2.     当我遇到障碍物时，我可以减速</p>
+<p data-type="paragraph">3.     当我遇到障碍物时，我可以绕过</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">嗯，有了 3 个细化的需求，有点感觉了。这里可以引入风靡全球的 DDD 落地大法-事件风暴（Event Storming，简称 ES）。在 ES 的过程中，会识别出业务问题中的关键事件，触发事件的命令与触发者（角色）。回到我们的场景，会是这样：</p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/58275c0f3e28546a.webp"/>
+<div data-title="">事件风暴</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">作为例子，这里只是列举了 3 个简单的事件，其余就不在列出了。但并不代表在实际建模过程中可以省略。例如这里有加快速度的需求，就一定会有减缓速度的需求；有停下的需求，就一定会有启动的需求。这些需求对应的事件在实际过程中都是需要识别出来的。</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">好了，有了这些事件，我们可以把目光从战术层面转向战略层识别子域。从事件到子域，是一个归纳与提炼的过程。通过对相关事件的归类，划分明确的业务领域与边界，从而得到清晰的业务架构。这个过程我认为类似于地图 zoom out，zoom out 前能够看到国家内的省份，城市，zoomout 后虽看不到这些细节，但能够看到所有国家的全景。回到我们的场景，我们识别出 2 个子域：</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">1.     速度控制</p>
+<p data-type="paragraph">2.     方向控制</p>
+<p data-type="paragraph"> </p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/7eef3cf11e7031eb.webp"/>
+<div data-title="">子域</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">真实的出行场景识别出来的子域肯定会更复杂。例如安全等子域，并且会划分核心域，通用域，支撑域。作为例子这里就不展开了。在实战过程中，需要精通业务领域的专家依据其丰富的业务经验对事件进行归类与定义清晰的业务边界。这往往是困难的，也是没有什么章法可循的。所以为什么在 DDD 的建模过程中必须强调一定要有领域专家在的原因。没有领域专家，出来的模型往往质量不高，所以如果没有领域专家， 领域建模也就可以不用做了。</p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/2529eaec5397435e.webp"/>
+<div data-title="">子域需要领域专家来划分</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">有了子域，我们可以跳回战术层。但这次是探索解决方案了。这一步的关键概念是聚合。聚合是一组业务相关性比较强的对象，这些对象组合起来对外提供一致的服务。聚合的特点是聚合内高内聚，聚合间低耦合。由于要对外提供服务，必须有单一的访问入口，这个入口叫做聚合根。从外部看一个聚合，只能看到它的聚合根，而看不到聚合内部具体的对象。</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">从事件到聚合，是一个从发散到收敛的抽象过程。这个过程很考验系统架构师的抽象能力。回到我们的例子，我抽象出来的聚合是：</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">1.     动力控制 - 聚合根：加速控制器</p>
+<p data-type="paragraph">2.     制动控制 - 聚合根：制动控制器</p>
+<p data-type="paragraph">3.     转向控制 - 聚合根：转向控制器</p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/cae584aa424a7a2d.webp"/>
+<div data-title="">聚合</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">在实战的过程中，过程会更复杂，涉及的概念会更多。例如实体，值对象，领域服务，聚合根的识别等。这些展开的话都会是一篇文章。</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">需要注意的一点是，我这里识别的聚合已经是解决方案的聚合，但实操过程中，有人会在这一步之前识别业务实体作为问题域的具体对象，然后再从业务实体识别出解决方案的聚合。很难说哪一种更好。先识别业务实体再识别聚合可能会更流畅，但也会因此引入更多的概念，让对 DDD 不熟悉的人容易产生混淆的感觉。</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">到了这一步，我们在问题域的战略层面有边界清晰的业务架构，在解决方案域的战术层面有能组合起来对外提供服务的聚合，是时候探索解决方案域的战略设计了。这一步我的惯常做法是把战术层面的聚合放回战略层面的子域，看能不能解决子域的业务问题，如果能解决，就形成战略层面的解决方案，即所谓的限界上下文。这个名字非常拗口，但这个名字却很好的表明了它的特性：限界表明它是边界划分清晰的，职责是明确的，上下文表明它是有一定的语境的。这往往是最难理解的一点。一个简单的例子就是对于“女儿”的解读。“女儿”在不同的家庭上下文里所指的人是不一样的。在我的家庭上下文里面，“女儿”是指我的女儿，但是在我岳母的家庭上下文里面，“女儿”指的就是我妻子。所以如果一个子域里面只有一个聚合，那往往就会以这个聚合形成一个限界上下文；但如果一个子域里面存在多于一个聚合，并且不同的聚合里面存在一个名字一样的对象，为了区分二义性，就要考虑是否需要拆开不同的上下文。回到我们的例子，限界上下文长这样：</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">1.     动力控制上下文（同属于速度控制子域）</p>
+<p data-type="paragraph">2.     制动控制上下文（同属于速度控制子域）</p>
+<p data-type="paragraph">3.     转向控制上下文</p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/ad0cf3ff5eaa2f40.webp"/>
+<div data-title="">限界上下文</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">这里速度控制子域还是维持动力与制动两个上下文，更多的考虑点还是职责区分。</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">到这一步，快速出行工具的的领域模型构建基本已经完成了。再往后走就是实现域的事情，也就没有 DDD 什么事了。到这里，才会涉及具体的技术实现，技术对复杂的业务架构的影响被 DDD 构建的领域架构完美隔离。从领域模型到具体实现的转化，就轮到技术架构师出场了。 技术架构师基于系统架构开展具体的技术架构设计时，更多的是需要考虑现实的限制因素。例如，在古代，科学不像现在这么发达，出行工具以马车的形式出现，加速控制器被设计为马鞭，制动控制器被设计为马缰绳，转向控制就靠马本身；在现代，出行工具变成了汽车，加速控制器是加速踏板，制动控制器是制动踏板，转向控制是方向盘。但是，无论出行工具怎么进化，无论是地铁，汽车，还是电动车，自行车，其通用系统架构与领域模型其实并没有发生非常大的改变。究其原因是人们在出行时的具体需求没有发生实质性变化，都是加速，减速，转向。变化的其实是具体的技术架构。</p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/8299a3d8b60b5de5.webp"/>
+<div data-title="">马车的实现</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/124db2abd4ea0824.webp"/>
+<div data-title="">汽车的实现</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">回到 IT 领域，当系统架构确定后，系统的实现究竟是以现在火热的微服务架构来实现还是沿用传统的单体架构来实现，并不是 DDD 所要回答的问题。技术架构师必须基于现实因素来综合考虑具体落地的实现方式。例如微服务架构最大的好处就是松耦合带来的高响应力，就像上面提到的马车，马车与马之间是松耦合的，马累趴下了可以立刻换马；单体架构的好处是不存在跨网络调用，性能往往比微服务好，就像现在的汽车（好吧，我承认我在黑微服务）。但是不论是微服务还是单体，基于 DDD 构建的领域模型都给最后的落地从架构上提供了很好的保障。</p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/b468c39359c70908.webp"/>
+<div data-title="">构建IT系统的微服务架构</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">讨论到这里，可能会有人问按照这种方法出来的模型跟我自己拍脑袋想的也差不多呀。然而事实就是这样，我们能拍出来一个八九不离十的模型是因为我们对各种出行工具已经非常熟悉了，以至于可以认为我们其实都是一定程度上的领域专家。类似的问题我们在帮客户实施 DDD 的过程中也经常被问到。尤其是对于遗留系统改造或者是系统平迁，最后出来的模型往往与客户脑子里面的模型差不多，然后他们就会问：“这和我们现在的差不多呀，也没什么特别大的区别呢。”，这个时候我一般会这样回答：“这个是肯定的呢，如果你们现有系统架构与业务领域相去甚远，你觉得你的系统能存活到现在吗？”</p>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">回到我们的问题：我要实现城市内快速出行。话说回来，其实这个问题的最快解决方法难道不是直接买一辆汽车吗？还花什么心思自己构建一辆呢？这个我承认。对我们来说，市内快速出行只是一个通用域的问题，直接花钱买一辆汽车就行。所以我们的建模过程就会快速收敛成以下这样：</p>
+<div data-type="image">
+<div data-content="" data-style-bordertype="none" data-style-width="100%"><img loading="lazy" src="/images/cnblogs/0ce705f3aeabee46.webp"/>
+<div data-title="">非核心域快速收敛</div>
+</div>
+</div>
+<p data-type="paragraph"> </p>
+<p data-type="paragraph">嗯，不错。遇到非核心域快速收敛，不用建模。Fail fast，才是 DDD 的精髓所在。</p>
+{% endraw %}

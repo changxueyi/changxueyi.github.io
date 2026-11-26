@@ -1,0 +1,53 @@
+---
+title: "BeanUtils.copyProperties使用"
+date: 2020-08-20 17:10:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "BeanUtils提供对Java反射和自省API的包装。其主要目的是利用反射机制对JavaBean的属性进行处理。我们知道，一个JavaBean通常包含了大量的属性，很多情况下，对JavaBean的处理导致大量get/set代码堆积，增加了代码长度和阅读代码的难度。 注意：属性复制，不同jar中的方"
+read_minutes: 1
+cnblogs_id: 13536204
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13536204.html"
+tags_inferred: true
+---
+{% raw %}
+<p>BeanUtils提供对Java反射和自省API的包装。其主要目的是利用反射机制对JavaBean的属性进行处理。我们知道，一个JavaBean通常包含了大量的属性，很多情况下，对JavaBean的处理导致大量get/set代码堆积，增加了代码长度和阅读代码的难度。</p>
+<p> 注意：属性复制，不同jar中的方法，用法不一样。<br/>1、<strong>package org.springframework.beans;中的</strong><br/>     BeanUtils.copyProperties(A,B);<br/>     是A中的值付给B<br/><br/></p>
+<p> </p>
+<p>2、<strong>package org.apache.commons.beanutils;（常用）</strong></p>
+<p>      BeanUtils.copyProperties(A,B);</p>
+<p>      是B中的值付给A</p>
+<p> </p>
+<div class="cnblogs_code">
+
+<pre>/**
+     * 实体类类型转化
+     * @param contents
+     * @param clazz
+     * @param &lt;I&gt;
+     * @param &lt;T&gt;
+     * @return
+     * **********************************
+     * import org.springframework.beans.BeanUtils;BeanUtils.copyProperties(A,B);是A中的值付给B
+     * import org.apache.commons.beanutils.BeanUtils;BeanUtils.copyProperties(A,B);是B中的值付给A
+     *
+     * **********************************
+     */
+    public static &lt;I, T&gt; List&lt;I&gt; convert(List&lt;T&gt; contents, Class&lt;I&gt; clazz) {
+        List&lt;I&gt; infos = new ArrayList&lt;&gt;();
+        for (T domain : contents) {
+            I info = null;
+            try {
+                info = clazz.newInstance();
+                BeanUtils.copyProperties(info, domain);
+            } catch (Exception e) {
+                log.info("转换数据失败", e);
+                throw new RuntimeException("转换数据失败");
+            }
+            if(info != null) {
+                infos.add(info);
+            }
+
+        }
+        return infos;
+    }</pre>
+</div>
+{% endraw %}

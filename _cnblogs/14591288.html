@@ -1,0 +1,55 @@
+---
+title: "SDK 和 API 的区别是什么？"
+date: 2021-03-29 10:16:00 +0800
+tags: ["【运维】-- Linux"]
+excerpt: "不知道区别的人，大概率是你还没搞懂API、SDK是什么。 讲个小故事： 研发人员A开发了软件A，研发人员B正在研发软件B。 有一天，研发人员B想要调用软件A的部分功能来用，但是他又不想从头看一遍软件A的源码和功能实现过程，怎么办呢？ 研发人员A想了一个好主意：我把软件A里你需要的功能打包好，写成一个"
+read_minutes: 3
+cnblogs_id: 14591288
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14591288.html"
+---
+{% raw %}
+<div>
+<p>不知道区别的人，大概率是你还没搞懂API、SDK是什么。</p>
+<p><strong>讲个小故事：</strong></p>
+<blockquote>研发人员A开发了软件A，研发人员B正在研发软件B。 <br/>有一天，研发人员B想要调用软件A的部分功能来用，但是他又不想从头看一遍软件A的源码和功能实现过程，怎么办呢？  <br/>研发人员A想了一个好主意：<strong>我把软件A里你需要的功能打包好，写成一个函数。你按照我说的流程，把这个函数放在软件B里，就能直接用我的功能了！</strong><br/>其中，API就是研发人员A说的那个函数。</blockquote>
+<noscript><img class="origin_image zh-lightbox-thumb" data-caption="" data-rawheight="979" data-rawwidth="1920" data-size="normal" loading="lazy" src="/images/cnblogs/fcd763024dffb97e.png" width="1920"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic2.zhimg.com/50/v2-4160a3b3d7361a1d75fa0174f8e3e83e_hd.jpg?source=1940ef5c" data-caption="" data-lazy-status="ok" data-rawheight="979" data-rawwidth="1920" data-size="normal" loading="lazy" src="/images/cnblogs/c5f2166920442acb.png" width="1920"/>
+<p>这就是API的诞生。</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>日常生活中，我们有很多类似API的场景，比如：</strong></p>
+<blockquote>电脑需要调用手机里面的信息，这时候你会拿一根数据线将电脑手机连接起来，电脑和手机上连接数据线的接口就相当于“API接口”。如图所示：</blockquote>
+<noscript><img class="origin_image zh-lightbox-thumb" data-caption="" data-rawheight="940" data-rawwidth="1920" data-size="normal" loading="lazy" src="/images/cnblogs/7de1d901b8c85e1a.png" width="1920"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic2.zhimg.com/50/v2-c3e0af3bc3c7ec6a163a2e8b5b5d6695_hd.jpg?source=1940ef5c" data-caption="" data-lazy-status="ok" data-rawheight="940" data-rawwidth="1920" data-size="normal" loading="lazy" src="/images/cnblogs/418205d8ea5a8f65.png" width="1920"/>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>那SDK又是什么？</strong></p>
+<p>SDK 就是 Software Development Kit 的缩写，翻译过来——软件开发工具包。这是一个覆盖面相当广泛的名词，可以这么说：辅助开发某一类软件的相关文档、范例和工具的集合都可以叫做SDK。</p>
+<p>SDK被开发出来是为了减少程序员工作量的。</p>
+<p>比如——</p>
+<p>有公司开发出某种软件的某一功能，把它封装成SDK（比如数据分析SDK就是能够实现数据分析功能的SDK），出售给其他公司做开发用，其他公司如果想要给软件开发出某种功能，但又不想从头开始搞开发，直接付钱省事。</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>现在可以谈谈API和SDK的区别了。</strong></p>
+<p>总的来说，两者没有值得比较的区别，因为是具有关联性的两种东西。</p>
+<p>你可以把SDK想象成一个虚拟的程序包，在这个程序包中有一份做好的软件功能，这份程序包几乎是全封闭的，只有一个小小接口可以联通外界，这个接口就是API。</p>
+<p>比如——</p>
+<p>我们现在要在企业ERP系统中增加某个功能（比如自动备份、数据分析、云存储等），但又不想耗费大量时间、也没那么多研发亲自去做这个功能。这时我们可以选择使用这个“SDK”软件包，把ERP系统连接上API接口，就可以使用SDK软件包里的功能。</p>
+<p class="ztext-empty-paragraph"> </p>
+<ul>
+<li><strong>举个实例辅助理解：</strong></li>
+</ul>
+<p>【中铁大桥科研院】有一个自研的信息平台，用于管理业务数据。</p>
+<p>但他们曾面临一个问题——尽管有信息平台，却因为系统的独立性，数据的上传和备份，需要依靠人工在excel里来回操作，效率很低。</p>
+<p>由于系统的开发周期长、成本高，桥科院将目光聚焦到现成的功能软件上。</p>
+<p>后来通过API将简道云直接插入公司数据库，数据可自动上传至信息平台上并统一展示；再通过webhook把数据推送到服务器，实现自动备份。</p>
+<noscript><img class="origin_image zh-lightbox-thumb" data-default-watermark-src="https://pic4.zhimg.com/50/v2-4903d1ad4e02da245135df5d87326729_hd.jpg?source=1940ef5c" data-rawheight="778" data-rawwidth="1302" data-size="normal" loading="lazy" src="/images/cnblogs/e8f5393cb6ac36f3.png" width="1302"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic4.zhimg.com/50/v2-e412823d1380e1174b97ab614f818159_hd.jpg?source=1940ef5c" data-default-watermark-src="https://pic4.zhimg.com/50/v2-4903d1ad4e02da245135df5d87326729_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="778" data-rawwidth="1302" data-size="normal" loading="lazy" src="/images/cnblogs/a26b71803b33e7b2.png" width="1302"/>API将信息平台与简道云相连
+<p>在这一过程中，简道云扮演的角色就是SDK，而简道云配备API接口，可以对接外部系统，让桥科院不用开发直接实现了数据自动上传、备份的功能。</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>最后，贴近生活讲讲两者的关系：</strong></p>
+<p>有一杯密封饮料，它的名字叫做“SDK”。</p>
+<p>饮料上插着吸管，吸管的名字叫“API”。</p>
+<p>把你叫做“XX系统”。</p>
+<p>如果你想喝到SDK里的饮料（让系统拥有SDK中的功能），你必须通过API这根吸管来实现（通过API连接你的系统和SDK工具包），否则你就喝不到饮料。</p>
+<p><strong>所以：</strong></p>
+<p>SDK＝放着你想要的软件功能的软件包</p>
+<p>API＝SDK上唯一的接口</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>不知道你这次真的懂了没？</strong></p>
+</div>
+{% endraw %}

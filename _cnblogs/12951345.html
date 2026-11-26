@@ -1,0 +1,44 @@
+---
+title: "记一次CPU 100%"
+date: 2020-05-24 16:18:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "一般CPU100%疯狂GC，都是死循环的锅，那怎么排查呢？ 先进服务器，用top -c 命令找出当前进程的运行列表 按一下 P 可以按照CPU使用率进行排序 显示Java进程 PID 为 2609 的java进程消耗最高 然后我们需要根据PID 查出CPU里面消耗最高的进程 使用命令 top -Hp"
+read_minutes: 1
+cnblogs_id: 12951345
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12951345.html"
+tags_inferred: true
+---
+{% raw %}
+<p>一般CPU100%疯狂GC，都是死循环的锅，那怎么排查呢？</p>
+<p>先进服务器，用<strong>top -c</strong> 命令找出当前进程的运行列表</p>
+<p>按一下 <strong>P</strong> 可以按照CPU使用率进行排序</p>
+<p>显示Java进程 PID 为 2609 的java进程消耗最高</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/65f2604429facbb4.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>然后我们需要根据PID 查出CPU里面消耗最高的进程</p>
+<p>使用命令 <strong>top -Hp 2609</strong> 找出这个进程下面的线程，继续按P排序</p>
+<p>可以看到 2854 CPU消耗最高</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/edad44c0266a591d.png"/></p>
+<p> </p>
+<p> </p>
+<p>2854是十进制的，我们需要转换为十六进制，转换结果：b26</p>
+<p>接下来就需要导出我们的进程快照了，看看这个线程做了啥</p>
+<pre><code>jstack -l 2609 &gt; ./2609.stack<br/></code></pre>
+<p>再用grep查看一下线程在文件里做了啥</p>
+<pre><code>cat 2609.stack |grep 'b26' -C 8<br/></code></pre>
+<p>我这里就随便定位一个，基本上这样查都可以定位到你死循环的那个类，那一行，这里你还可以在jstack出来的文件中看到很多熟悉的名词，至于是啥，你们留言告诉我好了，就当是个课后作业了。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/7b6bfd57f5c34c4f.png"/></p>
+<p> </p>
+<p> </p>
+<p>我写了个伪代码，看看当时我为啥会写出这个死循环，对了当时我上线的是预发，也是后台系统非线上的，虽然都是自己在玩，但是大家还是要引以为戒。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/5fead48d75bf1511.png"/></p>
+<p> </p>
+<p> </p>
+<p>我当时写了个代码准备去查出数据库的数据，订正下日期，仔细看没问题，但是我忘了数据库的偏移值自己去计算了，因为以前都是框架，自己临时写的就没管。</p>
+<p>导致每次都能查出10个数据，在最后判断的时候就一直true不退出了，其实最后会退出，但是得循环很多次。</p>
+<p>我这里退出的逻辑比较取巧，就是想着最后一次查询肯定跟我的页数不一样，那就是最后一页了，那我就处理完退出。</p>
+<p>结果没想到也是个坑了。</p>
+<p>大家写的时候也要注意很多小坑，还有代码一定要本地测了再发，我这次其实是本地发现了，然后想着干脆就写个排查经过的吧，机制吧。</p>
+{% endraw %}

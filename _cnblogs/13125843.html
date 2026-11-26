@@ -1,0 +1,56 @@
+---
+title: "ibatis iterate VS mybatis foreach"
+date: 2020-06-14 17:47:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "Iterate作用：遍历入参属性： prepend > 拼接sql条件，一般放在sql执行之前 property > 接收传入参数（List时不填） open > 标识遍历开始的字符串，常用于定义括号 close > 标识遍历结束的字符串，常用于定义括号 conjunction > 标识每遍历完一次"
+read_minutes: 1
+cnblogs_id: 13125843
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13125843.html"
+tags_inferred: true
+---
+{% raw %}
+<p>Iterate<br/>作用：遍历入参<br/>属性： <br/>         prepend ----&gt; 拼接sql条件，一般放在sql执行之前<br/>         property ----&gt;  接收传入参数（List时不填）<br/>         open  ---&gt;  标识遍历开始的字符串，常用于定义括号<br/>         close  ---&gt;  标识遍历结束的字符串，常用于定义括号 <br/>         conjunction  ---&gt;  标识每遍历完一次之后的操作符，常用于定义 and ， or ，“ ，” 等。<br/><br/></p>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 批量删除 List </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">delete </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="deleteUserInfoByIds"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="java.util.List"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    delete
+    from UserInfo where id in
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">iterate </span><span style="color: #ff0000;">open</span><span style="color: #0000ff;">="("</span><span style="color: #ff0000;"> close</span><span style="color: #0000ff;">=")"</span><span style="color: #ff0000;">  conjunction</span><span style="color: #0000ff;">=","</span><span style="color: #0000ff;">&gt;</span>
+     <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> ids为list变量名称,[]非常重要，方括号[]将对象标记为List，以防解析器简单地将List输出成String </span><span style="color: #008000;">--&gt;</span><span style="color: #000000;">
+        #ids[]#    
+    </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">iterate</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">delete</span><span style="color: #0000ff;">&gt;</span> </pre>
+</div>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 批量删除 Map</span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">delete </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="deleteUserInfoByIds"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="java.UserIon.UserIonfoMap"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    delete
+    from UserInfo  where id in
+    </span><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> ids为map中的一个List对象 </span><span style="color: #008000;">--&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">iterate </span><span style="color: #ff0000;">property</span><span style="color: #0000ff;">="ids"</span><span style="color: #ff0000;"> open</span><span style="color: #0000ff;">="("</span><span style="color: #ff0000;"> close</span><span style="color: #0000ff;">=")"</span><span style="color: #ff0000;">  conjunction</span><span style="color: #0000ff;">=","</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        #ids[]#
+    </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">iterate</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">delete</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>foreach<br/>作用：遍历入参<br/>属性： <br/>         item  ----&gt;  标识变量名<br/>         collection  ----&gt;  遍历类型，数据赋值为array，集合为list<br/>         open  ---&gt;  标识遍历开始的字符串，常用于定义括号<br/>         close  ---&gt;  标识遍历结束的字符串，常用于定义括号 <br/>         separator  ---&gt;  标识每遍历完一次之后的操作符，常用于定义  “ ，” 等。<br/>例子</p>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 批量删除 数组 </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">delete </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="deleteUserInfoByIds"</span><span style="color: #ff0000;"> parameterType</span><span style="color: #0000ff;">="int"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    delete
+    from UserInfo where id in
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">foreach </span><span style="color: #ff0000;">item</span><span style="color: #0000ff;">="idsItem"</span><span style="color: #ff0000;"> collection</span><span style="color: #0000ff;">="array"</span><span style="color: #ff0000;"> open</span><span style="color: #0000ff;">="("</span><span style="color: #ff0000;"> separator</span><span style="color: #0000ff;">=","</span><span style="color: #ff0000;"> close</span><span style="color: #0000ff;">=")"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+            #{ids}
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">foreach</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">delete</span><span style="color: #0000ff;">&gt;</span>
+ 
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 批量删除 List</span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">delete </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="deleteUserInfoByIds"</span><span style="color: #ff0000;"> parameterType</span><span style="color: #0000ff;">="int"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    delete
+    from UserInfo  where id in
+     </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">foreach </span><span style="color: #ff0000;">item</span><span style="color: #0000ff;">="idsItem"</span><span style="color: #ff0000;"> collection</span><span style="color: #0000ff;">="list"</span><span style="color: #ff0000;"> open</span><span style="color: #0000ff;">="("</span><span style="color: #ff0000;"> separator</span><span style="color: #0000ff;">=","</span><span style="color: #ff0000;"> close</span><span style="color: #0000ff;">=")"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+             #{ids}
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">foreach</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">delete</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+{% endraw %}

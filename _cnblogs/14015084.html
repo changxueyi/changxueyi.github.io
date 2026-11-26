@@ -1,0 +1,38 @@
+---
+title: "ElasticSearch中text和keyword类型的区别"
+date: 2020-11-21 11:44:00 +0800
+tags: ["【微服务】-- ES"]
+excerpt: "es从2.X版本一下子跳到了5.X版本，将string类型变为了过期类型，取而代之的是text和keyword数据类型，一直到现在最新的6以上版本。接下来就看看这两个字段的区别。 按照官方文档的阐述，text类型的数据被用来索引长文本，例如电子邮件主体部分或者一款产品的介绍，这些文本会被分析，在建立"
+read_minutes: 1
+cnblogs_id: 14015084
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14015084.html"
+---
+{% raw %}
+<div>es从2.X版本一下子跳到了5.X版本，将string类型变为了过期类型，取而代之的是text和keyword数据类型，一直到现在最新的6以上版本。接下来就看看这两个字段的区别。</div>
+<div>    </div>
+<div>     按照官方文档的阐述，text类型的数据被用来索引长文本，例如电子邮件主体部分或者一款产品的介绍，这些文本会被分析，在建立索引文档之前会被分词器进行分词，转化为词组。经过分词机制之后es允许检索到该文本切分而成的词语，但是text类型的数据不能用来过滤、排序和聚合等操作。</div>
+<div>    keyword类型的数据可以满足电子邮箱地址、主机名、状态码、邮政编码和标签等数据的要求，不进行分词，常常被用来过滤、排序和聚合。</div>
+<p> </p>
+<div>    综上，可以发现text类型在存储数据的时候会默认进行分词，并生成索引。而keyword存储数据的时候，不会分词建立索引，显然，这样划分数据更加节省内存。</div>
+<div> </div>
+<p>    这样，我们映射了某一个字段为keyword类型之后，就不用设置任何有关分词器的事情了，该类型就是默认不分词的文本数据类型。而对于text类型，我们还可以设置它的分词类型，如下：</p>
+<div class="cnblogs_code">
+<pre>PUT /zk_test/info/<span style="color: #000000;">_mapping
+{
+  </span><span style="color: #800000;">"</span><span style="color: #800000;">info</span><span style="color: #800000;">"</span><span style="color: #000000;">:{
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">properties</span><span style="color: #800000;">"</span><span style="color: #000000;">:{
+      </span><span style="color: #800000;">"</span><span style="color: #800000;">address</span><span style="color: #800000;">"</span>:{<span style="color: #800000;">"</span><span style="color: #800000;">type</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">analyzer</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">standard</span><span style="color: #800000;">"</span><span style="color: #000000;">}
+    }
+  }
+}</span></pre>
+</div>
+<p>analyzer 还有中文分词 chinese，英文分词 english 等参数。</p>
+<p> </p>
+<div>    另外，我们在像之前2.X版本中一样设置分词使用"index":"not_analyzed"配置时，会有提醒，提示"index"参数只有false和true两个值。</div>
+<div><img alt="" loading="lazy" src="/images/cnblogs/16780d0c6149ee85.png"/>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>在5以上的版本中，“index”参数用来配置该字段是否可以被用来搜索，true可以通过搜索该字段检索到文档，false为否，配置分词器，用analyzer参数。</p>
+</div>
+{% endraw %}

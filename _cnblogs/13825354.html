@@ -1,0 +1,99 @@
+---
+title: "关于Mockito学习的一点自己的理解"
+date: 2020-10-16 11:03:00 +0800
+tags: ["【测试】--单元测试"]
+excerpt: "1. 如果要使用@Mockito ，则要加入MockitoAnnotations.initMocks MockitoAnnotations.initMocks 放在 junit 的 @Before 注解修饰的函数中更合适。 MockitoAnnotations.initMocks 的一个替代方案是使"
+read_minutes: 2
+cnblogs_id: 13825354
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13825354.html"
+---
+{% raw %}
+<p><strong><span style="font-size: 18px;">1. 如果要使用@Mockito ，则要加入MockitoAnnotations.initMocks</span></strong></p>
+<p><code>MockitoAnnotations.initMocks</code> 放在 junit 的 <code>@Before</code> 注解修饰的函数中更合适。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/9f74c0efd88184b3.png"/></p>
+<p> </p>
+<p> </p>
+<p>MockitoAnnotations.initMocks 的一个替代方案是使用 MockitoJUnitRunner 。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/53fe3f0f55b4a1f1.png"/></p>
+<p> </p>
+<p> </p>
+<p><strong><span style="font-size: 18px;"> 2.一些注意点：</span></strong></p>
+<p><span style="font-size: 14px;">1.Dao层测试，直接用一些模拟数据，插入数据库，看看测试是否成功</span></p>
+<p><span style="font-size: 14px;">2.Service主要来测试缓存的</span></p>
+<p><span style="font-size: 14px;">3. web直接用Mock进行来测试</span></p>
+<p><strong><span style="font-size: 18px;">3. 使用方式：</span></strong></p>
+<p><strong><span style="font-size: 18px;">方式一：</span></strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">@Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> queryx() {</span>
+        String pin = "testPin"<span style="color: #000000;">;
+        String ip </span>= "127.0.0.1"<span style="color: #000000;">;
+        when(XXXJsf.getPreSwitch(any(XXXXReq.</span><span style="color: #0000ff;">class</span>))).thenAnswer(<span style="color: #0000ff;">new</span> Answer&lt;Object&gt;<span style="color: #000000;">() {
+            @Override
+            </span><span style="color: #0000ff;">public</span> Object answer(InvocationOnMock invocation) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Throwable {
+                GenericResult</span>&lt;XXXX&gt; genericResult = <span style="color: #0000ff;">new</span> GenericResult&lt;&gt;<span style="color: #000000;">();
+                XXXX xjkCashierTradeRes </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> xxx();
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">符合切量</span>
+                XXXXXRes.setxxxx(<span style="color: #0000ff;">true</span><span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">成功</span>
+                genericResult.setSuccess(<span style="color: #0000ff;">true</span><span style="color: #000000;">);
+                genericResult.setCode(</span>"0000"<span style="color: #000000;">);
+                genericResult.setValue(XXXX);
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> genericResult;
+            }
+        });<br/>下面一定要写调用的具体接口</span></pre>
+<pre>ResponseVo&lt;XXXXX&gt; responseVo = XXXXX.XXXX(pin, "127.0.0.1");<br/>log.info("XXXXX.res:{}", GsonUtils.toJson(responseVo));</pre>
+<pre><strong><span style="color: #000000;"> </span></strong></pre>
+</div>
+<p> </p>
+<p><span style="font-size: 18px;"><strong>方式二：</strong></span></p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">调用的时候会直接抛出异常信息，如果想让起抛出异常信息，则直接使用这个方式<br/> @Test
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> testMktSaleOrder() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        String message </span>= "XXXXX"<span style="color: #000000;">;
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {<br/>　　　　　　　　//注意下面两行代码的位置不能交换，必须先去定义调用就去抛出异常信息
+            doThrow(RuntimeException.</span><span style="color: #0000ff;">class</span>).when(XXXXJSF).asynxxxxeStock(any(XXXXckReq.<span style="color: #0000ff;">class</span><span style="color: #000000;">));
+            XXXXX.onMessage(message);
+        } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Exception e) {
+        }
+    }</span></pre>
+</div>
+<p><strong><span style="font-size: 18px;">方式三：</span></strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">@Before
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setup() {
+        doReturn(</span>1).when(XXXXXDao).insert(any(XXXXXXPo.<span style="color: #0000ff;">class</span><span style="color: #000000;">));
+        doReturn(</span>1).when(xxxDao).updateByxxxxId(any(XXXXXXPo.<span style="color: #0000ff;">class</span><span style="color: #000000;">));
+        when(scoreXXXXDao.queryByIdxxxx(anyString())).then(invocationOnMock </span>-&gt; <span style="color: #0000ff;">this</span><span style="color: #000000;">.XXXXPo());
+        when(scorXXXXDao.queryByConditionXXXX(any(XXXXXPo.</span><span style="color: #0000ff;">class</span>))).then(invocationOnMock -&gt;<span style="color: #000000;"> {
+            Page page </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Page();
+            page.add(</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.xxxxxPo());
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> page;
+        });
+    }</span></pre>
+</div>
+<p><span style="font-size: 18px;"><strong> 方式四：</strong></span>　　　　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;"><em id="__mceDel">        doReturn(216322040L).when(activityDao).insert(any(SaleActivity.class));<br/>　　　　doReturn(230L).when(activityRewardStockDao).insert(any(SaleActivityRewardStock.class));
+        doNothing().when(activityRewardDao).insert(any(SaleActivityReward.class));
+        doReturn(40L).when(activityRewardStockDao).insert(any(SaleActivityRewardStock.class));
+        doNothing().when(activityRewardEnumDao).insert(any(SaleActivityRewardEnum.class));
+        doNothing().when(bizCacheService).saveActivityInfoToCache(any(RichSaleActivity.class));
+        doNothing().when(activityDao).update(any(SaleActivity.class));<br/></em></pre>
+<pre>　　　　doReturn(new ArrayList&lt;SaleActivityRuleConfig&gt;()).when(activityRuleConfigDao).queryRuleList();</pre>
+</div>
+<p> </p>
+<p><span style="font-size: 18px;"><strong> 方式五：</strong></span></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;"> 　　　　　　when(bizCacheService.cacheGetActivity(anyLong())).then(new Answer&lt;SaleActivity&gt;() {
+            @Override
+            public SaleActivity answer(InvocationOnMock invocationOnMock) throws Throwable {
+                String saleActivityStr = "{\"activityEnum\":\"020302\",\"activityName\":\"4月-白条网易严选权益卡\",\"appShow\":1,\"auditor\":\"sunweiting\",\"auditorTime\":1553778669000,\"budgetNum\":\"SC00190306899\",\"createTime\":1553754196000,\"creator\":\"gaoya39\",\"dayFinishTime\":946742399000,\"dayPartiCount\":1,\"dayStartTime\":946656000000,\"detail\":\"\",\"finishTime\":1555343999000,\"id\":314135082,\"partiCount\":1,\"phone\":\"18301232918\",\"priority\":1,\"startTime\":1554048000000,\"status\":4,\"updateTime\":1555344000000}";
+                return JSON.parseObject(saleActivityStr, SaleActivity.class);
+            }
+        });
+</pre>
+</div>
+<p>　　</p>
+<p> </p>
+{% endraw %}

@@ -1,0 +1,139 @@
+---
+title: "Go --- Marshal与Unmarshal基础用法"
+date: 2021-03-08 18:38:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "go语言本身为我们提供了json的工具包”encoding/json”。 前言： Json–Javascript Object Nanotation 是一种数据交换格式，经常用于前后端的数据传输。一端将数据转换成json字符串，另一端再将json字符串转换成相应的数据结构，如struct, floa"
+read_minutes: 4
+cnblogs_id: 14501391
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14501391.html"
+---
+{% raw %}
+<p>go语言本身为我们提供了json的工具包”encoding/json”。</p>
+<h2><a name="t0"></a><a name="t0"></a><a id="_2"></a>前言：</h2>
+<p>Json–Javascript Object Nanotation 是一种数据交换格式，经常用于前后端的数据传输。一端将数据转换成json字符串，另一端再将json字符串转换成相应的数据结构，如struct, float等。</p>
+<h2><a name="t1"></a><a name="t1"></a><a id="_5"></a>用法：</h2>
+<p>1.Marshal—将数据编码成json字符串</p>
+<pre class="prettyprint"><code class="has-numbering">package main
+
+import (
+	"encoding/json"
+	"fmt"
+)
+
+type Student struct{
+	Name string `json:"name"`
+	Age int
+	sex string
+	Class *Class `json:"class"`
+}
+
+type Class struct {
+	Name string
+	Grade int
+}
+
+func main() {
+	//实例化一个数据结构，用于生成json字符串
+	stu := Student{
+		Name: "Raily",
+		Age: 18,
+		sex: "女",
+	}
+	//指针变量
+	cla :=  new(Class)
+	cla.Name = "1班"
+	cla.Grade = 3
+	stu.Class = cla
+
+	jsonStu, err := json.Marshal(stu)
+	if err!= nil{
+		return
+	}
+	//jsonStu是[]byte类型，转化成string类型便于查看
+	fmt.Println(string(jsonStu))
+}</code></pre>
+<p>输出结果：</p>
+<pre class="prettyprint"><code class="has-numbering">{"name":"Raily","Age":18,"class":{"Name":"1班","Grade":3}}
+</code></pre>
+<ul class="pre-numbering">
+<li>1</li>
+</ul>
+<p>从结果中可以看出：</p>
+<p>①只要是可导出成员（变量首字母大写），都可以转成json。因成员变量sex是不可导出的，故无法转成json。</p>
+<p>②如果变量打上了json标签，如Name旁边的 <code>json:"name"</code> ，那么转化成的json key就用该标签“name”，否则取变量名作为key，如“Age”，“HIgh”。</p>
+<p>③bool类型也是可以直接转换为json的value值。Channel， complex 以及函数不能被编码json字符串。当然，循环的数据结构也不行，它会导致marshal陷入死循环。</p>
+<p>④指针变量，编码时自动转换为它所指向的值，如cla变量。（当然，不传指针，Stu struct的成员Class如果换成Class struct类型，效果也是一模一样的。只不过指针更快，且能节省内存空间。）<br/>最后，强调一句：json编码成字符串后就是纯粹的字符串了。<br/>············································································································</p>
+<blockquote>
+<p>上面的成员变量都是已知的类型，只能接收指定的类型，比如string类型的Name只能赋值string类型的数据。<br/>但有时为了通用性，或使代码简洁，我们希望有一种类型可以接受各种类型的数据，并进行json编码。这就用到了interface{}类型。<br/>如下：</p>
+</blockquote>
+<pre class="prettyprint"><code class="has-numbering">type Student struct {
+    Name  interface{} `json:"name"`
+    Age   interface{}
+    sex   interface{}
+    Class interface{} `json:"class"`
+}
+//其他部分与上面的例子一样；无论是string，int，bool，还是指针类型等，都可赋值给interface{}类型。</code></pre>
+<p>············································································································<br/>在实际项目中，编码成json串的数据结构，往往是切片类型。如下定义了一个[]StuRead类型的切片：</p>
+<pre class="prettyprint"><code class="has-numbering">//方式1：只声明，不分配内存
+var stus1 []*StuRead
+
+//方式2：分配初始值为0的内存
+stus2 := make([]*StuRead, 0)
+
+//错误示范
+//new()只能实例化一个struct
+stus := new([]StuRead)
+
+stu1 := StuRead{成员赋值...}
+stu2 := StuRead{成员赋值...}
+
+//由方式1和2创建的切片，都能成功追加数据
+//方式2最好分配0长度，append时会自动增长。反之指定初始长度，长度不够时不会自动增长，导致数据丢失
+stus1 := appen(stus1,stu1,stu2)
+stus2 := appen(stus2,stu1,stu2)
+
+//成功编码
+json1,_ := json.Marshal(stus1)
+json2,_ := json.Marshal(stus2)
+</code></pre>
+<p> </p>
+<p>解码时定义对应的切片接受即可。</p>
+<p>2.Unmarshal—将json字符串解码到相应的数据结构<br/>将上面的例子进行解码：</p>
+<pre class="prettyprint"><code class="has-numbering">type StuRead struct {
+    Name  interface{} `json:"name"`
+    Age   interface{}
+    sex   interface{}
+    Class interface{} `json:"class"`
+    Test  interface{}
+}
+
+type Class struct {
+    Name  string
+    Grade int
+}
+
+func main() {
+    //json字符中的"引号，需用\进行转义，否则编译出错
+    //json字符串沿用上面的结果，但对key进行了大小的修改，并添加了sex数据
+    data:="{\"name\":\"张三\",\"Age\":18,\"sex\":\"男\",\"CLASS\":{\"naME\":\"1班\",\"GradE\":3}}"
+   
+    str:=[]byte(data)
+    //1.Unmarshal的第一个参数是json字符串，第二个参数是接受json解析的数据结构。
+    //第二个参数必须是指针，否则无法接收解析的数据，如stu仍为空对象StuRead{}
+    //2.可以直接stu:=new(StuRead),此时的stu自身就是指针
+    stu:=StuRead{}
+    err:=json.Unmarshal(str,&amp;stu)
+    //解析失败会报错，如json字符串格式不对，缺"号，缺}等。
+    if err!=nil{
+        fmt.Println(err)
+    }
+
+    fmt.Println(stu)
+}</code></pre>
+<p>结果：</p>
+<pre class="prettyprint"><code class="has-numbering">{张三 18 true &lt;nil&gt; map[naME:1班 GradE:3] &lt;nil&gt;}</code></pre>
+<p>总结：<br/>① json字符串解析时，需要一个“接收体”接受解析后的数据，且Unmarshal时接收体必须传递指针。否则解析虽不报错，但数据无法赋值到接受体中。如这里用的是StuRead{}接收。</p>
+<p>② 解析时，接收体可自行定义。json串中的key自动在接收体中寻找匹配的项进行赋值。匹配规则是：<br/>先查找与key一样的json标签，找到则赋值给该标签对应的变量(如Name)。<br/>没有json标签的，就从上往下依次查找变量名与key一样的变量，如Age。或者变量名忽略大小写后与key一样的变量。如Class。第一个匹配的就赋值，后面就算有匹配的也忽略。<br/>(前提是该变量必需是可导出的，即首字母大写)。<br/>不可导出的变量无法被解析（如sex变量，虽然json串中有key为sex的k-v，解析后其值仍为nil,即空值）</p>
+<p>③ 当接收体中存在json串中匹配不了的项时，解析会自动忽略该项，该项仍保留原值。如变量Test，保留空值nil。</p>
+<p>④ 你一定会发现，变量Class貌似没有解析为我们期待样子。因为此时的Class是个interface{}类型的变量，而json串中key为CLASS的value是个复合结构，不是可以直接解析的简单类型数据（如“张三”，18，true等）。所以解析时，由于没有指定变量Class的具体类型，json自动将value为复合结构的数据解析为map[string]interface{}类型的项。也就是说，此时的struct Class对象与StuRead中的Class变量没有半毛钱关系，故与这次的json解析没有半毛钱关系。</p>
+{% endraw %}

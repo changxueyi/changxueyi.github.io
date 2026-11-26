@@ -1,0 +1,95 @@
+---
+title: "记一次线上CPU100%排查过程"
+date: 2020-05-24 16:03:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "引言 不知道在大家面试中，有没有遇到这个问题： 生产服务器上部署了几个java程序，突然出现了CPU100%的异常告警，你如何定位出问题呢？ 这个问题分为两版回答！高调版对不起，我是做研发的，这个问题在生产上是不可能遇见的！因为研发是不可能直接操作生产服务器，如果贵公司能出现这个问题，应该要反思一下"
+read_minutes: 2
+cnblogs_id: 12951282
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12951282.html"
+tags_inferred: true
+---
+{% raw %}
+<h2><img alt="" loading="lazy" src="/images/cnblogs/f34ddeac83cb8e58.jpg"/></h2>
+<p> </p>
+<p> </p>
+<h2>引言</h2>
+<p>不知道在大家面试中，有没有遇到这个问题：</p>
+<blockquote>
+<p>生产服务器上部署了几个java程序，突然出现了CPU100%的异常告警，你如何定位出问题呢？</p>
+</blockquote>
+<p>这个问题分为两版回答！<br/><em>高调版</em><br/>对不起，我是做研发的，这个问题在生产上是不可能遇见的！因为研发是不可能直接操作生产服务器，如果贵公司能出现这个问题，应该要反思一下自己的权限控制是否合理！</p>
+<p><code>面试官心里活动</code>：装13是不是，赶紧走！</p>
+<p><em>低调版</em><br/>这个问题我在生产上没碰到过，因为我们是没法直接操作生产环境的。只能说，在测试环境曾经遇见过。操作步骤如下，balabala…</p>
+<p><code>面试官心里活动</code>：权限控制的不错，应该是在大厂呆过。</p>
+<p>下面开始我们的正文</p>
+<h2><a name="t2"></a><a name="t2"></a>正文</h2>
+<p>下面给出两种系统下的排查步骤，都是一模一样的，只是命令稍有区别！</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>查消耗cpu最高的进程PID</p>
+</li>
+<li>
+<p>根据PID查出消耗cpu最高的线程号</p>
+</li>
+<li>
+<p>根据线程号查出对应的java线程，进行处理。</p>
+</li>
+</ul>
+<p>准备一行死循环代码：</p>
+<p><img alt="640?wx_fmt=png" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGjuFtZSh6P7MVsNW7weufWgsv4bdRu3gZJCn1my5SiaFiaaupiaoATPk5Pvw/640?wx_fmt=png"/></p>
+<p>怎么跑，应该不用我说了，直接教大家怎么查！</p>
+<h3><a name="t3"></a><a name="t3"></a>windows版</h3>
+<p>可能有人有疑问，我为什么要说windows版的！因为，我曾经给很多政府部门做过系统。我发现他们用的是windows server，不是linux系统。所有必要说一下！</p>
+<h4>查消耗cpu最高的进程PID</h4>
+<p>手边没有windows server机器，我以win 10为例，截图给大家看一下，先调出PID显示项！</p>
+<p><img alt="640?wx_fmt=jpeg" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_jpg/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGjuVUrLkMuGVVTgL7o1AiaXLHSYqqOYpviae10ytQAqhiczujy3biaSaZj2Ng/640?wx_fmt=jpeg"/></p>
+<p>
+<br/>然后发现进程PID如下图所示，为10856</p>
+<p><img alt="640?wx_fmt=jpeg" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_jpg/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGjuicWkB3KD2Ae6LaAtkgiaibIXjwTNFbnJ9dickuzcSibZP2IhicTvhG8FXxtA/640?wx_fmt=jpeg"/></p>
+<p>
+<br/>接下来呢？</p>
+<h4>根据PID查出消耗cpu最高的线程号</h4>
+<p>这里用到微软的工具Process Explorer v16.22，地址如下<br/><code>https://docs.microsoft.com/zh-cn/sysinternals/downloads/process-explorer</code><br/>如图所示</p>
+<p><img alt="640?wx_fmt=png" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_png/SYoYmIOcI5rATXZNRC0z5fQef1FFcazQCOokycotP4Nd3cDLSTsoJbksc5SQiaoTsOU02H3k1SYT2MicXEiaNXojg/640?wx_fmt=png"/></p>
+<p>
+<br/>发现最耗cpu的线程的TId为6616<br/>这是十进制的数据，转成十六进制为19d8</p>
+<h4>根据线程号查出对应的java线程，进行处理</h4>
+<p>执行命令,导出进程快照</p>
+<p><img alt="640?wx_fmt=png" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGju3Eq0LoGRCapXXYusaicGQl2TYZVpRNb0vQ91ceDQJ4y1supn69EEa9w/640?wx_fmt=png"/></p>
+<p>打开文件 c:/10856.stack，搜索19d8，如下图所示</p>
+<p><img alt="640?wx_fmt=png" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGju85ykwushqJGUJDTIickAUNFSBKfr9RlLmZJd56iaw265WINbIcriawKzg/640?wx_fmt=png"/></p>
+<p>
+<br/>根据文件就可以看出，我们的<code>TestFor.java</code>文件第七行一直在跑，至此定位到问题</p>
+<h3><a name="t4"></a><a name="t4"></a>Linux版</h3>
+<p>Linux版本，步骤是一模一样的，就是命令换了一下</p>
+<h4>查消耗cpu最高的进程PID</h4>
+<p>执行命令</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>执行<code>top -c</code> ，显示进程运行信息列表。按下P,进程按照cpu使用率排序</p>
+</li>
+</ul>
+<p>如下图所示，PID为3033的进程耗费cpu最高</p>
+<p><img alt="640?wx_fmt=png" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGju3ALRlPjJeeSDibsl09ESq63jqA7GV5Vh0uXG5ZtuzysqZUn5UlgfCrQ/640?wx_fmt=png"/></p>
+<h4>根据PID查出消耗cpu最高的线程号</h4>
+<p>执行命令</p>
+<ul class="list-paddingleft-2">
+<li>
+<p><code>top -Hp 3033</code> ，显示一个进程的线程运行信息列表。按下P,进程按照cpu使用率排序</p>
+</li>
+</ul>
+<p>如下图所示，PID为3034的线程耗费cpu最高</p>
+<p><img alt="640?wx_fmt=png" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGjuzEhXqXg9MFEDwd0Z5o62kse7sgF1uAj4TTaIZMSc5u13R0mibAK6VRA/640?wx_fmt=png"/></p>
+<p>这是十进制的数据，转成十六进制为0xbda</p>
+<h4>根据线程号查出对应的java线程，进行处理</h4>
+<p>执行命令,导出进程快照</p>
+<p> </p>
+<pre><code class="hljs cpp">jstack -l <span class="hljs-number"><span class="hljs-number">3033 &gt; ./<span class="hljs-number"><span class="hljs-number">3033.<span class="hljs-built_in"><span class="hljs-built_in">stack<br/></span></span></span></span></span></span></code></pre>
+<p>然后执行，grep命令，看线程<code>0xbda</code>做了什么</p>
+<pre><code class="hljs nginx go"><span class="hljs-attribute">cat <span class="hljs-number"><span class="hljs-number">3033<span class="hljs-number">.stack |grep <span class="hljs-string"><span class="hljs-string">'bda' -C <span class="hljs-number"><span class="hljs-number">8<br/></span></span></span></span></span></span></span></span></code></pre>
+<p>输出如下</p>
+<p><img alt="640?wx_fmt=png" loading="lazy" referrerpolicy="no-referrer" src="https://ss.csdn.net/p?https://mmbiz.qpic.cn/mmbiz_png/UtWdDgynLdZiaibp00PiaibBwqQXUfvTkGjurIVxGvkz2kqpsVW7IBIsvWUA0dFGY8Cn1jRSxQd9wSctibwxeniaUI0w/640?wx_fmt=png"/></p>
+<p>至此定位到问题</p>
+<h2><a name="t5"></a><a name="t5"></a>总结</h2>
+<p>大家记得一定要去实际操作一次！</p>
+{% endraw %}

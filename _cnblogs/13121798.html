@@ -1,0 +1,893 @@
+---
+title: "RabbitMQ实战教程"
+date: 2020-06-13 21:13:00 +0800
+tags: ["【中间件】-- MQ"]
+excerpt: "RabbitMQ实战教程 1.什么是MQ消息队列（Message Queue，简称MQ），从字面意思上看，本质是个队列，FIFO先入先出，只不过队列中存放的内容是message而已。其主要用途：不同进程Process/线程Thread之间通信。为什么会产生消息队列？有几个原因： 不同进程（proce"
+read_minutes: 22
+cnblogs_id: 13121798
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13121798.html"
+tags_inferred: true
+---
+{% raw %}
+<h2>RabbitMQ实战教程</h2>
+<p><strong>1.什么是MQ</strong><br/>消息队列（Message Queue，简称MQ），从字面意思上看，本质是个队列，FIFO先入先出，只不过队列中存放的内容是message而已。<br/>其主要用途：不同进程Process/线程Thread之间通信。<br/>为什么会产生消息队列？有几个原因：</p>
+<p><strong>不同进程（process）</strong>之间传递消息时，两个进程之间耦合程度过高，改动一个进程，引发必须修改另一个进程，为了隔离这两个进程，在两进程间抽离出一层（一个模块），所有两进程之间传递的消息，都必须通过消息队列来传递，单独修改某一个进程，不会影响另一个；</p>
+<p><strong>不同进程（process）</strong>之间传递消息时，为了实现标准化，将消息的格式规范化了，并且，某一个进程接受的消息太多，一下子无法处理完，并且也有先后顺序，必须对收到的消息进行排队，因此诞生了事实上的消息队列；</p>
+<h3>2.RabbitMQ</h3>
+<h4><a id="21RabbitMQ_39"></a>2.1.RabbitMQ的简介</h4>
+<p><img alt="" loading="lazy" src="/images/cnblogs/1c6ebc583fe4488b.png"/></p>
+<p> </p>
+<p> </p>
+<p> 开发语言：Erlang – 面向并发的编程语言。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/70dd251f93377d76.png"/></p>
+<p> </p>
+<p> </p>
+<p> 2.1.1.AMQP<br/>AMQP是消息队列的一个协议。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/0781f0947646f11a.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<h4>2.2.官网</h4>
+<p><img alt="" loading="lazy" src="/images/cnblogs/cc716a5595f6e2e9.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<h4>2.3.MQ的其他产品</h4>
+<p><img alt="" loading="lazy" src="/images/cnblogs/8df63804a56e7149.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<h4>2.4.学习5种队列</h4>
+<p><img alt="" loading="lazy" src="/images/cnblogs/1b5bfca734d44eda.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<h4>2.5.安装文档</h4>
+<p><img alt="" loading="lazy" src="/images/cnblogs/94158d9c62e2db41.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<h3>3.搭建RabbitMQ环境</h3>
+<p>3.1.下载<br/>下载地址：http://www.rabbitmq.com/download.html</p>
+<p>3.2.windows下安装<br/>3.2.1.安装Erlang<br/>下载：http://www.erlang.org/download/otp_win64_17.3.exe<br/>安装：</p>
+<p> </p>
+<p> </p>
+<p>安装完成。</p>
+<p>3.2.2.安装RabbitMQ</p>
+<p> </p>
+<p>安装完成。</p>
+<p>开始菜单里出现如下选项：</p>
+<p><br/>启动、停止、重新安装等。<br/><br/></p>
+<p>3.2.3.启用管理工具<br/>1、双击<br/>2、进入C:\Program Files (x86)\RabbitMQ Server\rabbitmq_server-3.4.1\sbin输入命令：<br/>rabbitmq-plugins enable rabbitmq_management</p>
+<p><br/>这样就启动了管理工具，可以试一下命令：<br/>停止：net stop RabbitMQ<br/>启动：net start RabbitMQ</p>
+<p>3、在浏览器中输入地址查看：http://127.0.0.1:15672/</p>
+<p>4、使用默认账号登录：guest/ guest</p>
+<p>3.3.Linux下安装<br/>3.3.1.安装Erlang<br/>3.3.2.添加yum支持<br/>cd /usr/local/src/<br/>mkdir rabbitmq<br/>cd rabbitmq</p>
+<p>wget http://packages.erlang-solutions.com/erlang-solutions-1.0-1.noarch.rpm<br/>rpm -Uvh erlang-solutions-1.0-1.noarch.rpm</p>
+<p>rpm --import http://packages.erlang-solutions.com/rpm/erlang_solutions.asc</p>
+<p>使用yum安装：<br/>sudo yum install erlang</p>
+<p><br/>3.3.3.安装RabbitMQ<br/>上传rabbitmq-server-3.4.1-1.noarch.rpm文件到/usr/local/src/rabbitmq/<br/>安装：<br/>rpm -ivh rabbitmq-server-3.4.1-1.noarch.rpm</p>
+<p>3.3.4.启动、停止<br/>service rabbitmq-server start<br/>service rabbitmq-server stop<br/>service rabbitmq-server restart<br/>3.3.5.设置开机启动<br/>chkconfig rabbitmq-server on<br/>3.3.6.设置配置文件<br/>cd /etc/rabbitmq<br/>cp /usr/share/doc/rabbitmq-server-3.4.1/rabbitmq.config.example /etc/rabbitmq/</p>
+<p>mv rabbitmq.config.example rabbitmq.config<br/>3.3.7.开启用户远程访问<br/>vi /etc/rabbitmq/rabbitmq.config</p>
+<p>注意要去掉后面的逗号。<br/>3.3.8.开启web界面管理工具<br/>rabbitmq-plugins enable rabbitmq_management<br/>service rabbitmq-server restart<br/>3.3.9.防火墙开放15672端口<br/>/sbin/iptables -I INPUT -p tcp --dport 15672 -j ACCEPT<br/>/etc/rc.d/init.d/iptables save</p>
+<p>3.4.安装的注意事项<br/>1、推荐使用默认的安装路径<br/>2、系统用户名必须是英文<br/>Win10改名字非常麻烦，具体方法百度</p>
+<p>3、计算机名必须是英文</p>
+<p>4、系统的用户必须是管理员</p>
+<p>如果安装失败应该如何解决：<br/>1、重装系统 – 不推荐<br/>2、将RabbitMQ安装到linux虚拟机中<br/>a)推荐<br/>3、使用别人安装好的RabbitMQ服务<br/>a)只要给你开通一个账户即可。<br/>b)使用公用的RabbitMQ服务，在192.168.50.22<br/>c)推荐</p>
+<p>常见错误：</p>
+<p><br/>3.5.安装完成后操作<br/>1、系统服务中有RabbitMQ服务，停止、启动、重启</p>
+<p>2、打开命令行工具</p>
+<p>如果找不到命令行工具,直接cd到相应目录：</p>
+<p>输入命令rabbitmq-plugins enable rabbitmq_management启用管理插件</p>
+<p>查看管理页面</p>
+<p>通过默认账户 guest/guest 登录<br/>如果能够登录，说明安装成功。<br/><img alt="" loading="lazy" src="/images/cnblogs/85a1af01fff7c8a8.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<h3>4.添加用户</h3>
+<h4>4.1.添加admin用户</h4>
+<p>4.2.用户角色<br/>1、超级管理员(administrator)<br/>可登陆管理控制台，可查看所有的信息，并且可以对用户，策略(policy)进行操作。<br/>2、监控者(monitoring)<br/>可登陆管理控制台，同时可以查看rabbitmq节点的相关信息(进程数，内存使用情况，磁盘使用情况等)<br/>3、策略制定者(policymaker)<br/>可登陆管理控制台, 同时可以对policy进行管理。但无法查看节点的相关信息(上图红框标识的部分)。<br/>4、普通管理者(management)<br/>仅可登陆管理控制台，无法看到节点信息，也无法对策略进行管理。<br/>5、其他<br/>无法登陆管理控制台，通常就是普通的生产者和消费者。</p>
+<h4>4.3.创建Virtual Hosts</h4>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/879cf3ef47edfaf2.png"/></p>
+<p>选中Admin用户，设置权限：<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/1faefc147089eb9c.png"/><br/>看到权限已加：<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/28b48d55d2da88d2.png"/></p>
+<h4><a id="44_197"></a>4.4.管理界面中的功能</h4>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/ed2bd5334f53c207.png"/></p>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/f3d5d2aa60a9d9e7.png"/></p>
+<h3><a name="t6"></a><a name="t6"></a><a id="5_202"></a>5.学习五种队列</h3>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/358d061f0ddec728.png"/></p>
+<p> </p>
+<h4>5.1.导入my-rabbitmq项目</h4>
+<p>项目下载地址：<br/><a href="https://download.csdn.net/download/zpcandzhj/10585077">https://download.csdn.net/download/zpcandzhj/10585077</a><br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/0e9a12e1a9220e65.png"/></p>
+<h4>5.2.简单队列</h4>
+<p>5.2.1.图示<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/eb405e6ccd118c52.png"/></p>
+<p>P：消息的生产者<br/>C：消息的消费者<br/>红色：队列</p>
+<p>生产者将消息发送到队列，消费者从队列中获取消息。</p>
+<p>5.2.2.导入RabbitMQ的客户端依赖</p>
+<div class="cnblogs_code">
+<pre>&lt;dependency&gt;
+   &lt;groupId&gt;com.rabbitmq&lt;/groupId&gt;
+   &lt;artifactId&gt;amqp-client&lt;/artifactId&gt;
+   &lt;version&gt;3.4.1&lt;/version&gt;
+&lt;/dependency&gt;</pre>
+</div>
+<p>5.2.3.获取MQ的连接</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.util;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.ConnectionFactory;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> ConnectionUtil {
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> Connection getConnection() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">定义连接工厂</span>
+        ConnectionFactory factory = <span style="color: #0000ff;">new</span><span style="color: #000000;"> ConnectionFactory();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">设置服务地址</span>
+        factory.setHost("localhost"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">端口</span>
+        factory.setPort(5672<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">设置账号信息，用户名、密码、vhost</span>
+        factory.setVirtualHost("testhost"<span style="color: #000000;">);
+        factory.setUsername(</span>"admin"<span style="color: #000000;">);
+        factory.setPassword(</span>"admin"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 通过工程获取连接</span>
+        Connection connection =<span style="color: #000000;"> factory.newConnection();
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> connection;
+    }
+}</span></pre>
+</div>
+<p>5.2.4.生产者发送消息到队列</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.simple;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Send {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "q_test_01"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 从连接中创建通道</span>
+        Channel channel =<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明（创建）队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 消息内容</span>
+        String message = "Hello World!"<span style="color: #000000;">;
+        channel.basicPublish(</span>"", QUEUE_NAME, <span style="color: #0000ff;">null</span><span style="color: #000000;">, message.getBytes());
+        System.out.println(</span>" [x] Sent '" + message + "'"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">关闭通道和连接</span>
+<span style="color: #000000;">        channel.close();
+        connection.close();
+    }
+}</span></pre>
+</div>
+<p>5.2.5.管理工具中查看消息</p>
+<p><br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/7ce6dc6fcad7238f.png"/></p>
+<p>点击上面的队列名称，查询具体的队列中的信息：<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/976e072702e6a42f.png"/></p>
+<p>5.2.6.消费者从队列中获取消息</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.simple;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.QueueingConsumer;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Recv {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "q_test_01"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 从连接中创建通道</span>
+        Channel channel =<span style="color: #000000;"> connection.createChannel();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义队列的消费者</span>
+        QueueingConsumer consumer = <span style="color: #0000ff;">new</span><span style="color: #000000;"> QueueingConsumer(channel);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列</span>
+        channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">true</span><span style="color: #000000;">, consumer);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取消息</span>
+        <span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            QueueingConsumer.Delivery delivery </span>=<span style="color: #000000;"> consumer.nextDelivery();
+            String message </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String(delivery.getBody());
+            System.out.println(</span>" [x] Received '" + message + "'"<span style="color: #000000;">);
+        }
+    }
+}</span></pre>
+</div>
+<h4>5.3.Work模式</h4>
+<p> </p>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/6bbb36e20cd121b5.png"/></p>
+<p>5.3.1.图示<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/748f53db027a65f6.png"/></p>
+<p>一个生产者、2个消费者。</p>
+<p>一个消息只能被一个消费者获取。<br/>5.3.2.消费者1</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.work;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.QueueingConsumer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Recv {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "test_queue_work"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 同一时刻服务器只会发一条消息给消费者
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">channel.basicQos(1);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义队列的消费者</span>
+        QueueingConsumer consumer = <span style="color: #0000ff;">new</span><span style="color: #000000;"> QueueingConsumer(channel);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列，false表示手动返回完成状态，true表示自动</span>
+        channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">true</span><span style="color: #000000;">, consumer);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取消息</span>
+        <span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            QueueingConsumer.Delivery delivery </span>=<span style="color: #000000;"> consumer.nextDelivery();
+            String message </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String(delivery.getBody());
+            System.out.println(</span>" [y] Received '" + message + "'"<span style="color: #000000;">);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">休眠</span>
+            Thread.sleep(10<span style="color: #000000;">);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 返回确认状态，注释掉表示使用自动确认模式
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);</span>
+<span style="color: #000000;">        }
+    }
+}</span></pre>
+</div>
+<p>5.3.3.消费者2</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.work;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.QueueingConsumer;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Recv2 {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "test_queue_work"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 同一时刻服务器只会发一条消息给消费者
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">channel.basicQos(1);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义队列的消费者</span>
+        QueueingConsumer consumer = <span style="color: #0000ff;">new</span><span style="color: #000000;"> QueueingConsumer(channel);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列，false表示手动返回完成状态，true表示自动</span>
+        channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">true</span><span style="color: #000000;">, consumer);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取消息</span>
+        <span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            QueueingConsumer.Delivery delivery </span>=<span style="color: #000000;"> consumer.nextDelivery();
+            String message </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String(delivery.getBody());
+            System.out.println(</span>" [x] Received '" + message + "'"<span style="color: #000000;">);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 休眠1秒</span>
+            Thread.sleep(1000<span style="color: #000000;">);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">下面这行注释掉表示使用自动确认模式
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);</span>
+<span style="color: #000000;">        }
+    }
+}</span></pre>
+</div>
+<p>5.3.4.生产者<br/>向队列中发送100条消息。</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.work;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Send {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "test_queue_work"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; 100; i++<span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 消息内容</span>
+            String message = "" +<span style="color: #000000;"> i;
+            channel.basicPublish(</span>"", QUEUE_NAME, <span style="color: #0000ff;">null</span><span style="color: #000000;">, message.getBytes());
+            System.out.println(</span>" [x] Sent '" + message + "'"<span style="color: #000000;">);
+
+            Thread.sleep(i </span>* 10<span style="color: #000000;">);
+        }
+
+        channel.close();
+        connection.close();
+    }
+}</span></pre>
+</div>
+<p>5.3.5.测试<br/>测试结果：<br/>1、消费者1和消费者2获取到的消息内容是不同的，同一个消息只能被一个消费者获取。<br/>2、消费者1和消费者2获取到的消息的数量是相同的，一个是消费奇数号消息，一个是偶数。</p>
+<p>其实，这样是不合理的，因为消费者1线程停顿的时间短。应该是消费者1要比消费者2获取到的消息多才对。<br/>RabbitMQ 默认将消息顺序发送给下一个消费者，这样，每个消费者会得到相同数量的消息。即轮询（round-robin）分发消息。</p>
+<p>怎样才能做到按照每个消费者的能力分配消息呢？联合使用 Qos 和 Acknowledge 就可以做到。<br/>basicQos 方法设置了当前信道最大预获取（prefetch）消息数量为1。消息从队列异步推送给消费者，消费者的 ack 也是异步发送给队列，从队列的视角去看，总是会有一批消息已推送但尚未获得 ack 确认，Qos 的 prefetchCount 参数就是用来限制这批未确认消息数量的。设为1时，队列只有在收到消费者发回的上一条消息 ack 确认后，才会向该消费者发送下一条消息。prefetchCount 的默认值为0，即没有限制，队列会将所有消息尽快发给消费者。</p>
+<p>2个概念</p>
+<p>轮询分发 ：使用任务队列的优点之一就是可以轻易的并行工作。如果我们积压了好多工作，我们可以通过增加工作者（消费者）来解决这一问题，使得系统的伸缩性更加容易。在默认情况下，RabbitMQ将逐个发送消息到在序列中的下一个消费者(而不考虑每个任务的时长等等，且是提前一次性分配，并非一个一个分配)。平均每个消费者获得相同数量的消息。这种方式分发消息机制称为Round-Robin（轮询）。</p>
+<p>公平分发 ：虽然上面的分配法方式也还行，但是有个问题就是：比如：现在有2个消费者，所有的奇数的消息都是繁忙的，而偶数则是轻松的。按照轮询的方式，奇数的任务交给了第一个消费者，所以一直在忙个不停。偶数的任务交给另一个消费者，则立即完成任务，然后闲得不行。而RabbitMQ则是不了解这些的。这是因为当消息进入队列，RabbitMQ就会分派消息。它不看消费者为应答的数目，只是盲目的将消息发给轮询指定的消费者。</p>
+<p>为了解决这个问题，我们使用basicQos( prefetchCount = 1)方法，来限制RabbitMQ只发不超过1条的消息给同一个消费者。当消息处理完毕后，有了反馈，才会进行第二次发送。<br/>还有一点需要注意，使用公平分发，必须关闭自动应答，改为手动应答。</p>
+<p>5.4.Work模式的“能者多劳”<br/>打开上述代码的注释：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">// 同一时刻服务器只会发一条消息给消费者
+channel.basicQos(1);
+</pre>
+</div>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">//</span><span style="color: #008000;">开启这行 表示使用手动确认模式</span>
+channel.basicAck(delivery.getEnvelope().getDeliveryTag(), <span style="color: #0000ff;">false</span>);</pre>
+</div>
+<p>同时改为手动确认：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列，false表示手动返回完成状态，true表示自动</span>
+channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">false</span>, consumer);</pre>
+</div>
+<p>测试：<br/>消费者1比消费者2获取的消息更多。</p>
+<p>5.5.消息的确认模式<br/>消费者从队列中获取消息，服务端如何知道消息已经被消费呢？</p>
+<p>模式1：自动确认<br/>只要消息从队列中获取，无论消费者获取到消息后是否成功消息，都认为是消息已经成功消费。<br/>模式2：手动确认<br/>消费者从队列中获取消息后，服务器会将该消息标记为不可用状态，等待消费者的反馈，如果消费者一直没有反馈，那么该消息将一直处于不可用状态。</p>
+<p>手动模式：</p>
+<p><br/>自动模式：</p>
+<p><br/>5.6.订阅模式</p>
+<p>5.6.1.图示</p>
+<p><br/>解读：<br/>1、1个生产者，多个消费者<br/>2、每一个消费者都有自己的一个队列<br/>3、生产者没有将消息直接发送到队列，而是发送到了交换机<br/>4、每个队列都要绑定到交换机<br/>5、生产者发送的消息，经过交换机，到达队列，实现，一个消息被多个消费者获取的目的<br/>注意：一个消费者队列可以有多个消费者实例，只有其中一个消费者实例会消费</p>
+<p><br/>5.6.2.消息的生产者（看作是后台系统）<br/>向交换机中发送消息。</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.subscribe;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Send {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String EXCHANGE_NAME = "test_exchange_fanout"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明exchange</span>
+        channel.exchangeDeclare(EXCHANGE_NAME, "fanout"<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 消息内容</span>
+        String message = "Hello World!"<span style="color: #000000;">;
+        channel.basicPublish(EXCHANGE_NAME, </span>"", <span style="color: #0000ff;">null</span><span style="color: #000000;">, message.getBytes());
+        System.out.println(</span>" [x] Sent '" + message + "'"<span style="color: #000000;">);
+
+        channel.close();
+        connection.close();
+    }
+}</span></pre>
+</div>
+<p>注意：消息发送到没有队列绑定的交换机时，消息将丢失，因为，交换机没有存储消息的能力，消息只能存在在队列中。<br/>5.6.3.消费者1（看作是前台系统）</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.subscribe;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.QueueingConsumer;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Recv {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "test_queue_work1"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String EXCHANGE_NAME = "test_exchange_fanout"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 绑定队列到交换机</span>
+        channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, ""<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 同一时刻服务器只会发一条消息给消费者</span>
+        channel.basicQos(1<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义队列的消费者</span>
+        QueueingConsumer consumer = <span style="color: #0000ff;">new</span><span style="color: #000000;"> QueueingConsumer(channel);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列，手动返回完成</span>
+        channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">false</span><span style="color: #000000;">, consumer);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取消息</span>
+        <span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            QueueingConsumer.Delivery delivery </span>=<span style="color: #000000;"> consumer.nextDelivery();
+            String message </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String(delivery.getBody());
+            System.out.println(</span>" [Recv] Received '" + message + "'"<span style="color: #000000;">);
+            Thread.sleep(</span>10<span style="color: #000000;">);
+
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), </span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        }
+    }
+}</span></pre>
+</div>
+<p>5.6.4.消费者2（看作是搜索系统）</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.subscribe;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.QueueingConsumer;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Recv2 {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "test_queue_work2"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String EXCHANGE_NAME = "test_exchange_fanout"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 绑定队列到交换机</span>
+        channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, ""<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 同一时刻服务器只会发一条消息给消费者</span>
+        channel.basicQos(1<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义队列的消费者</span>
+        QueueingConsumer consumer = <span style="color: #0000ff;">new</span><span style="color: #000000;"> QueueingConsumer(channel);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列，手动返回完成</span>
+        channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">false</span><span style="color: #000000;">, consumer);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取消息</span>
+        <span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            QueueingConsumer.Delivery delivery </span>=<span style="color: #000000;"> consumer.nextDelivery();
+            String message </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String(delivery.getBody());
+            System.out.println(</span>" [Recv2] Received '" + message + "'"<span style="color: #000000;">);
+            Thread.sleep(</span>10<span style="color: #000000;">);
+
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), </span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        }
+    }
+}</span></pre>
+</div>
+<p>5.6.5.测试<br/>测试结果：<br/>同一个消息被多个消费者获取。一个消费者队列可以有多个消费者实例，只有其中一个消费者实例会消费到消息。</p>
+<p>在管理工具中查看队列和交换机的绑定关系：</p>
+<p> </p>
+<p>5.7.路由模式</p>
+<p>5.7.1.图示</p>
+<p><br/>5.7.2.生产者</p>
+<p>5.7.3.消费者1(假设是前台系统)</p>
+<p>5.7.4.消费2（假设是搜索系统）</p>
+<p><br/>5.8.主题模式（通配符模式）</p>
+<p> </p>
+<p><br/>5.8.1.图示</p>
+<p>同一个消息被多个消费者获取。一个消费者队列可以有多个消费者实例，只有其中一个消费者实例会消费到消息。</p>
+<p>5.8.2.生产者</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.topic;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Send {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String EXCHANGE_NAME = "test_exchange_topic"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明exchange</span>
+        channel.exchangeDeclare(EXCHANGE_NAME, "topic"<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 消息内容</span>
+        String message = "Hello World!!"<span style="color: #000000;">;
+        channel.basicPublish(EXCHANGE_NAME, </span>"routekey.1", <span style="color: #0000ff;">null</span><span style="color: #000000;">, message.getBytes());
+        System.out.println(</span>" [x] Sent '" + message + "'"<span style="color: #000000;">);
+
+        channel.close();
+        connection.close();
+    }
+}</span></pre>
+</div>
+<p>5.8.3.消费者1（前台系统）</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.topic;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.QueueingConsumer;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Recv {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "test_queue_topic_work_1"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String EXCHANGE_NAME = "test_exchange_topic"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 绑定队列到交换机</span>
+        channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "routekey.*"<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 同一时刻服务器只会发一条消息给消费者</span>
+        channel.basicQos(1<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义队列的消费者</span>
+        QueueingConsumer consumer = <span style="color: #0000ff;">new</span><span style="color: #000000;"> QueueingConsumer(channel);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列，手动返回完成</span>
+        channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">false</span><span style="color: #000000;">, consumer);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取消息</span>
+        <span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            QueueingConsumer.Delivery delivery </span>=<span style="color: #000000;"> consumer.nextDelivery();
+            String message </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String(delivery.getBody());
+            System.out.println(</span>" [Recv_x] Received '" + message + "'"<span style="color: #000000;">);
+            Thread.sleep(</span>10<span style="color: #000000;">);
+
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), </span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        }
+    }
+}</span></pre>
+</div>
+<p>5.8.4.消费者2（搜索系统）</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.topic;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.zpc.rabbitmq.util.ConnectionUtil;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Channel;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.Connection;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.rabbitmq.client.QueueingConsumer;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Recv2 {
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String QUEUE_NAME = "test_queue_topic_work_2"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> String EXCHANGE_NAME = "test_exchange_topic"<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] argv) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取到连接以及mq通道</span>
+        Connection connection =<span style="color: #000000;"> ConnectionUtil.getConnection();
+        Channel channel </span>=<span style="color: #000000;"> connection.createChannel();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 声明队列</span>
+        channel.queueDeclare(QUEUE_NAME, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 绑定队列到交换机</span>
+        channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "*.*"<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 同一时刻服务器只会发一条消息给消费者</span>
+        channel.basicQos(1<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义队列的消费者</span>
+        QueueingConsumer consumer = <span style="color: #0000ff;">new</span><span style="color: #000000;"> QueueingConsumer(channel);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 监听队列，手动返回完成</span>
+        channel.basicConsume(QUEUE_NAME, <span style="color: #0000ff;">false</span><span style="color: #000000;">, consumer);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取消息</span>
+        <span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">true</span><span style="color: #000000;">) {
+            QueueingConsumer.Delivery delivery </span>=<span style="color: #000000;"> consumer.nextDelivery();
+            String message </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> String(delivery.getBody());
+            System.out.println(</span>" [Recv2_x] Received '" + message + "'"<span style="color: #000000;">);
+            Thread.sleep(</span>10<span style="color: #000000;">);
+
+            channel.basicAck(delivery.getEnvelope().getDeliveryTag(), </span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        }
+    }
+}</span></pre>
+</div>
+<h3>6.Spring-Rabbit</h3>
+<h4><a id="61Spring_838"></a>6.1.Spring项目</h4>
+<p>http://spring.io/projects</p>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/4f07653931eecc0c.png"/></p>
+<h4><a id="62_842"></a>6.2.简介</h4>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/ad8a5f0b6f4eec16.png"/><br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/f4db53bbbc4b7624.png"/></p>
+<h4><a id="63_846"></a>6.3.使用</h4>
+<p>6.3.1.消费者</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.spring;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 消费者
+ *
+ * </span><span style="color: #808080;">@author</span><span style="color: #008000;"> Evan
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Foo {
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">具体执行业务的方法</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> listen(String foo) {
+        System.out.println(</span>"\n消费者： " + foo + "\n"<span style="color: #000000;">);
+    }
+}
+————————————————</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.rabbitmq.spring;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.amqp.rabbit.core.RabbitTemplate;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.context.support.AbstractApplicationContext;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.context.support.ClassPathXmlApplicationContext;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> SpringMain {
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(<span style="color: #0000ff;">final</span> String... args) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        AbstractApplicationContext ctx </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> ClassPathXmlApplicationContext(
+                </span>"classpath:spring/rabbitmq-context.xml"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">RabbitMQ模板</span>
+        RabbitTemplate template = ctx.getBean(RabbitTemplate.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">发送消息</span>
+        template.convertAndSend("Hello, 鸟鹏!"<span style="color: #000000;">);
+        Thread.sleep(</span>1000);<span style="color: #008000;">//</span><span style="color: #008000;"> 休眠1秒</span>
+        ctx.destroy(); <span style="color: #008000;">//</span><span style="color: #008000;">容器销毁</span>
+<span style="color: #000000;">    }
+}</span></pre>
+</div>
+<p>6.3.3.配置文件<br/>1、定义连接工厂</p>
+<p>&lt;!-- 定义RabbitMQ的连接工厂 --&gt;<br/>&lt;rabbit:connection-factory id="connectionFactory"<br/>   host="127.0.0.1" port="5672" username="admin" password="admin"<br/>   virtual-host="testhost" /&gt;<br/>1<br/>2<br/>3<br/>4<br/>2、定义模板（可以指定交换机或队列）</p>
+<p>&lt;rabbit:template id="amqpTemplate" connection-factory="connectionFactory" exchange="fanoutExchange" /&gt;<br/>1<br/>3、定义队列、交换机、以及完成队列和交换机的绑定</p>
+<p>&lt;!-- 定义队列，自动声明 --&gt;<br/>&lt;rabbit:queue name="zpcQueue" auto-declare="true"/&gt;</p>
+<p>&lt;!-- 定义交换器，把Q绑定到交换机，自动声明 --&gt;<br/>&lt;rabbit:fanout-exchange name="fanoutExchange" auto-declare="true"&gt;<br/>   &lt;rabbit:bindings&gt;<br/>      &lt;rabbit:binding queue="zpcQueue"/&gt;<br/>   &lt;/rabbit:bindings&gt;<br/>&lt;/rabbit:fanout-exchange&gt;<br/>1<br/>2<br/>3<br/>4<br/>5<br/>6<br/>7<br/>8<br/>9<br/>4、定义监听</p>
+<p>&lt;rabbit:listener-container connection-factory="connectionFactory"&gt;<br/>   &lt;rabbit:listener ref="foo" method="listen" queue-names="zpcQueue" /&gt;<br/>&lt;/rabbit:listener-container&gt;</p>
+<p>&lt;bean id="foo" class="com.zpc.rabbitmq.spring.Foo" /&gt;<br/>1<br/>2<br/>3<br/>4<br/>5<br/>5、定义管理，用于管理队列、交换机等：</p>
+<p>&lt;!-- MQ的管理，包括队列、交换器等 --&gt;<br/>&lt;rabbit:admin connection-factory="connectionFactory" /&gt;<br/>1<br/>2<br/>完整配置文件rabbitmq-context.xml</p>
+<p>&lt;beans xmlns="http://www.springframework.org/schema/beans"<br/>   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"<br/>   xsi:schemaLocation="http://www.springframework.org/schema/rabbit<br/>   http://www.springframework.org/schema/rabbit/spring-rabbit-1.4.xsd<br/>   http://www.springframework.org/schema/beans<br/>   http://www.springframework.org/schema/beans/spring-beans-4.1.xsd"&gt;</p>
+<p>   &lt;!-- 定义RabbitMQ的连接工厂 --&gt;<br/>   &lt;rabbit:connection-factory id="connectionFactory"<br/>      host="127.0.0.1" port="5672" username="admin" password="admin"<br/>      virtual-host="testhost" /&gt;</p>
+<p>   &lt;!-- 定义Rabbit模板，指定连接工厂以及定义exchange --&gt;<br/>   &lt;rabbit:template id="amqpTemplate" connection-factory="connectionFactory" exchange="fanoutExchange" /&gt;<br/>   &lt;!-- &lt;rabbit:template id="amqpTemplate" connection-factory="connectionFactory"<br/>      exchange="fanoutExchange" routing-key="foo.bar" /&gt; --&gt;</p>
+<p>   &lt;!-- MQ的管理，包括队列、交换器等 --&gt;<br/>   &lt;rabbit:admin connection-factory="connectionFactory" /&gt;</p>
+<p>   &lt;!-- 定义队列，自动声明 --&gt;<br/>   &lt;rabbit:queue name="zpcQueue" auto-declare="true"/&gt;<br/> <br/>   &lt;!-- 定义交换器，把Q绑定到交换机，自动声明 --&gt;<br/>   &lt;rabbit:fanout-exchange name="fanoutExchange" auto-declare="true"&gt;<br/>      &lt;rabbit:bindings&gt;<br/>         &lt;rabbit:binding queue="zpcQueue"/&gt;<br/>      &lt;/rabbit:bindings&gt;<br/>   &lt;/rabbit:fanout-exchange&gt;<br/> <br/>&lt;!--   &lt;rabbit:topic-exchange name="myExchange"&gt;<br/>      &lt;rabbit:bindings&gt;<br/>         &lt;rabbit:binding queue="myQueue" pattern="foo.*" /&gt;<br/>      &lt;/rabbit:bindings&gt;<br/>   &lt;/rabbit:topic-exchange&gt; --&gt;</p>
+<p>   &lt;!-- 队列监听 --&gt;<br/>   &lt;rabbit:listener-container connection-factory="connectionFactory"&gt;<br/>      &lt;rabbit:listener ref="foo" method="listen" queue-names="zpcQueue" /&gt;<br/>   &lt;/rabbit:listener-container&gt;</p>
+<p>   &lt;bean id="foo" class="com.zpc.rabbitmq.spring.Foo" /&gt;</p>
+<p>&lt;/beans&gt;</p>
+<h4>6.4.持久化交换机和队列</h4>
+<p><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/a62807041cbb908d.png"/></p>
+<p>持久化：将交换机或队列的数据保存到磁盘，服务器宕机或重启之后依然存在。<br/>非持久化：将交换机或队列的数据保存到内存，服务器宕机或重启之后将不存在。</p>
+<p>非持久化的性能高于持久化。</p>
+<p>如何选择持久化？非持久化？ – 看需求。</p>
+<h3>7.Spring集成RabbitMQ一个完整案例</h3>
+<p>创建三个系统A,B,C<br/>A作为生产者，B、C作为消费者(B,C作为web项目启动)<br/>项目下载地址：<a href="https://download.csdn.net/download/zpcandzhj/10585077">https://download.csdn.net/download/zpcandzhj/10585077</a></p>
+<h4>7.1.在A系统中发送消息到交换机</h4>
+<p>7.1.1.导入依赖</p>
+<div class="cnblogs_code">
+<pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"<span style="color: #000000;">
+   xsi:schemaLocation</span>="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+   &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+   &lt;groupId&gt;com.zpc&lt;/groupId&gt;
+   &lt;artifactId&gt;myrabbitA&lt;/artifactId&gt;
+   &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+   &lt;packaging&gt;jar&lt;/packaging&gt;
+   &lt;name&gt;myrabbit&lt;/name&gt;
+
+   &lt;dependencies&gt;
+      &lt;dependency&gt;
+         &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;
+         &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;
+         &lt;version&gt;1.4.0.RELEASE&lt;/version&gt;
+      &lt;/dependency&gt;
+
+      &lt;dependency&gt;
+         &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+         &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+         &lt;version&gt;1.2.47&lt;/version&gt;
+      &lt;/dependency&gt;
+   &lt;/dependencies&gt;
+&lt;/project&gt;</pre>
+</div>
+<p>7.1.2.队列和交换机的绑定关系<br/>实现：<br/>1、在配置文件中将队列和交换机完成绑定<br/>2、可以在管理界面中完成绑定<br/>a)绑定关系如果发生变化，需要修改配置文件，并且服务需要重启<br/>b)管理更加灵活<br/>c)更容易对绑定关系的权限管理，流程管理<br/>本例选择第2种方式<br/>7.1.3.配置<br/>rabbitmq-context.xml</p>
+<div class="cnblogs_code">
+<pre>&lt;beans xmlns="http://www.springframework.org/schema/beans"<span style="color: #000000;">
+   xmlns:xsi</span>="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"<span style="color: #000000;">
+   xsi:schemaLocation</span>="http://www.springframework.org/schema/rabbit
+   http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/rabbit/spring-rabbit-1.4.xsd</span>
+   http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/beans</span>
+   http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/beans/spring-beans-4.1.xsd"&gt;</span>
+
+   &lt;!-- 定义RabbitMQ的连接工厂 --&gt;
+   &lt;rabbit:connection-factory id="connectionFactory"<span style="color: #000000;">
+      host</span>="127.0.0.1" port="5672" username="admin" password="admin"<span style="color: #000000;">
+      virtual</span>-host="testhost" /&gt;
+
+   &lt;!-- MQ的管理，包括队列、交换器等 --&gt;
+   &lt;rabbit:admin connection-factory="connectionFactory" /&gt;
+
+   &lt;!-- 定义交换器，暂时不把Q绑定到交换机，在管理界面去绑定 --&gt;
+   &lt;!--&lt;rabbit:topic-exchange name="topicExchange" auto-declare="true" &gt;&lt;/rabbit:topic-exchange&gt;--&gt;
+   &lt;rabbit:direct-exchange name="directExchange" auto-declare="true" &gt;&lt;/rabbit:direct-exchange&gt;
+   &lt;!--&lt;rabbit:fanout-exchange name="fanoutExchange" auto-declare="true" &gt;&lt;/rabbit:fanout-exchange&gt;--&gt;
+
+   &lt;!-- 定义Rabbit模板，指定连接工厂以及定义exchange(exchange要和上面的一致) --&gt;
+   &lt;!--&lt;rabbit:template id="amqpTemplate" connection-factory="connectionFactory" exchange="topicExchange" /&gt;--&gt;
+   &lt;rabbit:template id="amqpTemplate" connection-factory="connectionFactory" exchange="directExchange" /&gt;
+   &lt;!--&lt;rabbit:template id="amqpTemplate" connection-factory="connectionFactory" exchange="fanoutExchange" /&gt;--&gt;
+&lt;/beans&gt;</pre>
+</div>
+<p>7.1.4.消息内容<br/>方案：<br/>1、消息内容使用对象做json序列化发送<br/>a)数据大<br/>b)有些数据其他人是可能用不到的<br/>2、发送特定的业务字段，如id、操作类型</p>
+<p>7.1.5.实现<br/>生产者MsgSender.java：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> com.zpc.myrabbit;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> com.alibaba.fastjson.JSON;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.amqp.rabbit.core.RabbitTemplate;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.context.support.AbstractApplicationContext;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.context.support.ClassPathXmlApplicationContext;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.text.SimpleDateFormat;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Date;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.HashMap;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Map;
+
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 消息生产者
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> MsgSender {
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] args) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        AbstractApplicationContext ctx </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> ClassPathXmlApplicationContext(
+                </span>"classpath:spring/rabbitmq-context.xml"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">RabbitMQ模板</span>
+        RabbitTemplate template = ctx.getBean(RabbitTemplate.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+
+        String date </span>= <span style="color: #0000ff;">new</span> SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(<span style="color: #0000ff;">new</span> Date());<span style="color: #008000;">//</span><span style="color: #008000;">24小时制
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">发送消息</span>
+        Map&lt;String, Object&gt; msg = <span style="color: #0000ff;">new</span> HashMap&lt;String, Object&gt;<span style="color: #000000;">();
+        msg.put(</span>"type", "1"<span style="color: #000000;">);
+        msg.put(</span>"date"<span style="color: #000000;">, date);
+        template.convertAndSend(</span>"type2"<span style="color: #000000;">, JSON.toJSONString(msg));
+        Thread.sleep(</span>1000);<span style="color: #008000;">//</span><span style="color: #008000;"> 休眠1秒</span>
+        ctx.destroy(); <span style="color: #008000;">//</span><span style="color: #008000;">容器销毁</span>
+<span style="color: #000000;">    }
+}</span></pre>
+</div>
+<h4>7.2.在B系统接收消息</h4>
+<p>7.2.1.导入依赖</p>
+<div class="cnblogs_code">
+<pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"<span style="color: #000000;">
+         xsi:schemaLocation</span>="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.zpc&lt;/groupId&gt;
+    &lt;artifactId&gt;myrabbitB&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;war&lt;/packaging&gt;
+
+    &lt;name&gt;myrabbit&lt;/name&gt;
+    &lt;properties&gt;
+        &lt;spring.version&gt;4.1.3.RELEASE&lt;/spring.version&gt;
+        &lt;fastjson.version&gt;1.2.46&lt;/fastjson.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.rabbitmq&lt;/groupId&gt;
+            &lt;artifactId&gt;amqp-client&lt;/artifactId&gt;
+            &lt;version&gt;3.4.1&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.amqp&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-rabbit&lt;/artifactId&gt;
+            &lt;version&gt;1.4.0.RELEASE&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-webmvc&lt;/artifactId&gt;
+            &lt;version&gt;${spring.version}&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alibaba&lt;/groupId&gt;
+            &lt;artifactId&gt;fastjson&lt;/artifactId&gt;
+            &lt;version&gt;1.2.47&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;finalName&gt;${project.artifactId}&lt;/finalName&gt;
+        &lt;plugins&gt;
+            &lt;!-- web层需要配置Tomcat插件 --&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.tomcat.maven&lt;/groupId&gt;
+                &lt;artifactId&gt;tomcat7-maven-plugin&lt;/artifactId&gt;
+                &lt;configuration&gt;
+                    &lt;path&gt;/testRabbit&lt;/path&gt;
+                    &lt;uriEncoding&gt;UTF-8&lt;/uriEncoding&gt;
+                    &lt;port&gt;8081&lt;/port&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;</pre>
+</div>
+<p>7.2.2.配置</p>
+<div class="cnblogs_code">
+<pre>&lt;beans xmlns="http://www.springframework.org/schema/beans"<span style="color: #000000;">
+   xmlns:xsi</span>="http://www.w3.org/2001/XMLSchema-instance" xmlns:rabbit="http://www.springframework.org/schema/rabbit"<span style="color: #000000;">
+   xsi:schemaLocation</span>="http://www.springframework.org/schema/rabbit
+   http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/rabbit/spring-rabbit-1.4.xsd</span>
+   http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/beans</span>
+   http:<span style="color: #008000;">//</span><span style="color: #008000;">www.springframework.org/schema/beans/spring-beans-4.1.xsd"&gt;</span>
+
+   &lt;!-- 定义RabbitMQ的连接工厂 --&gt;
+   &lt;rabbit:connection-factory id="connectionFactory"<span style="color: #000000;">
+      host</span>="127.0.0.1" port="5672" username="admin" password="admin"<span style="color: #000000;">
+      virtual</span>-host="testhost" /&gt;
+
+   &lt;!-- MQ的管理，包括队列、交换器等 --&gt;
+   &lt;rabbit:admin connection-factory="connectionFactory" /&gt;
+
+   &lt;!-- 定义B系统需要监听的队列，自动声明 --&gt;
+   &lt;rabbit:queue name="q_topic_testB" auto-declare="true"/&gt;
+
+   &lt;!-- 队列监听 --&gt;
+   &lt;rabbit:listener-container connection-factory="connectionFactory"&gt;
+      &lt;rabbit:listener ref="myMQlistener" method="listen" queue-names="q_topic_testB" /&gt;
+   &lt;/rabbit:listener-container&gt;
+
+   &lt;bean id="myMQlistener" <span style="color: #0000ff;">class</span>="com.zpc.myrabbit.listener.Listener" /&gt;
+&lt;/beans&gt;</pre>
+</div>
+<p>7.2.3.具体处理逻辑</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Listener {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">具体执行业务的方法</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> listen(String msg) {
+        System.out.println(</span>"\n消费者B开始处理消息： " + msg + "\n"<span style="color: #000000;">);
+    }
+}</span></pre>
+</div>
+<p>7.2.4.在界面管理工具中完成绑定关系<br/>选中定义好的交换机(exchange)<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/86646f754bdce32d.png"/><br/>1）direct<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/9fe5d4f35ed5a4a7.png"/><br/>2）fanout<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/e9b3b9f105a33e99.png"/><br/>3）topic<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/2411970bd67e996d.png"/></p>
+<p> </p>
+{% endraw %}

@@ -1,0 +1,255 @@
+---
+title: "submit与execute区别"
+date: 2020-09-27 11:14:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "（1）可以接受的任务类型 submit： execute： 可以看出： execute只能接受Runnable类型的任务 submit不管是Runnable还是Callable类型的任务都可以接受，但是Runnable返回值均为void，所以使用Future的get()获得的还是null （2）返回"
+read_minutes: 2
+cnblogs_id: 13738332
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13738332.html"
+---
+{% raw %}
+<p>（1）可以接受的任务类型</p>
+<p>               submit：</p>
+<p>               <img alt="" loading="lazy" src="/images/cnblogs/d16a2ce6e65fc43a.png"/></p>
+<p>              execute：</p>
+<p>              <img alt="" loading="lazy" src="/images/cnblogs/ae33b8c22d62027e.png"/></p>
+<p>             可以看出：</p>
+<p>                        execute只能接受Runnable类型的任务</p>
+<p>                        submit不管是Runnable还是Callable类型的任务都可以接受，但是Runnable返回值均为void，所以使用Future的get()获得的还是null</p>
+<p> </p>
+<p> </p>
+<p>（2）返回值</p>
+<p>                由Callable和Runnable的区别可知：</p>
+<p>                execute没有返回值</p>
+<p>                submit有返回值，所以需要返回值的时候必须使用submit</p>
+<p> </p>
+<p> </p>
+<p>（3）异常</p>
+<p>                1.execute中抛出异常</p>
+<p>                    execute中的是Runnable接口的实现，所以只能使用try、catch来捕获CheckedException，通过实现UncaughtExceptionHande接口处理UncheckedException</p>
+<p>                    即和普通线程的处理方式完全一致</p>
+<p> </p>
+<p>
+                2.submit中抛出异常</p>
+<p> </p>
+<p>                   不管提交的是Runnable还是Callable类型的任务，如果不对返回值Future调用get()方法，都会吃掉异常</p>
+<p>                   先来看下Callable定义</p>
+<p> </p>
+<ol class="hljs-ln">
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">interface <span class="hljs-title">Callable&lt;<span class="hljs-title">V&gt; {</span></span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-function">V <span class="hljs-title">call<span class="hljs-params">() <span class="hljs-keyword">throws Exception;</span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">}</div>
+</div>
+</li>
+</ol>
+<p>                    其中的call能够抛出Exception异常，所以不管是CheckedException还是UncheckedException，直接抛出即可</p>
+<p> </p>
+<p> </p>
+<ol class="hljs-ln">
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">import java.util.concurrent.Callable;</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">import java.util.concurrent.ExecutionException;</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">import java.util.concurrent.ExecutorService;</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">import java.util.concurrent.Executors;</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">import java.util.concurrent.Future;</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">ThreadExceptionTest {</span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args) {</span></span></span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		ExecutorService executor = Executors.newCachedThreadPool();</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		Future&lt;Boolean&gt; future = executor.submit(<span class="hljs-keyword">new CallableTask());</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-keyword">try {</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">			future.get();</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		} <span class="hljs-keyword">catch (InterruptedException e) {</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">			e.printStackTrace();</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		} <span class="hljs-keyword">catch (ExecutionException e) {</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">			e.printStackTrace();</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		}</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">		executor.shutdown();<span class="hljs-comment">//必须不能忘，否则会一致卡在那里</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">	}</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">}</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">CallableTask <span class="hljs-keyword">implements <span class="hljs-title">Callable&lt;<span class="hljs-title">Boolean&gt;{</span></span></span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-function"><span class="hljs-keyword">public Boolean <span class="hljs-title">call<span class="hljs-params">() <span class="hljs-keyword">throws Exception {</span></span></span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"><span class="hljs-comment">//		InputStream in = new FileInputStream(new File("xx.pdf"));</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-keyword">int num = <span class="hljs-number">3/<span class="hljs-number">0;</span></span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-keyword">return <span class="hljs-keyword">false;</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">	}</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code"> </div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">}</div>
+</div>
+</li>
+</ol>
+<p>                  结果为：</p>
+<p> </p>
+<p> </p>
+<pre><code class="language-groovy">java.util.concurrent.<span class="hljs-attr">ExecutionException: java.lang.<span class="hljs-attr">ArithmeticException: / by zero
+	at java.util.concurrent.FutureTask$Sync.innerGet(FutureTask.<span class="hljs-attr">java:<span class="hljs-number">222)
+	at java.util.concurrent.FutureTask.get(FutureTask.<span class="hljs-attr">java:<span class="hljs-number">83)
+	at my.ThreadExceptionTest.main(ThreadExceptionTest.<span class="hljs-attr">java:<span class="hljs-number">21)
+Caused <span class="hljs-attr">by: java.lang.<span class="hljs-attr">ArithmeticException: / by zero
+	at my.CallableTask.call(ThreadExceptionTest.<span class="hljs-attr">java:<span class="hljs-number">57)
+	at my.CallableTask.call(ThreadExceptionTest.<span class="hljs-attr">java:<span class="hljs-number">1)
+	at java.util.concurrent.FutureTask$Sync.innerRun(FutureTask.<span class="hljs-attr">java:<span class="hljs-number">303)
+	at java.util.concurrent.FutureTask.run(FutureTask.<span class="hljs-attr">java:<span class="hljs-number">138)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.runTask(ThreadPoolExecutor.<span class="hljs-attr">java:<span class="hljs-number">886)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.<span class="hljs-attr">java:<span class="hljs-number">908)
+	at java.lang.Thread.run(Thread.<span class="hljs-attr">java:<span class="hljs-number">619)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+{% endraw %}

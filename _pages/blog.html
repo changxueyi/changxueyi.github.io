@@ -1,0 +1,102 @@
+---
+layout: archive
+permalink: /blog/
+title: "博客文章"
+author_profile: true
+description: "常学奕自 2020 年起写在博客园的全部公开文章，现已完整迁移至此，支持标签筛选与关键词搜索。"
+---
+
+{% include base_path %}
+{% assign docs = site.cnblogs | sort: "date" | reverse %}
+{% assign stats = site.data.cnblogs_stats %}
+
+<section class="blog-hero">
+  <div class="blog-hero__text">
+    <span class="blog-hero__eyebrow">CNBLOGS ARCHIVE · {{ stats.first_year }}–{{ stats.last_year }}</span>
+    <p>从博客园完整迁移的 <strong>{{ docs.size }}</strong> 篇文章，覆盖 Go、Java、Redis、MySQL、微服务、网络等方向。发布时间保持原样，图片已转存到本站。</p>
+  </div>
+  <a class="blog-hero__src" href="https://www.cnblogs.com/cxy2020" target="_blank" rel="noopener">博客园主页 ↗</a>
+</section>
+
+<section class="tag-filter blog-filter" aria-label="博客文章筛选">
+  <label class="blog-search" for="blog-search">
+    <i class="fa fa-search" aria-hidden="true"></i>
+    <input id="blog-search" type="search" placeholder="搜索标题、摘要或标签，例如：Redis 分布式锁" autocomplete="off">
+  </label>
+  <div class="tag-filter__head">
+    <h2 class="tag-filter__title">全部标签</h2>
+    <span class="tag-filter__status" id="blog-status">共 {{ docs.size }} 篇文章</span>
+  </div>
+  <div class="tag-filter__list">
+    <button class="tag-filter__btn is-active" type="button" data-filter="" aria-pressed="true">全部 <span class="tag-filter__count">{{ docs.size }}</span></button>
+    {% for t in site.data.cnblogs_tags %}<button class="tag-filter__btn" type="button" data-filter="{{ t.name | escape }}" aria-pressed="false">#{{ t.label }} <span class="tag-filter__count">{{ t.count }}</span></button>{% endfor %}
+  </div>
+</section>
+
+<div id="blog-post-list">
+{% for doc in docs %}{% capture tagjoin %}{{ doc.tags | join: '|' }}{% endcapture %}
+  <div class="list__item tech-post blog-post" data-tags="{{ tagjoin | escape }}" data-search="{{ doc.title | append: ' ' | append: doc.excerpt | append: ' ' | append: tagjoin | downcase | escape }}">
+    <article class="archive__item">
+      <h2 class="archive__item-title"><a href="{{ base_path }}{{ doc.url }}" rel="permalink">{{ doc.title | escape }}</a></h2>
+      <p class="page__meta blog-post__meta"><span><i class="fa fa-fw fa-calendar" aria-hidden="true"></i> 发布时间：<time datetime="{{ doc.date | date_to_xmlschema }}">{{ doc.date | date: "%Y-%m-%d %H:%M" }}</time></span><span><i class="fa fa-clock" aria-hidden="true"></i> 约 {{ doc.read_minutes }} 分钟阅读</span></p>
+      <p class="archive__item-excerpt">{{ doc.excerpt | escape }}</p>
+      <div class="post-tags">{% for tag in doc.tags %}<a class="post-tag" href="{{ base_path }}/blog/?tag={{ tag | uri_escape }}" data-tag="{{ tag | escape }}">#{{ tag | replace: "-- ", "" | replace: "--", "" }}</a>{% endfor %}</div>
+    </article>
+  </div>
+{% endfor %}
+</div>
+<p class="tech-empty" id="blog-empty">没有找到匹配的文章，换个关键词或标签试试。</p>
+
+<script>
+(function () {
+  var buttons = Array.prototype.slice.call(document.querySelectorAll('.blog-filter .tag-filter__btn'));
+  var posts = Array.prototype.slice.call(document.querySelectorAll('.blog-post'));
+  var input = document.getElementById('blog-search');
+  var status = document.getElementById('blog-status');
+  var empty = document.getElementById('blog-empty');
+  var state = { tag: '', q: '' };
+
+  function label(tag) { return tag.replace(/\s*--\s*/g, ''); }
+  function render(updateUrl) {
+    var terms = state.q.toLowerCase().split(/\s+/).filter(Boolean), visible = 0;
+    buttons.forEach(function (b) {
+      var on = b.getAttribute('data-filter') === state.tag;
+      b.classList.toggle('is-active', on); b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    posts.forEach(function (p) {
+      var tags = (p.getAttribute('data-tags') || '').split('|');
+      var hay = p.getAttribute('data-search') || '';
+      var show = (!state.tag || tags.indexOf(state.tag) !== -1) &&
+                 terms.every(function (t) { return hay.indexOf(t) !== -1; });
+      p.classList.toggle('is-hidden', !show); if (show) visible += 1;
+    });
+    var parts = [];
+    if (state.tag) parts.push('#' + label(state.tag));
+    if (terms.length) parts.push('“' + state.q.trim() + '”');
+    status.textContent = (parts.length ? parts.join(' · ') + ' · ' : '共 ') + visible + ' 篇文章';
+    empty.classList.toggle('is-visible', visible === 0);
+    if (updateUrl && window.history && window.history.replaceState) {
+      var url = new URL(window.location.href);
+      state.tag ? url.searchParams.set('tag', state.tag) : url.searchParams.delete('tag');
+      state.q.trim() ? url.searchParams.set('q', state.q.trim()) : url.searchParams.delete('q');
+      window.history.replaceState(null, '', url.toString());
+    }
+  }
+  buttons.forEach(function (b) {
+    b.addEventListener('click', function () { state.tag = b.getAttribute('data-filter'); render(true); });
+  });
+  document.querySelectorAll('.blog-post .post-tag').forEach(function (a) {
+    a.addEventListener('click', function (e) {
+      e.preventDefault(); state.tag = a.getAttribute('data-tag'); render(true);
+      document.querySelector('.blog-filter').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  var timer;
+  input.addEventListener('input', function () {
+    clearTimeout(timer); timer = setTimeout(function () { state.q = input.value; render(true); }, 120);
+  });
+  var params = new URLSearchParams(window.location.search);
+  state.tag = params.get('tag') || ''; state.q = params.get('q') || ''; input.value = state.q;
+  render(false);
+})();
+</script>

@@ -1,0 +1,175 @@
+---
+title: "Go 语言基础语法"
+date: 2021-01-13 19:40:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "Go 语言基础语法 1.字符串连接 Go 语言的字符串可以通过 + 实现： 实例 package mainimport \"fmt\"func main() { fmt.Println(\"Google\" + \"Runoob\")} 以上实例输出结果为： GoogleRunoob Go 语言的空格 Go 语"
+read_minutes: 5
+cnblogs_id: 14274028
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14274028.html"
+---
+{% raw %}
+<h1>Go 语言基础语法</h1>
+<h2>1.字符串连接</h2>
+<p>Go 语言的字符串可以通过 <span class="marked">+ 实现：</span></p>
+<div class="example">
+<h2 class="example">实例</h2>
+<div class="example_code">package main<br/>import "fmt"<br/>func main() {<br/>    fmt.Println("Google" + "Runoob")<br/>}</div>
+</div>
+<div class="example">
+<p>以上实例输出结果为：</p>
+<pre class="prettyprint prettyprinted"><span class="typ">GoogleRunoob<br/></span></pre>
+<h2>Go 语言的空格</h2>
+<p>Go 语言中变量的声明必须使用空格隔开，如：</p>
+<pre class="prettyprint prettyprinted"><span class="kwd">var<span class="pln"> age <span class="kwd">int<span class="pun">;</span></span></span></span></pre>
+<p>语句中适当使用空格能让程序更易阅读。</p>
+<p>无空格：</p>
+<pre class="prettyprint prettyprinted"><span class="pln">fruit<span class="pun">=<span class="pln">apples<span class="pun">+<span class="pln">oranges<span class="pun">;</span></span></span></span></span></span></pre>
+<p>在变量与运算符间加入空格，程序看起来更加美观，如：</p>
+<pre class="prettyprint prettyprinted"><span class="pln">fruit <span class="pun">=<span class="pln"> apples <span class="pun">+<span class="pln"> oranges<span class="pun">;</span></span></span></span></span></span></pre>
+<h1>Go语言数据类型</h1>
+<p><strong>布尔型</strong><br/>布尔型的值只可以是常量 true 或者 false。一个简单的例子：</p>
+<p>var b bool = true</p>
+<h1>Go 语言变量</h1>
+<p>var indentifier type</p>
+<p>可以一次声明多个变量</p>
+<p>var identifier1 , identifier2 type </p>
+<p><strong>例子</strong></p>
+<p><strong>fun main(){</strong></p>
+<p><strong>　　var a string = "runoob"</strong></p>
+<p><strong>　　fmt.Println(a)</strong></p>
+<p><strong>　　var b,c int = 1,2</strong></p>
+<p><strong>　　fmt.println(b,c)</strong></p>
+<p><strong>}</strong></p>
+<p><strong>实际输出</strong></p>
+<p><strong>Runoob 1 2</strong></p>
+<h3>变量声明</h3>
+<p><strong>第一种，指定变量类型，如果没有初始化，则变量默认为零值</strong>。</p>
+<h2 class="example">实例</h2>
+<p>package main<br/>import "fmt"<br/>func main() {<br/><br/>    // 声明一个变量并初始化<br/>    var a = "RUNOOB"<br/>    fmt.Println(a)<br/><br/>    // 没有初始化就为零值<br/>    var b int<br/>    fmt.Println(b)<br/><br/>    // bool 零值为 false<br/>    var c bool<br/>    fmt.Println(c)<br/>}</p>
+<p><strong>第二种，根据值自行判定变量类型。</strong></p>
+<h2 class="example">实例</h2>
+<div class="example_code">package main<br/>import "fmt"<br/>func main() {<br/>    var d = true<br/>    fmt.Println(d)<br/>}</div>
+<div class="example_code">如果你声明了一个局部变量却没有在相同的代码块中使用它，同样会得到编译错误，例如下面这个例子当中的变量 a：</div>
+<div class="example_code">
+<p>如果你声明了一个局部变量却没有在相同的代码块中使用它，同样会得到编译错误，例如下面这个例子当中的变量 a：</p>
+<div class="example">
+<h2 class="example">实例</h2>
+<div class="example_code">package main<br/><br/>import "fmt"<br/><br/>func main() {<br/>   var a string = "abc"<br/>   fmt.Println("hello, world")<br/>}</div>
+</div>
+<p>尝试编译这段代码将得到错误 <strong>a declared and not used</strong>。</p>
+<p>此外，单纯地给 a 赋值也是不够的，这个值必须被使用，所以使用</p>
+<pre class="prettyprint prettyprinted"><span class="pln">fmt<span class="pun">.<span class="typ">Println<span class="pun">(<span class="str">"hello, world"<span class="pun">,<span class="pln"> a<span class="pun">)<br/></span></span></span></span></span></span></span></span></pre>
+</div>
+<h1>Go 语言常量</h1>
+<ul>
+<li>显式类型定义： <code>const b string = "abc"</code></li>
+<li>隐式类型定义： <code>const b = "abc"</code></li>
+</ul>
+<pre class="prettyprint prettyprinted"><span class="typ">多个相同类型的声明可以简写为<br/></span></pre>
+<pre class="prettyprint prettyprinted"><span class="kwd">const<span class="pln"> c_name1<span class="pun">,<span class="pln"> c_name2 <span class="pun">=<span class="pln"> value1<span class="pun">,<span class="pln"> value2</span></span></span></span></span></span></span></span></pre>
+<pre class="prettyprint prettyprinted"><span class="typ">以下实例演示了常量的应用：<br/></span></pre>
+<h2 class="example">实例</h2>
+<div class="example_code">package main<br/><br/>import "fmt"<br/><br/>func main() {<br/>   const LENGTH int = 10<br/>   const WIDTH int = 5  <br/>   var area int<br/>   const a, b, c = 1, false, "str" //多重赋值<br/><br/>   area = LENGTH * WIDTH<br/>   fmt.Printf("面积为 : %d", area)<br/>   println()<br/>   println(a, b, c)  <br/>}</div>
+<div class="example_code">常量还可以用作枚举：</div>
+<div class="example_code">const(</div>
+<div class="example_code">　　Unknown = 0</div>
+<div class="example_code">　　Female = 1</div>
+<div class="example_code">　　Male =2</div>
+<div class="example_code">)</div>
+<div class="example_code">数字 0、1 和 2 分别代表未知性别、女性和男性。</div>
+<div class="example_code"> </div>
+<div class="example_code">常量可以用len(), cap(), unsafe.Sizeof()函数计算表达式的值。常量表达式中，函数必须是内置函数，否则编译不过</div>
+<h2 class="example">实例</h2>
+<p>package main</p>
+<p>import "unsafe"</p>
+<p>const (</p>
+<p>　　a = "123"</p>
+<p>　　b = len(a)</p>
+<p> 　　c =unsafe.Sizeof(a)</p>
+<p>)</p>
+<p>func main(){<br/>    println(a, b, c)<br/>}</p>
+<p>以上实例运行结果为：</p>
+<pre class="prettyprint prettyprinted"><span class="pln">abc <span class="lit">3<span class="pln"> <span class="lit">16</span></span></span></span></pre>
+<h1>Go 语言运算符</h1>
+<ul>
+<li>算术运算符</li>
+<li>关系运算符</li>
+<li>逻辑运算符</li>
+<li>位运算符</li>
+<li>赋值运算符</li>
+<li>其他运算符</li>
+</ul>
+<p>以下实例演示了各个算术运算符的用法：</p>
+<p>fun main(){</p>
+<p>　　var a int = 21</p>
+<p>　　var b int = 10</p>
+<p>　　var c int </p>
+<p>　　c = a + b<br/>   fmt.Printf("第一行 - c 的值为 %d\n", c )<br/>   c = a - b<br/>   fmt.Printf("第二行 - c 的值为 %d\n", c )<br/>   c = a * b<br/>   fmt.Printf("第三行 - c 的值为 %d\n", c )<br/>   c = a / b<br/>   fmt.Printf("第四行 - c 的值为 %d\n", c )<br/>   c = a % b<br/>   fmt.Printf("第五行 - c 的值为 %d\n", c )<br/>   a++<br/>   fmt.Printf("第六行 - a 的值为 %d\n", a )<br/>   a=21   // 为了方便测试，a 这里重新赋值为 21<br/>   a--<br/>   fmt.Printf("第七行 - a 的值为 %d\n", a )</p>
+<p>}</p>
+<h1>Go 语言条件语句</h1>
+<p><strong>if 语句</strong></p>
+<p><strong>func main(){</strong></p>
+<p><strong>　　var a int = 10</strong></p>
+<p><strong>　　if a &lt; 20{</strong></p>
+<p><strong>　　fmt.Printf("a小于 20\n")</strong></p>
+<p><strong>}<br/></strong></p>
+<p><strong>}</strong></p>
+<p><strong>//注意， 和java的区别，一般情况下，Go不要加如（）</strong></p>
+<h1>Go 语言循环语句</h1>
+<h1>Go 语言 for 循环</h1>
+<p>Go 语言的 For 循环有 3 种形式，只有其中的一种使用分号。</p>
+<p>和 C 语言的 for 一样：</p>
+<p>1.</p>
+<p><span class="kwd">f</span><span class="kwd">or<span class="pln"> init<span class="pun">;<span class="pln"> condition<span class="pun">;<span class="pln"> post <span class="pun">{<span class="pln"> <span class="pun">}</span></span></span></span></span></span></span></span></span></p>
+<p>2.</p>
+<pre class="prettyprint prettyprinted"><span class="kwd">for<span class="pln"> condition <span class="pun">{<span class="pln"> <span class="pun">}<br/></span></span></span></span></span>3.</pre>
+<pre class="prettyprint prettyprinted"><span class="kwd">for<span class="pln"> <span class="pun">{<span class="pln"> <span class="pun">}</span></span></span></span></span><br/><br/></pre>
+<pre class="prettyprint prettyprinted"><em><em>for 循环的 range 格式可以对 slice、map、数组、字符串等进行迭代循环。格式如下<br/></em></em><em id="__mceDel"><span class="kwd"><br/>for<span class="pln"> key<span class="pun">,<span class="pln"> value <span class="pun">:=<span class="pln"> range oldMap <span class="pun">{</span></span></span></span></span></span></span></em></pre>
+<pre class="prettyprint prettyprinted"><em><span class="kwd"><span class="pln"><span class="pun"><span class="pln"><span class="pun"><span class="pln"><span class="pun"><span class="pln">    newMap<span class="pun">[<span class="pln">key<span class="pun">]<span class="pln"> <span class="pun">=<span class="pln"> value
+<span class="pun">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><br/><br/><strong>实际例子<br/>计算 1 到 10 的数字之和：<br/>package main<br/><br/>import "fmt"<br/><br/>func main() {<br/>        sum := 0<br/>        for i := 0; i &lt;= 10; i++ {<br/>                sum += i<br/>        }<br/>        fmt.Println(sum)<br/>}<br/><br/></strong></em></pre>
+<p>init 和 post 参数是可选的，我们可以直接省略它，类似 While 语句。</p>
+<p>以下实例在 sum 小于 10 的时候计算 sum 自相加后的值：</p>
+<p>package main<br/><br/>import "fmt"<br/><br/>func main() {<br/>        sum := 1<br/>        for ; sum &lt;= 10; {<br/>                sum += sum<br/>        }<br/>        fmt.Println(sum)<br/><br/>        // 这样写也可以，更像 While 语句形式<br/>        for sum &lt;= 10{<br/>                sum += sum<br/>        }<br/>        fmt.Println(sum)<br/>}</p>
+<p>无限循环:</p>
+<p>package main<br/><br/>import "fmt"<br/><br/>func main() {<br/>        sum := 0<br/>        for {<br/>            sum++ // 无限循环下去<br/>        }<br/>        fmt.Println(sum) // 无法输出<br/>}</p>
+<p><strong>For-each range 循环</strong></p>
+<p>这种格式的循环可以对字符串、数组、切片等进行迭代输出元素。</p>
+<p>package main<br/>import "fmt"<br/><br/>func main() {<br/>        strings := []string{"google", "runoob"}<br/>        for i, s := range strings {<br/>                fmt.Println(i, s)<br/>        }<br/><br/><br/>        numbers := [6]int{1, 2, 3, 5}<br/>        for i,x:= range numbers {<br/>                fmt.Printf("第 %d 位 x 的值 = %d\n", i,x)<br/>        }  <br/>}</p>
+<p>以上实例运行输出结果为:</p>
+<pre class="prettyprint prettyprinted"><span class="lit">0<span class="pln"> google
+<span class="lit">1<span class="pln"> runoob
+<span class="pun">第<span class="pln"> <span class="lit">0<span class="pln"> <span class="pun">位<span class="pln"> x <span class="pun">的值<span class="pln"> <span class="pun">=<span class="pln"> <span class="lit">1<span class="pln">
+<span class="pun">第<span class="pln"> <span class="lit">1<span class="pln"> <span class="pun">位<span class="pln"> x <span class="pun">的值<span class="pln"> <span class="pun">=<span class="pln"> <span class="lit">2<span class="pln">
+<span class="pun">第<span class="pln"> <span class="lit">2<span class="pln"> <span class="pun">位<span class="pln"> x <span class="pun">的值<span class="pln"> <span class="pun">=<span class="pln"> <span class="lit">3<span class="pln">
+<span class="pun">第<span class="pln"> <span class="lit">3<span class="pln"> <span class="pun">位<span class="pln"> x <span class="pun">的值<span class="pln"> <span class="pun">=<span class="pln"> <span class="lit">5<span class="pln">
+<span class="pun">第<span class="pln"> <span class="lit">4<span class="pln"> <span class="pun">位<span class="pln"> x <span class="pun">的值<span class="pln"> <span class="pun">=<span class="pln"> <span class="lit">0<span class="pln">
+<span class="pun">第<span class="pln"> <span class="lit">5<span class="pln"> <span class="pun">位<span class="pln"> x <span class="pun">的值<span class="pln"> <span class="pun">=<span class="pln"> <span class="lit">0</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><br/><br/></pre>
+<h1>Go 语言函数</h1>
+<p>Go 语言标准库提供了多种可动用的内置的函数。例如，len() 函数可以接受不同类型参数并返回该类型的长度。如果我们传入的是字符串则返回字符串的长度，如果传入的是数组，则返回数组中包含的元素个数。</p>
+<h2>函数定义</h2>
+<p>Go 语言函数定义格式如下：</p>
+<pre class="prettyprint prettyprinted"><span class="pln">func function_name<span class="pun">(<span class="pln"> <span class="pun">[<span class="pln">parameter list<span class="pun">]<span class="pln"> <span class="pun">)<span class="pln"> <span class="pun">[<span class="pln">return_types<span class="pun">]<span class="pln"> <span class="pun">{<span class="pln">
+   <span class="pun">函数体<span class="pln">
+<span class="pun">}<br/><strong>例子<br/>以下实例为 max() 函数的代码，该函数传入两个整型参数 num1 和 num2，并返回这两个参数的最大值<br/>code<br/>func max(a ,b int) int{<br/>　　var result int<br/>　　if (num1&gt;num2){<br/>　　result = num1<br/>}<br/>}<br/></strong></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<h2>函数调用</h2>
+<h2>函数返回多个值</h2>
+<p>package main<br/><br/>import "fmt"<br/><br/>func swap(x, y string) (string, string) {<br/>   return y, x<br/>}<br/><br/>func main() {<br/>   a, b := swap("Google", "Runoob")<br/>   fmt.Println(a, b)<br/>}</p>
+<h1>Go 语言变量作用域</h1>
+<ul>
+<li>函数内定义的变量称为局部变量</li>
+<li>函数外定义的变量称为全局变量</li>
+<li>函数定义中的变量称为形式参数</li>
+</ul>
+<pre class="prettyprint prettyprinted"><em><strong>/* 函数定义-两数相加 */<br/>func sum(a, b int) int {<br/>   fmt.Printf("sum() 函数中 a = %d\n",  a);<br/>   fmt.Printf("sum() 函数中 b = %d\n",  b);<br/><br/>   return a + b;<br/>}<br/><br/></strong></em></pre>
+<pre class="prettyprint prettyprinted"><span class="pln">main<span class="pun">()函数中<span class="pln"> a <span class="pun">=<span class="pln"> <span class="lit">10<span class="pln">
+sum<span class="pun">()<span class="pln"> <span class="pun">函数中<span class="pln"> a <span class="pun">=<span class="pln"> <span class="lit">10<span class="pln">
+sum<span class="pun">()<span class="pln"> <span class="pun">函数中<span class="pln"> b <span class="pun">=<span class="pln"> <span class="lit">20<span class="pln">
+main<span class="pun">()函数中<span class="pln"> c <span class="pun">=<span class="pln"> <span class="lit">30</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span><br/><br/></pre>
+<h2>初始化局部和全局变量</h2>
+<h1>Go 语言数组</h1>
+<pre class="prettyprint prettyprinted"><span class="kwd">var<span class="pln"> balance <span class="pun">=<span class="pln"> <span class="pun">[<span class="lit">5<span class="pun">]<span class="pln">float32<span class="pun">{<span class="lit">1000.0<span class="pun">,<span class="pln"> <span class="lit">2.0<span class="pun">,<span class="pln"> <span class="lit">3.4<span class="pun">,<span class="pln"> <span class="lit">7.0<span class="pun">,<span class="pln"> <span class="lit">50.0<span class="pun">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<pre class="prettyprint prettyprinted"><em id="__mceDel"><strong>实例<br/>package main<br/><br/>import "fmt"<br/><br/>func main() {<br/>   var n [10]int /* n 是一个长度为 10 的数组 */<br/>   var i,j int<br/><br/>   /* 为数组 n 初始化元素 */        <br/>   for i = 0; i &lt; 10; i++ {<br/>      n[i] = i + 100 /* 设置元素为 i + 100 */<br/>   }<br/><br/>   /* 输出每个数组元素的值 */<br/>   for j = 0; j &lt; 10; j++ {<br/>      fmt.Printf("Element[%d] = %d\n", j, n[j] )<br/>   }<br/>}<br/><br/><br/></strong></em></pre>
+<p> </p>
+<p> </p>
+</div>
+{% endraw %}

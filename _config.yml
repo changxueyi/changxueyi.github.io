@@ -237,6 +237,9 @@ collections:
   talks:
     output: true
     permalink: /:collection/:path/
+  cnblogs:
+    output: true
+    permalink: /blog/:path/
 
 
 # These settings control how pages and collections are included in the site
@@ -292,6 +295,14 @@ defaults:
       type: talks
     values:
       layout: talk
+      author_profile: true
+      share: true
+  # _cnblogs（从博客园迁移的历史文章）
+  - scope:
+      path: ""
+      type: cnblogs
+    values:
+      layout: cnblog
       author_profile: true
       share: true
 

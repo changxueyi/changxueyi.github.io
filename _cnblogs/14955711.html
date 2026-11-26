@@ -1,0 +1,46 @@
+---
+title: "Go语言 之结构体数组 赋值"
+date: 2021-06-30 17:54:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "package main import ( \"fmt\" ) type Student struct { id int name string score float64 } func main() { s := []Student{ Student{ 1, \"yy\", 82, }, Student{"
+read_minutes: 1
+cnblogs_id: 14955711
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14955711.html"
+tags_inferred: true
+---
+{% raw %}
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">package main
+
+import (
+    "fmt"
+)
+
+type Student struct {
+    id    int
+    name  string
+    score float64
+}
+
+func main() {
+    s := []Student{
+        Student{
+            1,
+            "yy",
+            82,
+        },
+        Student{
+            2,
+            "yang",
+            67,
+        },
+        Student{
+            3,
+            "go",
+            91,
+        },
+    }
+    fmt.Println(s)
+}</pre>
+</div>
+{% endraw %}

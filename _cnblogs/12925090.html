@@ -1,0 +1,195 @@
+---
+title: "使用Redis——拳打南山敬老院，脚踩北斗幼儿园"
+date: 2020-05-20 17:55:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "拳打南山敬老院，脚踩北斗幼儿园 Redis 你说你用过对吧，你们怎么用的？ 面试官您好，因为传统的关系型数据库如Mysql已经不能适用所有的场景了，比如秒杀的库存扣减，APP首页的访问流量高峰等等，都很容易把数据库打崩，所以引入了缓存中间件，目前市面上比较常用的缓存中间件有Redis和Memcach"
+read_minutes: 14
+cnblogs_id: 12925090
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12925090.html"
+---
+{% raw %}
+<blockquote>
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">拳打南山敬老院，脚踩北斗幼儿园</span></p>
+</blockquote>
+<h4 class="md-end-block md-heading"><span class="md-plain">Redis 你说你用过对吧，你们怎么用的？</span></h4>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">面试官您好</span></strong><span class="md-plain">，因为传统的关系型数据库如Mysql已经不能适用所有的场景了，比如秒杀的库存扣减，APP首页的访问流量高峰等等，都很容易把数据库打崩，所以引入了缓存中间件，目前市面上比较常用的缓存中间件有<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">和<span><strong><span class="md-plain">Memcached</span></strong><span class="md-plain">不过中和考虑了他们的优缺点，最后选择了Redis</span></span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">Redis有哪些数据结构？</span></h3>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">String</span></strong><span class="md-plain">、<span><strong><span class="md-plain">Hash</span></strong><span class="md-plain">、<span><strong><span class="md-plain">List</span></strong><span class="md-plain">、<span><strong><span class="md-plain">Set</span></strong><span class="md-plain">、<span><strong><span class="md-plain">SortedSet</span></strong><span class="md-plain">。</span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">当然为了加分，可以扯一下，用过<span><strong><span class="md-plain">BloomFilter</span></strong><span class="md-plain">布隆过滤器</span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">这玩意的使用场景是真的多，而且用起来是真的香，原理也好理解</span></strong></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">如果有大量的key需要设置同一时间过期，一般需要注意什么？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">如果有大量的Key集中过期，<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">可能会出现短暂的卡顿现象。严重的话会出现缓存雪崩，我们一般需要在时间上加一个随机值，使得过期时间分散一些。</span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">那你使用过Redis分布式锁么，它是什么回事？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">先拿<span><strong><span class="md-plain">setnx</span></strong><span class="md-plain">来争抢锁，抢到之后，再用<span><strong><span class="md-plain">expire</span></strong><span class="md-plain">给锁加一个过期时间防止锁忘记了释放</span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">假如Redis里面有1亿个key，其中有10w个key是以某个固定的已知的前缀开头的，如何将它们全部找出来？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">使用<span><strong><span class="md-plain">keys</span></strong><span class="md-plain">指令可以扫出指定模式的key列表</span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">如果这个redis正在给线上的业务提供服务，那使用keys指令会有什么问题？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">Redis的单线程的。keys指令会导致线程阻塞一段时间，线上服务会停顿，直到指令执行完毕，服务才能恢复。这个时候可以使用<span><strong><span class="md-plain">scan</span></strong><span class="md-plain">指令，<span><strong><span class="md-plain">scan</span></strong><span class="md-plain">指令可以无阻塞的提取出指定模式的key列表，但是会有一定的重复概率，在客户端做一次去重就可以了，但是整体所花费的时间会比直接用keys指令长。</span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">如果对方接着追问能不能生产一次消费多次呢</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">使用pub/sub主题订阅者模式，可以实现 1:N 的消息队列。</span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">如果对方继续追问 pub/su b有什么缺点？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">在消费者下线的情况下，生产的消息会丢失，得使用专业的消息队列如<span><strong><span class="md-plain">RocketMQ</span></strong><span class="md-plain">等</span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">Redis是怎么持久化的？服务主从数据怎么交互的？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">RDB做镜像全量持久化，AOF做增量持久化。因为RDB会耗费较长时间，不够实时，在停机的时候会导致大量丢失数据，所以需要AOF来配合使用。在redis实例重启时，会使用RDB持久化文件重新构建内存，再使用AOF重放近期的操作指令来实现完整恢复重启之前的状态。</span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">这里很好理解，把RDB理解为一整个表全量的数据，AOF理解为每次操作的日志就好了，服务器重启的时候先把表的数据全部搞进去，但是他可能不完整，你再回放一下日志，数据不就完整了嘛。不过Redis本身的机制是 AOF持久化开启且存在AOF文件时，优先加载AOF文件；AOF关闭或者AOF文件不存在时，加载RDB文件；加载AOF/RDB文件城后，Redis启动成功；AOF/RDB文件存在错误时，Redis启动失败并打印错误信息</span></strong></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">对方追问那如果突然机器掉电会怎样？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">取决于AOF日志sync属性的配置，如果不要求性能，在每条写指令时都sync一下磁盘，就不会丢失数据。但是在高性能的要求下每次都sync是不现实的，一般都使用定时sync，比如1s1次，这个时候最多就会丢失1s的数据。</span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">对方追问RDB的原理是什么？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">你给出两个词汇就可以了，fork和cow。fork是指redis通过创建子进程来进行RDB操作，cow指的是<span><strong><span class="md-plain">copy on write</span></strong><span class="md-plain">，子进程创建后，父子进程共享数据段，父进程继续提供读写服务，写脏的页面数据会逐渐和子进程分离开来。</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">注：回答这个问题的时候，如果你还能说出AOF和RDB的优缺点，我觉得我是面试官在这个问题上我会给你点赞，两者其实区别还是很大的，而且涉及到Redis集群的数据同步问题等等。想了解的伙伴也可以留言，我会专门写一篇来介绍的。</span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">Redis的同步机制了解么？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">Redis可以使用主从同步，从从同步。第一次同步时，主节点做一次<span><strong><span class="md-plain">bgsave</span></strong><span class="md-plain">，并同时将后续修改操作记录到内存buffer，待完成后将RDB文件全量同步到复制节点，复制节点接受完成后将RDB镜像加载到内存。加载完成后，再通知主节点将期间修改的操作记录同步到复制节点进行重放就完成了同步过程。后续的增量数据通过AOF日志同步即可，有点类似数据库的binlog。</span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">还有一点就是我问你为啥用Redis你不要一上来就直接回答问题了，你可以这样回答：</span></strong></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">帅气的面试官您好</span></strong><span class="md-plain">，首先我们的项目DB遇到了瓶颈，特别是秒杀和热点数据这样的场景DB基本上就扛不住了，那就需要缓存中间件的加入了，目前市面上有的缓存中间件有 <span><strong><span class="md-plain">Redis</span></strong><span class="md-plain"> 和 <span><strong><span class="md-plain">Memcached</span></strong><span class="md-plain"> ，他们的优缺点……，综合这些然后再结合我们项目特点，最后我们在技术选型的时候选了谁</span></span></span></span></span></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"> </p>
+<blockquote>
+<p class="md-end-block md-p"><span class="md-plain">你要知道你现在想要的生活</span></p>
+</blockquote>
+<h4 class="md-end-block md-heading"><span class="md-plain">之前问过了你基础知识以及一些缓存的常见几个大问题了，那你能跟我聊聊为啥Redis那么快么？</span></h4>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaq3kA1SIY46vib8WGiaFE7PeKxqTJiaq8wI2mMGXKOG9XPWJKbQaBtphhTA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"><img alt="img" loading="lazy" src="/images/cnblogs/1533ca1fad835138.webp"/></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">采用的是基于内存的采用的是单进程单线程模型的 KV 数据库，由C语言编写，官方提供的数据是可以达到100000+的<span><strong><span class="md-plain">QPS（每秒内查询次数）</span></strong></span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">完全基于内存，绝大部分请求是纯粹的内存操作，非常快速。它的，数据存在内存中，类似于<span><strong><span class="md-plain">HashMap</span></strong><span class="md-plain">，<span><strong><span class="md-plain">HashMap</span></strong><span class="md-plain">的优势就是查找和操作的时间复杂度都是O(1)；</span></span></span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">数据结构简单，对数据操作也简单，<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">中的数据结构是专门进行设计的；</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">采用单线程，避免了不必要的上下文切换和竞争条件，也不存在多进程或者多线程导致的切换而消耗 <span><strong><span class="md-plain">CPU</span></strong><span class="md-plain">，不用去考虑各种锁的问题，不存在加锁释放锁操作，没有因为可能出现死锁而导致的性能消耗；</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">使用多路I/O复用模型，非阻塞IO；</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">使用底层模型不同，它们之间底层实现方式以及与客户端之间通信的应用协议不一样，<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">直接自己构建了VM 机制 ，因为一般的系统调用系统函数的话，会浪费一定的时间去移动和请求；</span></span></span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><span class="md-plain">我可以问一下啥是上下文切换么？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">我可以打个比方么：我记得有过一个小伙伴微信问过我上下文切换是啥，为啥可能会线程不安全，我是这么说的，就好比你看一本英文书，你看到第十页发现有个单词不会读，你加了个书签，然后去查字典，过了一会你又回来继续从书签那里读，ok到目前为止没啥问题。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">如果是你一个人读肯定没啥问题，但是你去查的时候，别的小伙伴好奇你在看啥他就翻了一下你的书，然后溜了，哦豁，你再看的时候就发现书不是你看的那一页了。不知道到这里为止我有没有解释清楚，以及为啥会线程不安全，就是因为你一个人怎么看都没事，但是人多了换来换去的操作一本书数据就乱了。可能我的解释很粗糙，但是道理应该是一样的。</span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">那他是单线程的，我们现在服务器都是多核的，那不是很浪费？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">是的他是单线程的，但是，我们可以通过在单机开多个<span><strong><span class="md-plain">Redis实例</span></strong><span class="md-plain">嘛。</span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">既然提到了单机会有瓶颈，那你们是怎么解决这个瓶颈的？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">Redis Cluster是Redis官方提供的Redis集群功能</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们用到了集群的部署方式也就是<span><strong><span class="md-plain">Redis cluster</span></strong><span class="md-plain">，并且是主从同步读写分离，类似<span><strong><span class="md-plain">Mysql</span></strong><span class="md-plain">的主从同步，<span><strong><span class="md-plain">Redis cluster</span></strong><span class="md-plain"> 支撑 N 个 <span><strong><span class="md-plain">Redis master node</span></strong><span class="md-plain">，每个<span><strong><span class="md-plain">master node</span></strong><span class="md-plain">都可以挂载多个 <span><strong><span class="md-plain">slave node</span></strong><span class="md-plain">。</span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这样整个 <span><strong><span class="md-plain">Redis</span></strong><span class="md-plain"> 就可以横向扩容了。如果你要支撑更大数据量的缓存，那就横向扩容更多的 <span><strong><span class="md-plain">master</span></strong><span class="md-plain"> 节点，每个 <span><strong><span class="md-plain">master</span></strong><span class="md-plain"> 节点就能存放更多的数据了。</span></span></span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">为什么要实现Redis Cluster</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">1.主从复制不能实现高可用<span class="md-softbreak"> <span class="md-plain">2.随着公司发展，用户数量增多，并发越来越多，业务需要更高的QPS，而主从复制中单机的QPS可能无法满足业务需求<span class="md-softbreak"> <span class="md-plain">3.数据量的考虑，现有服务器内存不能满足业务数据的需要时，单纯向服务器添加内存不能达到要求，此时需要考虑分布式需求，把数据分布到不同服务器上<span class="md-softbreak"> <span class="md-plain">4.网络流量需求：业务的流量已经超过服务器的网卡的上限值，可以考虑使用分布式来进行分流<span class="md-softbreak"> <span class="md-plain">5.离线计算，需要中间环节缓冲等别的需求</span></span></span></span></span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">哦？那问题就来了，他们之间是怎么进行数据交互的？以及Redis是怎么进行持久化的？Redis数据都在内存中，一断电或者重启不就木有了嘛？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">是的，持久化的话是<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">高可用中比较重要的一个环节，因为<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">数据在内存的特性，持久化必须得有，我了解到的持久化是有两种方式的。</span></span></span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">RDB：<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain"> 持久化机制，是对 <span><strong><span class="md-plain">Redis</span></strong><span class="md-plain"> 中的数据执行<span><strong><span class="md-plain">周期性</span></strong><span class="md-plain">的持久化。</span></span></span></span></span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">AOF：<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain"> 机制对每条写入命令作为日志，以 <span><strong><span class="md-plain">append-only</span></strong><span class="md-plain"> 的模式写入一个日志文件中，因为这个模式是只追加的方式，所以没有任何磁盘寻址的开销，所以很快，有点像Mysql中的<span><strong><span class="md-plain">binlog</span></strong><span class="md-plain">。</span></span></span></span></span></span></span></p>
+</li>
+</ul>
+<p class="md-end-block md-p"><span class="md-plain">两种方式都可以把<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">内存中的数据持久化到磁盘上，然后再将这些数据备份到别的地方去，<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">更适合做<span><strong><span class="md-plain">冷备</span></strong><span class="md-plain">，<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">更适合做<span><strong><span class="md-plain">热备</span></strong><span class="md-plain">，比如我杭州的某电商公司有这两个数据，我备份一份到我杭州的节点，再备份一个到上海的，就算发生无法避免的自然灾害，也不会两个地方都一起挂吧，这<span><strong><span class="md-plain">灾备</span></strong><span class="md-plain">也就是<span><strong><span class="md-plain">异地容灾</span></strong><span class="md-plain">，地球毁灭他没办法。</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">tip：两种机制全部开启的时候，Redis在重启的时候会默认使用AOF去重新构建数据，因为AOF的数据是比RDB更完整的。</span></strong></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">那这两种机制各自优缺点是啥？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">我先说<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">吧</span></span></span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">优点：</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">他会生成多个数据文件，每个数据文件分别都代表了某一时刻<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">里面的数据，这种方式，有没有觉得很适合做<span><strong><span class="md-plain">冷备</span></strong><span class="md-plain">，完整的数据运维设置定时任务，定时同步到远端的服务器，比如阿里的云服务，这样一旦线上挂了，你想恢复多少分钟之前的数据，就去远端拷贝一份之前的数据就好了。</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">对<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">的性能影响非常小，是因为在同步数据的时候他只是<span><strong><span class="md-plain">fork</span></strong><span class="md-plain">了一个子进程去做持久化的，而且他在数据恢复的时候速度比<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">来的快。</span></span></span></span></span></span></span></span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">缺点：</span></h4>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">都是快照文件，都是默认五分钟甚至更久的时间才会生成一次，这意味着你这次同步到下次同步这中间五分钟的数据都很可能全部丢失掉。<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">则最多丢一秒的数据，<span><strong><span class="md-plain">数据完整性</span></strong><span class="md-plain">上高下立判。</span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">还有就是<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">在生成数据快照的时候，如果文件很大，客户端可能会暂停几毫秒甚至几秒，你公司在做秒杀的时候他刚好在这个时候<span><strong><span class="md-plain">fork</span></strong><span class="md-plain">了一个子进程去生成一个大快照，哦豁，出大问题。</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们再来说说<span><strong><span class="md-plain">AOF</span></strong></span></span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">优点：</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">上面提到了，<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">五分钟一次生成快照，但是<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">是一秒一次去通过一个后台的线程<span><code>fsync</code><span class="md-plain">操作，那最多丢这一秒的数据。</span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">在对日志文件进行操作的时候是以<span><code>append-only</code><span class="md-plain">的方式去写的，他只是追加的方式写数据，自然就少了很多磁盘寻址的开销了，写入性能惊人，文件也不容易破损。</span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">的日志是通过一个叫<span><strong><span class="md-plain">非常可读</span></strong><span class="md-plain">的方式记录的，这样的特性就适合做<span><strong><span class="md-plain">灾难性数据误删除</span></strong><span class="md-plain">的紧急恢复了，比如公司的实习生通过<span><strong><span class="md-plain">flushall</span></strong><span class="md-plain">清空了所有的数据，只要这个时候后台重写还没发生，你马上拷贝一份<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">日志文件，把最后一条<span><strong><span class="md-plain">flushall</span></strong><span class="md-plain">命令删了就完事了。</span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">tip：我说的命令你们别真去线上系统操作啊，想试去自己买的服务器上装个Redis试，别到时候来说，敖丙真是个渣男，害我把服务器搞崩了，Redis官网上的命令都去看看，不要乱试！！！</span></strong></span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">缺点：</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">一样的数据，<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">文件比<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">还要大。</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">开启后，<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">支持写的<span><strong><span class="md-plain">QPS</span></strong><span class="md-plain">会比<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">支持写的要低，他不是每秒都要去异步刷新一次日志嘛<span><strong><span class="md-plain">fsync</span></strong><span class="md-plain">，当然即使这样性能还是很高，我记得<span><strong><span class="md-plain">ElasticSearch</span></strong><span class="md-plain">也是这样的，异步刷新缓存区的数据去持久化，为啥这么做呢，不直接来一条怼一条呢，那我会告诉你这样性能可能低到没办法用的，大家可以思考下为啥哟。</span></span></span></span></span></span></span></span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">那两者怎么选择？、</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">小孩子才做选择，<span><strong><span class="md-plain">我全都要</span></strong><span class="md-plain">，你单独用<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">你会丢失很多数据，你单独用<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">，你数据恢复没<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">来的快，真出什么时候第一时间用<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">恢复，然后<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">做数据补全，真香！冷备热备一起上，才是互联网时代一个高健壮性系统的王道。</span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">看不出来年纪轻轻有点东西的呀，对了我听你提到了高可用，Redis还有其他保证集群高可用的方式么？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">哦我想起来了，还有哨兵集群,</span></p>
+<p class="md-end-block md-p"><span class="md-plain">哨兵必须用三个实例去保证自己的健壮性的，哨兵+主从并<span><strong><span class="md-plain">不能保证数据不丢失</span></strong><span class="md-plain">，但是可以保证集群的<span><strong><span class="md-plain">高可用</span></strong><span class="md-plain">。</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">为啥必须要三个实例呢？我们先看看两个哨兵会咋样。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaqh596Lde5Ig0KPF8PPxTmQAfkjBOpC1dRLA23GphGibPQ9hfTlejp7QA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"><img alt="img" loading="lazy" src="/images/cnblogs/628be353fe5a673a.webp"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">master宕机了 s1和s2两个哨兵只要有一个认为你宕机了就切换了，并且会选举出一个哨兵去执行故障，但是这个时候也需要大多数哨兵都是运行的。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">那这样有啥问题呢？M1宕机了，S1没挂那其实是OK的，但是整个机器都挂了呢？哨兵就只剩下S2个裸屌了，没有哨兵去允许故障转移了，虽然另外一个机器上还有R1，但是故障转移就是不执行。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">经典的哨兵集群是这样的：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaqy7SGR97xnVPDLmvE5WJhCjGunLaIOhJ9ribicn7H7Sky3uApoxmkBqKw/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"><img alt="img" loading="lazy" src="/images/cnblogs/b8424d8d6c7eb481.webp"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">M1所在的机器挂了，哨兵还有两个，两个人一看他不是挂了嘛，那我们就选举一个出来执行故障转移不就好了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">暖男我，小的总结下哨兵组件的主要功能：</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">集群监控：负责监控 Redis master 和 slave 进程是否正常工作。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">消息通知：如果某个 <span><strong><span class="md-plain">Redis</span></strong><span class="md-plain"> 实例有故障，那么哨兵负责发送消息作为报警通知给管理员。</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">故障转移：如果 master node 挂掉了，会自动转移到 slave node 上。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">配置中心：如果故障转移发生了，通知 client 客户端新的 master 地址。</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><span class="md-plain">我记得你还提到了主从同步，能说一下主从之间的数据怎么同步的么？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">面试官您的记性可真是一级棒呢，我都要忘了你还记得，我特么谢谢你，提到这个，就跟我前面提到的数据持久化的<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">和<span><strong><span class="md-plain">AOF</span></strong><span class="md-plain">有着比密切的关系了。</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">我先说下为啥要用主从这样的架构模式，前面提到了单机<span><strong><span class="md-plain">QPS</span></strong><span class="md-plain">是有上限的，而且<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">的特性就是必须支撑读高并发的，那你一台机器又读又写，<span><strong><span class="md-plain">这谁顶得住啊</span></strong><span class="md-plain">，不当人啊！但是你让这个master机器去写，数据同步给别的slave机器，他们都拿去读，分发掉大量的请求那是不是好很多，而且扩容的时候还可以轻松实现水平扩容。</span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaql9jqeiboH8nWViaz8QibxEhGb32aNibCpFyGmFCkJtXte5pn5juAvziaCuw/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"><img alt="img" loading="lazy" src="/images/cnblogs/2328572ff8ba048d.webp"/></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">回归正题，他们数据怎么同步的呢？</span></strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">你启动一台slave 的时候，他会发送一个<span><strong><span class="md-plain">psync</span></strong><span class="md-plain">命令给master ，如果是这个slave第一次连接到master，他会触发一个全量复制。master就会启动一个线程，生成<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">快照，还会把新的写请求都缓存在内存中，<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">文件生成后，master会将这个<span><strong><span class="md-plain">RDB</span></strong><span class="md-plain">发送给slave的，slave拿到之后做的第一件事情就是写进本地的磁盘，然后加载进内存，然后master会把内存里面缓存的那些新命名都发给slave。</span></span></span></span></span></span></span></span></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">数据传输的时候断网了或者服务器挂了怎么办啊？</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">传输过程中有什么网络问题啥的，会自动重连的，并且连接之后会把缺少的数据补上的。</span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">大家需要记得的就是，RDB快照的数据生成的时候，缓存区也必须同时开始接受新请求，不然你旧的数据过去了，你在同步期间的增量数据咋办？是吧？</span></strong></span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">最后就是如果的如果，定期没删，我也没查询，那可咋整？</span></h3>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">内存淘汰机制</span></strong><span class="md-plain">！</span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">官网上给到的内存淘汰机制是以下几个：</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong><span class="md-plain">noeviction</span></strong><span class="md-plain">:返回错误当内存限制达到并且客户端尝试执行会让更多内存被使用的命令（大部分的写入指令，但DEL和几个例外）</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong><span class="md-plain">allkeys-lru</span></strong><span class="md-plain">: 尝试回收最少使用的键（LRU），使得新添加的数据有空间存放。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong><span class="md-plain">volatile-lru</span></strong><span class="md-plain">: 尝试回收最少使用的键（LRU），但仅限于在过期集合的键,使得新添加的数据有空间存放。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong><span class="md-plain">allkeys-random</span></strong><span class="md-plain">: 回收随机的键使得新添加的数据有空间存放。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong><span class="md-plain">volatile-random</span></strong><span class="md-plain">: 回收随机的键使得新添加的数据有空间存放，但仅限于在过期集合的键。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong><span class="md-plain">volatile-ttl</span></strong><span class="md-plain">: 回收在过期集合的键，并且优先回收存活时间（TTL）较短的键,使得新添加的数据有空间存放。</span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">如果没有键满足回收的前提条件的话，策略<span><strong><span class="md-plain">volatile-lru</span></strong><span class="md-plain">, <span><strong><span class="md-plain">volatile-random</span></strong><span class="md-plain">以及<span><strong><span class="md-plain">volatile-ttl</span></strong><span class="md-plain">就和noeviction 差不多了。</span></span></span></span></span></span></span></p>
+</li>
+</ul>
+<p class="md-end-block md-p"><span class="md-plain">至于<span><strong><span class="md-plain">LRU</span></strong><span class="md-plain">我也简单提一下，手写实在是太长了，大家可以去<span><strong><span class="md-plain">Redis官网</span></strong><span class="md-plain">看看，我把<span><strong><span class="md-plain">近视LUR</span></strong><span class="md-plain">效果给大家看看</span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong><span class="md-plain">tip：Redis为什么不使用真实的LRU实现是因为这需要太多的内存。不过近似的LRU算法对于应用而言应该是等价的。使用真实的LRU算法与近似的算法可以通过下面的图像对比。</span></strong></span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaqNjQqKnUVa5csiapSZj3Bu3aSzBibXQJGRw9JQSY3snicy6n3vno1deiaTQ/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"><img alt="LRU comparison" loading="lazy" src="/images/cnblogs/2d74dcc5a126c6f0.webp"/><span class="md-plain">LRU comparison</span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">你可以看到三种点在图片中, 形成了三种带.</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">浅灰色带是已经被回收的对象。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">灰色带是没有被回收的对象。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">绿色带是被添加的对象。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">在<span><strong><span class="md-plain">LRU</span></strong><span class="md-plain">实现的理论中，我们希望的是，在旧键中的第一半将会过期。<span><strong><span class="md-plain">Redis</span></strong><span class="md-plain">的<span><strong><span class="md-plain">LRU</span></strong><span class="md-plain">算法则是概率的过期旧的键。</span></span></span></span></span></span></span></p>
+</li>
+</ul>
+<p class="md-end-block md-p"><span class="md-plain">你可以看到，在都是五个采样的时候Redis 3.0比Redis 2.8要好，Redis2.8中在最后一次访问之间的大多数的对象依然保留着。使用10个采样大小的Redis 3.0的近似值已经非常接近理论的性能。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">注意LRU只是个预测键将如何被访问的模型。另外，如果你的数据访问模式非常接近幂定律，大部分的访问将集中在一个键的集合中，LRU的近似算法将处理得很好。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">其实在大家熟悉的<span><strong><span class="md-plain">LinkedHashMap</span></strong><span class="md-plain">中也实现了Lru算法的，实现如下：</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaqXulcrGX9Zb8wNWGWDnL0UUh0DdQGefVsibOOC4p4h9mowkKz8gBSOjQ/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"><img alt="img" loading="lazy" src="/images/cnblogs/ad786fd7d040f28d.webp"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">当容量超过100时，开始执行<span><strong><span class="md-plain">LRU</span></strong><span class="md-plain">策略：将最近最少未使用的 <span><strong><span class="md-plain">TimeoutInfoHolder</span></strong><span class="md-plain"> 对象 <span><strong><span class="md-plain">evict</span></strong><span class="md-plain"> 掉。</span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">真实面试中会让你写LUR算法，你可别搞原始的那个，那真TM多，写不完的，你要么怼上面这个，要么怼下面这个，找一个数据结构实现下Java版本的LRU还是比较容易的，知道啥原理就好了。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaqTqoQmnM3mySKvBNrFr4U6R70kDkv4nVlQrW1VL5bPibQzfNYEC6cZqA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"><img alt="img" loading="lazy" src="/images/cnblogs/8fcc0298e207559f.webp"/></span></p>
+<p><span class="md-image md-img-loaded" data-src="https://mmbiz.qpic.cn/mmbiz_jpg/uChmeeX1Fpw3kedn8KYhTFdutS1fDAiaqTqoQmnM3mySKvBNrFr4U6R70kDkv4nVlQrW1VL5bPibQzfNYEC6cZqA/640?wx_fmt=jpeg&amp;tp=webp&amp;wxfrom=5&amp;wx_lazy=1&amp;wx_co=1"> </span></p>
+{% endraw %}

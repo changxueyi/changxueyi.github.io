@@ -1,0 +1,241 @@
+---
+title: "python 实现异步编程, 核心模块asyncio、aiohttp、gevent"
+date: 2023-10-25 16:57:00 +0800
+tags: ["【Python】Python基础"]
+excerpt: "asyncio、aiohttp、gevent模块 文章目录 asyncio、aiohttp、gevent模块 概述 基础示例 核心解析 创建 task 绑定回调函数 await 挂起耗时操作 aiohttp 网络访问 并发访问 多进程配合 关闭协程 同类型 gevent 模块 概述在Python3."
+read_minutes: 6
+cnblogs_id: 17787647
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/17787647.html"
+---
+{% raw %}
+<ul>
+<li>asyncio、aiohttp、gevent模块</li>
+<li>文章目录</li>
+<li>asyncio、aiohttp、gevent模块</li>
+<li>概述</li>
+<li>基础示例</li>
+<li>核心解析</li>
+<li>创建 task</li>
+<li>绑定回调函数</li>
+<li>await 挂起耗时操作</li>
+<li>aiohttp 网络访问</li>
+<li>并发访问</li>
+<li>多进程配合</li>
+<li>关闭协程</li>
+<li>同类型 gevent 模块</li>
+</ul>
+<p><br/>概述<br/>在Python3.6后，可以通过关键词async def来定义一个coroutine协程，协程就相当于未来需要完成的任务，多个协程就是多个需要完成的任务，多个协程可以进一步封装到一个task对象中，task就是一个储存任务的盒子。此时，装在盒子里的任务并没有真正的运行，需要把它接入到一个监视器中使它运行，同时监视器还要持续不断的盯着盒子里的任务运行到了哪一步，这个持续不断的监视器就用一个循环对象loop来实现。 原话链接 单来说在一个线程里，先后执行 AB 两个任务，但是当A遇到耗时操作（网络等待、文件读写等），这个时候 gevent 会让 A 继续执行，但是同时也会开始执行B任务，如果B在遇到耗时操作同时A又执行完了耗时操作</p>
+<p>基础示例</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">import</span><span style="color: #000000;"> asyncio
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">定义第1个协程，协程就是将要具体完成的任务，该任务耗时3秒，完成后显示任务完成</span>
+async <span style="color: #0000ff;">def</span><span style="color: #000000;"> to_do_something(i):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">第{}个任务：任务启动...</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(i))
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">遇到耗时的操作，await就会使任务挂起，继续去完成下一个任务</span>
+<span style="color: #000000;">    await asyncio.sleep(i)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">第{}个任务：任务完成！</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(i))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">定义第2个协程，用于通知任务进行状态</span>
+async <span style="color: #0000ff;">def</span><span style="color: #000000;"> mission_running():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">任务正在执行...</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+start </span>=<span style="color: #000000;"> time.time()
+</span><span style="color: #008000;">#</span><span style="color: #008000;">创建一个循环</span>
+loop =<span style="color: #000000;"> asyncio.get_event_loop()
+</span><span style="color: #008000;">#</span><span style="color: #008000;">创建一个任务盒子tasks，包含了3个需要完成的任务</span>
+tasks = [asyncio.ensure_future(to_do_something(1<span style="color: #000000;">)),
+         asyncio.ensure_future(to_do_something(</span>2<span style="color: #000000;">)),
+         asyncio.ensure_future(mission_running())]
+</span><span style="color: #008000;">#</span><span style="color: #008000;">tasks接入loop中开始运行</span>
+<span style="color: #000000;">loop.run_until_complete(asyncio.wait(tasks))
+end </span>=<span style="color: #000000;"> time.time()
+</span><span style="color: #0000ff;">print</span>(end-start)</pre>
+</div>
+<p> </p>
+<p>代码注释</p>
+<ol>
+<li>启动入口 asyncio.run()</li>
+<li>并发运行asyncio任务 asyncio.create_task()</li>
+<li>并发运行asyncio任务 asyncio.gather()</li>
+<li>等待对象 await</li>
+<li>休眠 asyncio.sleep() 挂起当前任务，允许允许其他任务</li>
+</ol>
+<p>核心解析</p>
+<ol>
+<li> event_loop 事件循环 理解为一个循环的池，里面存放一些async关键词定义的协程函数，只有放到循环池里才能执行。</li>
+<li> coroutine 协程：协程对象，指一个使用async关键字定义的函数，它的调用不会立即执行函数，而是会返回一个协程对象。协程对象需要注册到事件循环，由事件循环调用。</li>
+<li> task 任务：一个协程对象就是一个原生可以挂起的函数，任务则是对协程进一步封装，其中包含任务的各种状态。</li>
+<li> future：代表将来执行或没有执行的任务的结果。它和task上没有本质的区别。</li>
+<li> async/await 关键字：python3.5 用于定义协程的关键字，async定义一个协程，await用于挂起阻塞的异步调用接口。</li>
+</ol>
+<p>简单使用</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">import asyncio
+
+async def do_some_work(x):  # 使用async关键字定义协程
+    print('Waiting: ', x)
+
+coroutine = do_some_work(2)  # 创建协程对象
+loop = asyncio.get_event_loop()  # 创建一个事件循环（池）
+loop.run_until_complete(coroutine)  # 将协程对象包装并注册协程对象
+</pre>
+</div>
+<p>　　</p>
+<p> </p>
+<p>创建 task<br/>协程对象不能直接运行，需要包装成任务才能运行，上面是通过run_until_complete()方法包装成task（隐式包装），还有下面两种方式进行显式包装：</p>
+<ol>
+<li> task = asyncio.ensure_future(coroutine)</li>
+<li> task = loop.create_task(coroutine)</li>
+</ol>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">import</span><span style="color: #000000;"> time, asyncio
+
+_now </span>= <span style="color: #0000ff;">lambda</span><span style="color: #000000;">: time.time()
+
+async </span><span style="color: #0000ff;">def</span> work(x):  <span style="color: #008000;">#</span><span style="color: #008000;"> 使用async关键字定义协程</span>
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">Waiting: </span><span style="color: #800000;">'</span><span style="color: #000000;">, x)
+
+cor </span>= work(<span style="color: #800000;">'</span><span style="color: #800000;">hi</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+start </span>=<span style="color: #000000;"> _now()
+loop </span>=<span style="color: #000000;"> asyncio.get_event_loop()
+task </span>= loop.create_task(cor)  <span style="color: #008000;">#</span><span style="color: #008000;"> 方法1</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> task = asyncio.ensure_future(cor)  # 方法2</span>
+<span style="color: #000000;">loop.run_until_complete(task)
+</span><span style="color: #0000ff;">print</span>(_now()-start)</pre>
+</div>
+<p> </p>
+<p> </p>
+<p>创建 task 后</p>
+<p>task 在加入事件循环前十 pending 状态<br/>加入 loop 后运行中是 running 状态<br/>loop 调用完是 Done 状态<br/>运行完是 finished 状态<br/>task 显性包装相比隐性包装有了协程函数的状态</p>
+<p>loop.run_until_complete() 接收 future 参数，指协程函数 task是future的子类</p>
+<p>绑定回调函数<br/>通过 task 的 task.add_done_callback(callback) 绑定回调函数，接收一个 future 对象参数如 task，在内部通过 future.result() 获取其返回值</p>
+<p> </p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">import</span><span style="color: #000000;"> asyncio
+
+async </span><span style="color: #0000ff;">def</span> work(x):  <span style="color: #008000;">#</span><span style="color: #008000;"> 使用async关键字定义协程</span>
+    <span style="color: #0000ff;">return</span> x+3
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> callback(y):
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(y.result())
+
+cor </span>= work(5<span style="color: #000000;">)
+loop </span>=<span style="color: #000000;"> asyncio.get_event_loop()
+task </span>= loop.create_task(cor)  <span style="color: #008000;">#</span><span style="color: #008000;"> 方法1</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> task = asyncio.ensure_future(cor)  # 方法2</span>
+task.add_done_callback(callback)  <span style="color: #008000;">#</span><span style="color: #008000;"> 绑定回调函数</span>
+loop.run_until_complete(task)  <span style="color: #008000;">#</span><span style="color: #008000;"> 运行</span></pre>
+</div>
+<p> </p>
+<p>await 挂起耗时操作<br/>task 对象是顺序执行的， 因为在异步中没有声明哪些是耗时操作，所以会顺序执行，await作用就是提示哪些是耗时操作，可以对耗时操作进行挂起。</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">import</span><span style="color: #000000;"> asyncio
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test():
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> time.sleep(1)  # 传统顺序执行</span>
+    await asyncio.sleep(1)  <span style="color: #008000;">#</span><span style="color: #008000;"> 开启异步执行</span>
+    <span style="color: #0000ff;">print</span><span style="color: #000000;">(time.time())
+
+tasks </span>= [asyncio.ensure_future(test()) <span style="color: #0000ff;">for</span> _ <span style="color: #0000ff;">in</span> range(3<span style="color: #000000;">)]
+loop </span>=<span style="color: #000000;"> asyncio.get_event_loop()
+loop.run_until_complete(asyncio.wait(tasks))</span></pre>
+</div>
+<p> </p>
+<p>传统执行的情况下，会阻塞顺序执行。 开启await挂起耗时操作的情况下会异步执行</p>
+<p>aiohttp 网络访问<br/>文档在此 不懂就查</p>
+<p>pip3 install aiohttp</p>
+<p>使用案例,连续访问100次百度只需要一秒不到</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">import</span><span style="color: #000000;"> aiohttp, asyncio, time
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(response)
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> request():
+    url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    resulit </span>=<span style="color: #000000;"> await get(url)
+
+_now </span>= <span style="color: #0000ff;">lambda</span><span style="color: #000000;"> : time.time()
+start </span>=<span style="color: #000000;"> _now()
+tasks </span>= [asyncio.ensure_future(request()) <span style="color: #0000ff;">for</span> _ <span style="color: #0000ff;">in</span> range(100<span style="color: #000000;">)]
+
+loop </span>=<span style="color: #000000;"> asyncio.get_event_loop()
+loop.run_until_complete(asyncio.wait(tasks))
+</span><span style="color: #0000ff;">print</span>(_now()-start)</pre>
+</div>
+<p> </p>
+<p>并发访问</p>
+<ol>
+<li>loop.run_until_complete(syncio.wait(tasks)) 来实现协程并发，传入 task列表</li>
+<li>*loop.run_until_complete(asyncio.gather(tasks)) asyncio.gather 会将列表中不是 task 的 coro 预先封装为 future, 而 wait 则不会。</li>
+</ol>
+<p>两种方法效果相同，但是 wait 核 gather 返回值不同</p>
+<p>多进程配合<br/>如果这也满足不了你，你可以开启多进程配合使用,asyncio、aiohttp需要配合aiomultiprocess库使用，版本要求至少3.6</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">import</span><span style="color: #000000;"> asyncio
+</span><span style="color: #0000ff;">from</span> aiohttp <span style="color: #0000ff;">import</span><span style="color: #000000;"> request
+</span><span style="color: #0000ff;">from</span> aiomultiprocess <span style="color: #0000ff;">import</span><span style="color: #000000;"> Process
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> put(url, params):
+    async with request(</span><span style="color: #800000;">"</span><span style="color: #800000;">PUT</span><span style="color: #800000;">"</span>, url, params=<span style="color: #000000;">params) as response:
+        </span><span style="color: #0000ff;">pass</span><span style="color: #000000;">
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    p </span>= Process(target=put, args=(<span style="color: #800000;">"</span><span style="color: #800000;">https://jreese.sh</span><span style="color: #800000;">"</span><span style="color: #000000;">, ))
+    await p
+
+asyncio.run(main())
+If you want to get results back </span><span style="color: #0000ff;">from</span><span style="color: #000000;"> that coroutine, Worker makes that available:
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> asyncio
+</span><span style="color: #0000ff;">from</span> aiohttp <span style="color: #0000ff;">import</span><span style="color: #000000;"> request
+</span><span style="color: #0000ff;">from</span> aiomultiprocess <span style="color: #0000ff;">import</span><span style="color: #000000;"> Worker
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(url):
+    async with request(</span><span style="color: #800000;">"</span><span style="color: #800000;">GET</span><span style="color: #800000;">"</span><span style="color: #000000;">, url) as response:
+        </span><span style="color: #0000ff;">return</span> await response.text(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    p </span>= Worker(target=get, args=(<span style="color: #800000;">"</span><span style="color: #800000;">https://jreese.sh</span><span style="color: #800000;">"</span><span style="color: #000000;">, ))
+    response </span>=<span style="color: #000000;"> await p
+
+asyncio.run(main())
+If you want a managed pool of worker processes, then use Pool:
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> asyncio
+</span><span style="color: #0000ff;">from</span> aiohttp <span style="color: #0000ff;">import</span><span style="color: #000000;"> request
+</span><span style="color: #0000ff;">from</span> aiomultiprocess <span style="color: #0000ff;">import</span><span style="color: #000000;"> Pool
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(url):
+    async with request(</span><span style="color: #800000;">"</span><span style="color: #800000;">GET</span><span style="color: #800000;">"</span><span style="color: #000000;">, url) as response:
+        </span><span style="color: #0000ff;">return</span> await response.text(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+async </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    urls </span>= [<span style="color: #800000;">"</span><span style="color: #800000;">https://jreese.sh</span><span style="color: #800000;">"</span><span style="color: #000000;">, ...]
+    async with Pool() as pool:
+        result </span>=<span style="color: #000000;"> await pool.map(get, urls)
+
+asyncio.run(main())</span></pre>
+</div>
+<p> </p>
+<ul>
+<li>关闭协程</li>
+<li> 关闭单个 task</li>
+<li> 关闭 loop</li>
+<li>具体涉及函数</li>
+</ul>
+<ol>
+<li>asyncio.Task.all_tasks() 获取事件循环任务列表</li>
+<li>KeyboardInterrupt 捕获停止异常（Ctrl+C）</li>
+<li>loop.stop() 停止任务循环</li>
+<li>task.cancel() 取消单个任务</li>
+<li>loop.run_forever()</li>
+<li>loop.close() 关闭事件循环，不然会重启</li>
+</ol>
+<p>同类型 gevent 模块<br/>python程序实现的一种单线程下的多任务执行调度器，简单来说在一个线程里，先后执行 AB 两个任务，但是当A遇到耗时操作（网络等待、文件读写等），这个时候 gevent 会让 A 继续执行，但是同时也会开始执行B任务，如果B在遇到耗时操作同时A又执行完了耗时操作，gevent 又继续执行 A。 这里是我gevent使用Demo</p>
+<div id="gtx-trans" style="position: absolute; left: -29px; top: 422.812px;"> </div>
+{% endraw %}

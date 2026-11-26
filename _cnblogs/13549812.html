@@ -1,0 +1,249 @@
+---
+title: "mybatis 详细学习记录"
+date: 2020-08-23 17:29:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "MyBatis是什么？ MyBatis 本是apache的一个开源项目iBatis, 2010年这个项目由apache software foundation 迁移到了google code，并且改名为MyBatis，实质上Mybatis对ibatis进行一些改进。 目前mybatis在github"
+read_minutes: 6
+cnblogs_id: 13549812
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13549812.html"
+tags_inferred: true
+---
+{% raw %}
+<p><strong>MyBatis是什么？</strong></p>
+<p> MyBatis 本是apache的一个开源项目iBatis, 2010年这个项目由apache software foundation 迁移到了google code，并且改名为MyBatis，实质上Mybatis对ibatis进行一些改进。 目前mybatis在github上托管。  git（分布式版本控制，当前比较流程）<br/>　　MyBatis是一个优秀的持久层框架，它对jdbc的操作数据库的过程进行封装，使开发者只需要关注 SQL 本身，而不需要花费精力去处理例如注册驱动、创建connection、创建statement、手动设置参数、结果集检索等jdbc繁杂的过程代码。<br/>　　Mybatis通过xml或注解的方式将要执行的各种statement（statement、preparedStatemnt、CallableStatement）配置起来，并通过java对象和statement中的sql进行映射生成最终执行的sql语句，最后由mybatis框架执行sql并将结果映射成java对象并返回。</p>
+<p> <strong>mybatis架构</strong></p>
+<p><img alt="" height="766" loading="lazy" src="/images/cnblogs/fbdb27b592b42500.png" width="761"/></p>
+<p><strong>搭建开发环境</strong></p>
+<p><strong>(1)导包</strong></p>
+<p><strong><img alt="" loading="lazy" src="/images/cnblogs/93543cb9c3b75d83.jpg"/></strong></p>
+<p><strong>(2)导入配置文件</strong></p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/a38c2744230016d5.jpg"/></p>
+<p>这里我在工程文件下新建了一个和src平级的文件,把有关mybatis配置文件和src文件分离,看去界面更加清晰,因为在ssh开发中你肯定还要配置其它配置文件</p>
+<p>这里的log4j.properties主要是为了在后台输出是更加看的清楚执行流程,这个可要可不要.</p>
+<p><strong>(3)配需相关文件属性</strong></p>
+<p>  User.xml</p>
+<div class="cnblogs_code">
+
+<pre>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd"&gt;
+&lt;!-- namespace命名空间，为了对sql语句进行隔离，方便管理 ，mapper开发dao方式，使用namespace有特殊作用 --&gt;
+&lt;mapper namespace="test"&gt;
+&lt;!-- 在mapper.xml文件中配置很多的sql语句，执行每个sql语句时，封装为MappedStatement对象
+mapper.xml以statement为单位管理sql语句
+ --&gt;
+    &lt;!-- 根据id查询用户信息 --&gt;
+    &lt;!-- 
+        id：唯一标识 一个statement
+        #{}：表示 一个占位符，如果#{}中传入简单类型的参数，#{}中的名称随意
+        parameterType：输入 参数的类型，通过#{}接收parameterType输入 的参数
+        resultType：输出结果 类型，不管返回是多条还是单条，指定单条记录映射的pojo类型
+     --&gt;
+    &lt;select id="findUserById" parameterType="int" resultType="com.study.model.User"&gt;
+        SELECT * FROM USER WHERE id= #{id}
+    &lt;/select&gt;
+    
+    &lt;!-- 根据用户名称查询用户信息，可能返回多条
+    ${}：表示sql的拼接，通过${}接收参数，将参数的内容不加任何修饰拼接在sql中。
+     --&gt;
+    &lt;select id="findUserByName" parameterType="java.lang.String" resultType="com.study.model.User"&gt;
+        select * from user where username like '%${value}%'
+    &lt;/select&gt;
+    
+    &lt;!-- 添加用户
+    parameterType：输入 参数的类型，User对象 包括 username,birthday,sex,address
+    #{}接收pojo数据，可以使用OGNL解析出pojo的属性值
+    #{username}表示从parameterType中获取pojo的属性值
+    selectKey：用于进行主键返回，定义了获取主键值的sql
+    order：设置selectKey中sql执行的顺序，相对于insert语句来说
+    keyProperty：将主键值设置到哪个属性
+    resultType：select LAST_INSERT_ID()的结果 类型
+     --&gt;
+    &lt;insert id="insertUser" parameterType="com.study.model.User"&gt;
+        &lt;selectKey keyProperty="id" order="AFTER" resultType="int"&gt;
+            select LAST_INSERT_ID()
+        &lt;/selectKey&gt;
+        INSERT INTO USER(username,birthday,sex,address) VALUES(#{username},#{birthday},#{sex},#{address})
+    &lt;/insert&gt;
+    
+    &lt;!-- 用户删除  --&gt;
+    &lt;delete id="deleteUser" parameterType="int"&gt;
+     delete from user where id=#{id}
+    &lt;/delete&gt;
+    &lt;!-- 用户更新 
+    要求：传入的user对象中包括 id属性值
+    --&gt;
+    &lt;update id="updateUser" parameterType="com.study.model.User"&gt;
+        update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id=#{id}
+    &lt;/update&gt;
+&lt;/mapper&gt;</pre>
+
+</div>
+<p>SqlMapConfig.xml</p>
+<div class="cnblogs_code">
+
+<pre>&lt;!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd"&gt;
+&lt;configuration&gt;
+    &lt;!-- 和spring整合后 environments配置将废除--&gt;
+    &lt;environments default="development"&gt;
+        &lt;environment id="development"&gt;
+        &lt;!-- 使用jdbc事务管理--&gt;
+            &lt;transactionManager type="JDBC" /&gt;
+        &lt;!-- 数据库连接池--&gt;
+            &lt;dataSource type="POOLED"&gt;
+                &lt;property name="driver" value="com.mysql.jdbc.Driver" /&gt;
+                &lt;property name="url" value="jdbc:mysql://localhost:3306/mybatis?characterEncoding=utf-8" /&gt;
+                &lt;property name="username" value="root" /&gt;
+                &lt;property name="password" value="root" /&gt;
+            &lt;/dataSource&gt;
+        &lt;/environment&gt;
+    &lt;/environments&gt;
+    &lt;!-- 加载mapper.xml --&gt;
+    &lt;mappers&gt;
+        &lt;mapper resource="sqlmap/User.xml" /&gt;
+    &lt;/mappers&gt;
+&lt;/configuration&gt;</pre>
+
+</div>
+<p>User.java</p>
+<div class="cnblogs_code">
+
+<pre>public class User {
+    private int id;
+    private String username;// 用户姓名
+    private String sex;// 性别
+    private Date birthday;// 生日
+    private String address;// 地址
+   /*
+    *提供set和get方法，和toString方法
+    *
+    */
+}</pre>
+
+</div>
+<pre>MybatisFirst 测试类，进行增删改查</pre>
+<div class="cnblogs_code">
+
+<pre>import java.io.IOException;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.guigu.model.User;
+
+public class MybatisFirst {
+    // 会话工厂
+    private SqlSessionFactory sqlSessionFactory;
+    // 创建工厂
+    @Before  //before在text标签之前执行，所以会创建好sqlSessionFactory对象
+    public void init() throws IOException {
+        // 配置文件（SqlMapConfig.xml）
+        String resource = "SqlMapConfig.xml";
+        // 加载配置文件到输入 流
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        // 创建会话工厂
+        sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+    }
+   
+    
+    // 根据id查询用户(得到单条记录)
+    @Test
+    public void testFindUserById() {
+        // 通过sqlSessionFactory创建sqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        // 通过sqlSession操作数据库
+        // 第一个参数：statement的位置，等于namespace+statement的id
+        // 第二个参数：传入的参数
+        User user = sqlSession.selectOne("test.findUserById", 16);
+       
+            sqlSession.close();
+        
+        System.out.println(user);
+    }
+
+    // 模糊查询(可能是单条也可能是多条)
+    @Test
+    public void testFindUserByName() {
+        // 通过sqlSessionFactory创建sqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+       
+        //selectList代表着返回是list集合
+        List&lt;User&gt;  list = sqlSession.selectList("test.findUserByName", "小明");
+      
+            sqlSession.close();
+     
+        System.out.println(list.get(0).getUsername());
+    }
+
+    // 添加用户
+    @Test
+    public void testInsertUser() {
+        // 通过sqlSessionFactory创建sqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+     
+        User user = new User();
+        user.setUsername("小小徐");
+        user.setAddress("杭州市余杭区未来科技城");
+        user.setBirthday(new Date());
+        user.setSex("1");
+           //insert代表插入
+            sqlSession.insert("test.insertUser", user);
+ 
+            //查看是不需要提交事物的，但是插入和修改是需要提交事物的
+            sqlSession.commit();
+            sqlSession.close();
+           //这里输出的id竟然是0，有哪位大神解释下吗？
+        System.out.println("用户的id=" + user.getId());
+    }<br/> 
+    // 根据id删除用户
+    @Test
+    public void testDeleteUser() {
+        // 通过sqlSessionFactory创建sqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+        // delete代表删除用户
+    
+            sqlSession.delete("test.deleteUser", 29);
+            sqlSession.commit();
+      
+            sqlSession.close();
+        }
+
+ 
+    // 根据id更新用户
+    @Test
+    public void testUpdateUser() {
+        // 通过sqlSessionFactory创建sqlSession
+        SqlSession sqlSession = sqlSessionFactory.openSession();
+       
+        // 创建更新数据对象，要求必须包括 id
+        User user = new User();
+        user.setId(40);
+        user.setUsername("小小钟");
+        user.setAddress("杭州余杭区东西大道");
+        //user.setBirthday(new Date());
+        user.setSex("1");
+        //update更新数据
+            sqlSession.update("test.updateUser", user);
+          
+            sqlSession.commit();
+      
+            sqlSession.close();
+        System.out.println("用户的id=" + user.getId());
+    }
+}</pre>
+
+</div>
+<p><strong>mybatis与hibernate重要区别 </strong></p>
+<p><strong>　　</strong>企业开发进行技术选型 ，考虑mybatis与hibernate适用场景。<br/>　　　　mybatis：入门简单，程序容易上手开发，节省开发成本 。mybatis需要程序员自己编写sql语句，是一个不完全 的ORM框架，对sql修改和优化非常容易实现 。<br/>　　　　　　mybatis适合开发需求变更频繁的系统，比如：互联网项目。<br/>　　　　hibernate：入门门槛高，如果用hibernate写出高性能的程序不容易实现。hibernate不用写sql语句，是一个 ORM框架。<br/>　　　　　　hibernate适合需求固定，对象数据模型稳定，中小型项目，比如：企业OA系统。<br/>　　总之，企业在技术选型时根据项目实际情况，以降低成本和提高系统 可维护性为出发点进行技术选型。<br/><strong>总结</strong><br/><strong>　　SqlMapConfig.xml</strong><br/><strong>　　　　是mybatis全局配置文件，只有一个，名称不固定的，主要mapper.xml，mapper.xml中配置 sql语句</strong><br/><strong>　　mapper.xml</strong><br/><strong>　　　　mapper.xml是以statement为单位进行配置。（把一个sql称为一个statement），satatement中配置 sql语句、parameterType输入参数类型（完成输入映射）、resultType输出结果类型（完成输出映射）。<strong>还提供了parameterMap配置输入参数类型（过期了，不推荐使用了）,<strong>还提供resultMap配置输出结果类型（完成输出映射）</strong></strong></strong><br/><strong>　　#{}</strong><br/><strong>　　　　表示一个占位符，向占位符输入参数，mybatis自动进行java类型和jdbc类型的转换。<strong>程序员不需要考虑参数的类型，比如：传入字符串，mybatis最终拼接好的sql就是参数两边加单引号。<strong>#{}接收pojo数据，可以使用OGNL解析出pojo的属性值</strong></strong></strong><br/><strong>　　${}</strong><br/><strong>　　　　表示sql的拼接，通过${}接收参数，将参数的内容不加任何修饰拼接在sql中。<strong>${}也可以接收pojo数据，可以使用OGNL解析出pojo的属性值</strong></strong><br/><strong>　　　　缺点：不能防止sql注入。</strong><br/><strong>　　selectOne</strong><br/><strong>　　　　用于查询单条记录，不能用于查询多条记录，否则异常：</strong><br/><strong>　　　　　　org.apache.ibatis.exceptions.TooManyResultsException: Expected one result (or null) to be returned by selectOne(), but found: 4</strong><br/><strong>　　selectList</strong><br/><strong>　　　　用于查询多条记录，可以用于查询单条记录的。</strong></p>
+<p><a href="https://www.cnblogs.com/qdhxhz/p/6490088.html" target="_blank"><strong>以上为雨点的声音原创</strong></a></p>
+{% endraw %}

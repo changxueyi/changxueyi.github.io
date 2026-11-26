@@ -1,0 +1,281 @@
+---
+title: "Spring常用的三种注入方式"
+date: 2020-05-12 09:33:00 +0800
+tags: ["【框架】-- Spring"]
+excerpt: "Spring通过DI（依赖注入）实现IOC（控制反转），常用的注入方式主要有三种：构造方法注入，setter注入，基于注解的注入。 构造方法注入 先简单了解一下测试项目的结构，用maven构建的，四个包： entity：存储实体，里面只有一个User类 dao：数据访问，一个接口，两个实现类 ser"
+read_minutes: 7
+cnblogs_id: 12874273
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12874273.html"
+---
+{% raw %}
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">Spring通过DI（依赖注入）实现IOC（控制反转），常用的注入方式主要有三种：构造方法注入，setter注入，基于注解的注入。
+
+构造方法注入
+先简单了解一下测试项目的结构，用maven构建的，四个包：
+
+entity：存储实体，里面只有一个User类
+dao：数据访问，一个接口，两个实现类
+service：服务层，一个接口，一个实现类，实现类依赖于IUserDao
+test：测试包
+在spring的配置文件中注册UserService，将UserDaoJdbc通过constructor</span>-<span style="color: #000000;">arg标签注入到UserService的某个有参数的构造方法
+
+</span>&lt;!-- 注册userService --&gt;
+&lt;bean id=<span style="color: #800000;">"</span><span style="color: #800000;">userService</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">com.lyu.spring.service.impl.UserService</span><span style="color: #800000;">"</span>&gt;
+&lt;constructor-arg <span style="color: #0000ff;">ref</span>=<span style="color: #800000;">"</span><span style="color: #800000;">userDaoJdbc</span><span style="color: #800000;">"</span>&gt;&lt;/constructor-arg&gt;
+&lt;/bean&gt;
+&lt;!-- 注册jdbc实现的dao --&gt;
+&lt;bean id=<span style="color: #800000;">"</span><span style="color: #800000;">userDaoJdbc</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">com.lyu.spring.dao.impl.UserDaoJdbc</span><span style="color: #800000;">"</span>&gt;&lt;/bean&gt;
+<span style="color: #000000;">
+如果只有一个有参数的构造方法并且参数类型与注入的bean的类型匹配，那就会注入到该构造方法中。
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> UserService implements IUserService {
+
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> IUserDao userDao;
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(IUserDao userDao) {
+</span><span style="color: #0000ff;">this</span>.userDao =<span style="color: #000000;"> userDao;
+}
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> loginUser() {
+userDao.loginUser();
+}
+
+}
+</span><span style="color: #000000;">
+@Test
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> testDI() {
+ApplicationContext ac </span>= <span style="color: #0000ff;">new</span> ClassPathXmlApplicationContext(<span style="color: #800000;">"</span><span style="color: #800000;">applicationContext.xml</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 获取bean对象</span>
+UserService userService = ac.getBean(UserService.<span style="color: #0000ff;">class</span>, <span style="color: #800000;">"</span><span style="color: #800000;">userService</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 模拟用户登录</span>
+<span style="color: #000000;">userService.loginUser();
+}
+</span><span style="color: #000000;">
+测试打印结果：jdbc</span>-<span style="color: #000000;">登录成功
+
+注：模拟用户登录的loginUser方法其实只是打印了一条输出语句，jdbc实现的类输出的是：jdbc</span>-登录成功，mybatis实现的类输出的是：mybatis-<span style="color: #000000;">登录成功。
+
+问题一：如果有多个有参数的构造方法并且每个构造方法的参数列表里面都有要注入的属性，那userDaoJdbc会注入到哪里呢？
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> UserService implements IUserService {
+
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> IUserDao userDao;
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> User user;
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(IUserDao userDao) {
+System.</span><span style="color: #0000ff;">out</span>.println(<span style="color: #800000;">"</span><span style="color: #800000;">这是有一个参数的构造方法</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+</span><span style="color: #0000ff;">this</span>.userDao =<span style="color: #000000;"> userDao;
+}
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(IUserDao userDao, User user) {
+System.</span><span style="color: #0000ff;">out</span>.println(<span style="color: #800000;">"</span><span style="color: #800000;">这是有两个参数的构造方法</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+</span><span style="color: #0000ff;">this</span>.userDao =<span style="color: #000000;"> userDao;
+</span><span style="color: #0000ff;">this</span>.user =<span style="color: #000000;"> user;
+}
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> loginUser() {
+userDao.loginUser();
+}
+
+}
+</span><span style="color: #000000;">
+结果：会注入到只有一个参数的构造方法中，并且经过测试注入哪一个构造方法与构造方法的顺序无关
+
+ 
+
+问题二：如果只有一个构造方法，但是有两个参数，一个是待注入的参数，另一个是其他类型的参数，那么这次注入可以成功吗？
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> UserService implements IUserService {
+
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> IUserDao userDao;
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> User user;
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(IUserDao userDao, User user) {
+</span><span style="color: #0000ff;">this</span>.userDao =<span style="color: #000000;"> userDao;
+</span><span style="color: #0000ff;">this</span>.user =<span style="color: #000000;"> user;
+}
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> loginUser() {
+userDao.loginUser();
+}
+
+}
+</span><span style="color: #000000;">
+结果：失败了，即使在costract</span>-<span style="color: #000000;">arg标签里面通过name属性指定要注入的参数名userDao也会失败.
+
+ 
+
+问题三：如果我们想向有多个参数的构造方法中注入值该在配置文件中怎么写呢？
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> UserService implements IUserService {
+
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> IUserDao userDao;
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> User user;
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(IUserDao userDao, User user) {
+</span><span style="color: #0000ff;">this</span>.userDao =<span style="color: #000000;"> userDao;
+</span><span style="color: #0000ff;">this</span>.user =<span style="color: #000000;"> user;
+}
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> loginUser() {
+userDao.loginUser();
+}
+
+}
+</span><span style="color: #000000;">
+参考写法：通过name属性指定要注入的值，与构造方法参数列表参数的顺序无关。
+
+</span>&lt;!-- 注册userService --&gt;
+&lt;bean id=<span style="color: #800000;">"</span><span style="color: #800000;">userService</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">com.lyu.spring.service.impl.UserService</span><span style="color: #800000;">"</span>&gt;
+&lt;constructor-arg name=<span style="color: #800000;">"</span><span style="color: #800000;">userDao</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">ref</span>=<span style="color: #800000;">"</span><span style="color: #800000;">userDaoJdbc</span><span style="color: #800000;">"</span>&gt;&lt;/constructor-arg&gt;
+&lt;constructor-arg name=<span style="color: #800000;">"</span><span style="color: #800000;">user</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">ref</span>=<span style="color: #800000;">"</span><span style="color: #800000;">user</span><span style="color: #800000;">"</span>&gt;&lt;/constructor-arg&gt;
+&lt;/bean&gt;
+
+&lt;!-- 注册实体User类，用于测试 --&gt;
+&lt;bean id=<span style="color: #800000;">"</span><span style="color: #800000;">user</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">com.lyu.spring.entity.User</span><span style="color: #800000;">"</span>&gt;&lt;/bean&gt;
+
+&lt;!-- 注册jdbc实现的dao --&gt;
+&lt;bean id=<span style="color: #800000;">"</span><span style="color: #800000;">userDaoJdbc</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">com.lyu.spring.dao.impl.UserDaoJdbc</span><span style="color: #800000;">"</span>&gt;&lt;/bean&gt;
+<span style="color: #000000;">
+问题四：如果有多个构造方法，每个构造方法只有参数的顺序不同，那通过构造方法注入多个参数会注入到哪一个呢？
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> UserService implements IUserService {
+
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> IUserDao userDao;
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> User user;
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(IUserDao userDao, User user) {
+System.</span><span style="color: #0000ff;">out</span>.println(<span style="color: #800000;">"</span><span style="color: #800000;">这是第二个构造方法</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+</span><span style="color: #0000ff;">this</span>.userDao =<span style="color: #000000;"> userDao;
+</span><span style="color: #0000ff;">this</span>.user =<span style="color: #000000;"> user;
+}
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(User user, IUserDao userDao) {
+System.</span><span style="color: #0000ff;">out</span>.println(<span style="color: #800000;">"</span><span style="color: #800000;">这是第一个构造方法</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+</span><span style="color: #0000ff;">this</span>.userDao =<span style="color: #000000;"> userDao;
+</span><span style="color: #0000ff;">this</span>.user =<span style="color: #000000;"> user;
+}
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> loginUser() {
+userDao.loginUser();
+}
+
+}
+</span><span style="color: #000000;">
+结果：哪个构造方法在前就注入哪一个，这种情况下就与构造方法顺序有关。
+
+ 
+
+setter注入
+配置文件如下：
+</span>&lt;!-- 注册userService --&gt;
+&lt;bean id=<span style="color: #800000;">"</span><span style="color: #800000;">userService</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">com.lyu.spring.service.impl.UserService</span><span style="color: #800000;">"</span>&gt;
+&lt;!-- 写法一 --&gt;
+&lt;!-- &lt;property name=<span style="color: #800000;">"</span><span style="color: #800000;">UserDao</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">ref</span>=<span style="color: #800000;">"</span><span style="color: #800000;">userDaoMyBatis</span><span style="color: #800000;">"</span>&gt;&lt;/property&gt; --&gt;
+&lt;!-- 写法二 --&gt;
+&lt;property name=<span style="color: #800000;">"</span><span style="color: #800000;">userDao</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">ref</span>=<span style="color: #800000;">"</span><span style="color: #800000;">userDaoMyBatis</span><span style="color: #800000;">"</span>&gt;&lt;/property&gt;
+&lt;/bean&gt;
+
+&lt;!-- 注册mybatis实现的dao --&gt;
+&lt;bean id=<span style="color: #800000;">"</span><span style="color: #800000;">userDaoMyBatis</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">com.lyu.spring.dao.impl.UserDaoMyBatis</span><span style="color: #800000;">"</span>&gt;&lt;/bean&gt;
+<span style="color: #000000;">
+注：上面这两种写法都可以,spring会将name值的每个单词首字母转换成大写，然后再在前面拼接上</span><span style="color: #800000;">"</span><span style="color: #800000;">set</span><span style="color: #800000;">"</span><span style="color: #000000;">构成一个方法名,然后去对应的类中查找该方法,通过反射调用,实现注入。
+
+切记：name属性值与类中的成员变量名以及set方法的参数名都无关，只与对应的set方法名有关，下面的这种写法是可以运行成功的
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> UserService implements IUserService {
+
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> IUserDao userDao1;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setUserDao(IUserDao userDao1) {
+</span><span style="color: #0000ff;">this</span>.userDao1 =<span style="color: #000000;"> userDao1;
+}
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> loginUser() {
+userDao1.loginUser();
+}
+
+</span><span style="color: #000000;">
+还有一点需要注意：如果通过set方法注入属性，那么spring会通过默认的空参构造方法来实例化对象，所以如果在类中写了一个带有参数的构造方法，一定要把空参数的构造方法写上，否则spring没有办法实例化对象，导致报错。
+
+
+基于注解的注入
+在介绍注解注入的方式前，先简单了解bean的一个属性autowire，autowire主要有三个属性值：constructor，byName，byType。
+constructor：通过构造方法进行自动注入，spring会匹配与构造方法参数类型一致的bean进行注入，如果有一个多参数的构造方法，一个只有一个参数的构造方法，在容器中查找到多个匹配多参数构造方法的bean，那么spring会优先将bean注入到多参数的构造方法中。
+
+byName：被注入bean的id名必须与set方法后半截匹配，并且id名称的第一个单词首字母必须小写，这一点与手动set注入有点不同。
+
+byType：查找所有的set方法，将符合符合参数类型的bean注入。
+
+下面进入正题：注解方式注册bean，注入依赖
+
+主要有四种注解可以注册bean，每种注解可以任意使用，只是语义上有所差异：
+
+@Component：可以用于注册所有bean
+@Repository：主要用于注册dao层的bean
+@Controller：主要用于注册控制层的bean
+@Service：主要用于注册服务层的bean
+描述依赖关系主要有两种：
+
+@Resource：java的注解，默认以byName的方式去匹配与属性名相同的bean的id，如果没有找到就会以byType的方式查找，如果byType查找到多个的话，使用@Qualifier注解（spring注解）指定某个具体名称的bean。
+
+@Resource
+@Qualifier(</span><span style="color: #800000;">"</span><span style="color: #800000;">userDaoMyBatis</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> IUserDao userDao;
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserService(){
+
+</span><span style="color: #000000;">
+@Autowired：spring注解，默认是以byType的方式去匹配类型相同的bean，如果只匹配到一个，那么就直接注入该bean，无论要注入的 bean 的 name 是什么；如果匹配到多个，就会调用 DefaultListableBeanFactory 的 determineAutowireCandidate 方法来决定具体注入哪个bean。determineAutowireCandidate 方法的内容如下：
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> candidateBeans 为上一步通过类型匹配到的多个bean，该 Map 中至少有两个元素。</span>
+<span style="color: #0000ff;">protected</span> String determineAutowireCandidate(Map&lt;String, Object&gt;<span style="color: #000000;"> candidateBeans, DependencyDescriptor descriptor) {
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> requiredType 为匹配到的接口的类型</span>
+Class&lt;?&gt; requiredType =<span style="color: #000000;"> descriptor.getDependencyType();
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 1. 先找 Bean 上有@Primary 注解的，有则直接返回</span>
+String primaryCandidate = <span style="color: #0000ff;">this</span><span style="color: #000000;">.determinePrimaryCandidate(candidateBeans, requiredType);
+</span><span style="color: #0000ff;">if</span> (primaryCandidate != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> primaryCandidate;
+} </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.再找 Bean 上有 @Order，@PriorityOrder 注解的，有则返回</span>
+String priorityCandidate = <span style="color: #0000ff;">this</span><span style="color: #000000;">.determineHighestPriorityCandidate(candidateBeans, requiredType);
+</span><span style="color: #0000ff;">if</span> (priorityCandidate != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> priorityCandidate;
+} </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+Iterator var6 </span>=<span style="color: #000000;"> candidateBeans.entrySet().iterator();
+
+String candidateBeanName;
+Object beanInstance;
+</span><span style="color: #0000ff;">do</span><span style="color: #000000;"> {
+</span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">var6.hasNext()) {
+</span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 3. 再找 bean 的名称匹配的</span>
+Entry&lt;String, Object&gt; entry =<span style="color: #000000;"> (Entry)var6.next();
+candidateBeanName </span>=<span style="color: #000000;"> (String)entry.getKey();
+beanInstance </span>=<span style="color: #000000;"> entry.getValue();
+} </span><span style="color: #0000ff;">while</span>(!<span style="color: #0000ff;">this</span>.resolvableDependencies.values().contains(beanInstance) &amp;&amp; !<span style="color: #0000ff;">this</span><span style="color: #000000;">.matchesBeanName(candidateBeanName, descriptor.getDependencyName()));
+
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> candidateBeanName;
+</span><span style="color: #000000;">
+determineAutowireCandidate 方法的逻辑是：
+
+先找 Bean 上有@Primary 注解的，有则直接返回 bean 的 name。
+再找 Bean 上有 @Order，@PriorityOrder 注解的，有则返回 bean 的 name。
+最后再以名称匹配（ByName）的方式去查找相匹配的 bean。
+可以简单的理解为先以 ByType 的方式去匹配，如果匹配到了多个再以 ByName 的方式去匹配，找到了对应的 bean 就去注入，没找到就抛出异常。
+
+还有一点要注意：如果使用了 @Qualifier 注解，那么当自动装配匹配到多个 bean 的时候就不会进入 determineAutowireCandidate 方法（亲测），而是直接查找与 @Qualifer 指定的 bean name 相同的 bean 去注入，找到了就直接注入，没有找到则抛出异常。
+
+tips：大家如果认真思考可能会发现 ByName 的注入方式和 @Qualifier 有点类似，都是在自动装配匹配到多个 bean 的时候，指定一个具体的 bean，那它们有什么不同呢？
+
+ByName 的方式需要遍历，@Qualifier 直接一次定位。在匹配到多个 bean 的情况下，使用 @Qualifier 来指明具体装配的 bean 效率会更高一下。
+
+博主个人觉得：@Qualifer 注解出现的意义或许就是 Spring 为了解决 JDK 自带的 ByName 遍历匹配效率低下的问题。要不然也不会出现两个容易混淆的匹配方式。
+
+写在最后：虽然有这么多的注入方式，但是实际上开发的时候自己编写的类一般用注解的方式注册类，用@Autowired描述依赖进行注入，一般实现类也只有一种（jdbc or hibernate or mybatis），除非项目有大的变动，所以@Qualifier标签用的也较少；但是在使用其他组件的API的时候用的是通过xml配置文件来注册类，描述依赖，因为你不能去改人家源码嘛。</span></pre>
+</div>
+<p> </p>
+{% endraw %}

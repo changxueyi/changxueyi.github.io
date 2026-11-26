@@ -1,0 +1,321 @@
+---
+title: "Beego中Swagger实现API"
+date: 2021-02-08 23:33:00 +0800
+tags: ["【Go框架】-- BeeGo"]
+excerpt: "1、安装Beego $ export GO111MODULE=on $ export GOPROXY=https://goproxy.io $ go get github.com/astaxie/beego $ go get github.com/beego/bee 安装完之后，bee 可执行文件默"
+read_minutes: 7
+cnblogs_id: 14391516
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14391516.html"
+---
+{% raw %}
+<h2 id="1、安装beego">1、安装Beego</h2>
+<pre><code class="language-shell hljs"><span class="hljs-meta">$<span class="bash"> <span class="hljs-built_in">export GO111MODULE=on
+<span class="hljs-meta">$<span class="bash"> <span class="hljs-built_in">export GOPROXY=https://goproxy.io
+<span class="hljs-meta">$<span class="bash"> go get github.com/astaxie/beego
+<span class="hljs-meta">$<span class="bash"> go get github.com/beego/bee
+</span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>安装完之后，<code>bee</code> 可执行文件默认存放在 <code>$GOPATH/bin</code> 里面，所以需要把 <code>$GOPATH/bin</code> 添加到环境变量中</p>
+<h2 id="2、新建工程">2、新建工程</h2>
+<p>与<code>bee new 工程名</code>方法新建项目不同，生成api应用框架有特定的命令</p>
+<p>(经测试，new生成的工程也可以实现路由接口，但是接口无法提交结构体字段，使用serverjson提交时无数据显示，因此建议使用api生成框架，应用Swagger)</p>
+<pre><code class="language-shell hljs"><span class="hljs-meta">$<span class="bash"> <span class="hljs-built_in">cd go/src                       <span class="hljs-comment">#为了在项目中使用go mod，在此文件下新建项目
+<span class="hljs-meta">$<span class="bash"> bee api testapi(工程名)
+</span></span></span></span></span></span></code></pre>
+<pre><code class="hljs go">├── conf
+│   ├── app.conf                       <span class="hljs-comment">//配置信息，需默认设置EnableDocs = true
+├── controllers                          <span class="hljs-comment">//控制器，负责处理项目逻辑
+│   ├── object.<span class="hljs-keyword">go
+│   └── user.<span class="hljs-keyword">go
+├── lastupdate.tmp
+├── main.<span class="hljs-keyword">go                              <span class="hljs-comment">//主函数入口
+├── models                               <span class="hljs-comment">//数据模型
+│   ├── object.<span class="hljs-keyword">go
+│   └── user.<span class="hljs-keyword">go
+├── routers                               <span class="hljs-comment">//路由
+│   ├── commentsRouter_controllers.<span class="hljs-keyword">go
+│   └── router.<span class="hljs-keyword">go
+├── swagger                            <span class="hljs-comment">//自动化文档，实现接口的定义
+│   ├── favicon<span class="hljs-number">-16x16.png
+│   ├── favicon<span class="hljs-number">-32x32.png
+│   ├── index.html
+│   ├── oauth2-redirect.html
+│   ├── swagger.json
+│   ├── swagger-ui-bundle.js
+│   ├── swagger-ui-bundle.js.<span class="hljs-keyword">map
+│   ├── swagger-ui.css
+│   ├── swagger-ui.css.<span class="hljs-keyword">map
+│   ├── swagger-ui.js
+│   ├── swagger-ui.js.<span class="hljs-keyword">map
+│   ├── swagger-ui-standalone-preset.js
+│   ├── swagger-ui-standalone-preset.js.<span class="hljs-keyword">map
+│   └── swagger.yml
+├── testapi
+└── tests
+    └── default_test.<span class="hljs-keyword">go
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>运行命令</p>
+<pre><code class="language-shell hljs"><span class="hljs-meta">$<span class="bash"> bee run -gendoc=<span class="hljs-literal">true -downdoc=<span class="hljs-literal">true
+</span></span></span></span></code></pre>
+<p>此处需要注意的是，api生成的工程和new生成的工程不同，api生成的工程默认从/go/src下读取，因此工程新建时需要在src文件夹下新建，原因是工程不再使用go module控制依赖，因此如果需要兼容，需要在src文件下新建。否则会报错找不到依赖。</p>
+<p>运行成功后访问：</p>
+<pre><code class="hljs apache"><span class="hljs-attribute">http://<span class="hljs-number">127.0.0.1:8080/swagger/               #注意此处为<span class="hljs-number">127.0.0.1，而不是localhost，涉及CORS跨域问题
+</span></span></span></code></pre>
+<h2 id="3、设计接口，注解路由">3、设计接口，注解路由</h2>
+<p>swagger采用注解路由的方式实现接口，主要涉及两个步骤：</p>
+<h3 id="31、设置routersroutego">3.1、设置routers/route.go</h3>
+<p>目前自动化文档只支持如下的写法的解析，其他写法函数不会自动解析，即 namespace+Include 的写法，而且只支持二级解析，一级版本号，二级分别表示应用模块，自动化文档采用CommentRouterPath对注解路由生成，Beego会在启动的时候扫描文件生成路由，存放在routers下，具体内容如下：</p>
+<ul>
+<li>
+<p>API全局设置</p>
+<p>必须设置在 <code>routers/router.go</code> 中，文件的注释，最顶部：</p>
+<p>全局的注释如上所示，是显示给全局应用的设置信息，有如下这些设置</p>
+<ul>
+<li>@APIVersion</li>
+<li>@Title</li>
+<li>@Description</li>
+<li>@Contact</li>
+<li>@TermsOfServiceUrl</li>
+<li>@License</li>
+<li>@LicenseUrl</li>
+</ul>
+</li>
+<li>
+<p>路由设置</p>
+<p>只支持二级解析，一级版本号，二级分别表示应用模块</p>
+</li>
+</ul>
+<pre><code class="language-go hljs"><span class="hljs-comment">//route.go
+
+<span class="hljs-comment">// @APIVersion 1.0.0
+<span class="hljs-comment">// @Title beego Test API
+<span class="hljs-comment">// @Description beego has a very cool tools to autogenerate documents for your API
+<span class="hljs-comment">// @Contact astaxie@gmail.com
+<span class="hljs-comment">// @TermsOfServiceUrl http://beego.me/
+<span class="hljs-comment">// @License Apache 2.0
+<span class="hljs-comment">// @LicenseUrl http://www.apache.org/licenses/LICENSE-2.0.html
+<span class="hljs-keyword">package routers
+
+<span class="hljs-keyword">import (
+	<span class="hljs-string">"github.com/astaxie/beego"
+	<span class="hljs-string">"jingjinjiapi/controllers"
+)
+
+<span class="hljs-function"><span class="hljs-keyword">func <span class="hljs-title">init<span class="hljs-params">() {
+	<span class="hljs-comment">//add route
+	ns := beego.NewNamespace(<span class="hljs-string">"/v1",
+		beego.NSNamespace(<span class="hljs-string">"/object",
+			beego.NSInclude(
+				&amp;controllers.ObjectController{},
+			),
+		),
+		beego.NSNamespace(<span class="hljs-string">"/user",
+			beego.NSInclude(
+				&amp;controllers.UserController{},
+			),
+		),
+	)
+	beego.AddNamespace(ns)
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>路由设置后，经过后续步骤，可以通过访问 <a href="http://127.0.0.1:8080/v1/user%E8%AE%BF%E9%97%AEuser%E7%9B%B8%E5%85%B3%E5%86%85%E5%AE%B9%EF%BC%8C%E5%8E%9F%E7%90%86%E7%B1%BB%E4%BC%BC%E3%80%82" target="_blank">http://127.0.0.1:8080/v1/user访问user相关内容，原理类似。</a></p>
+<h3 id="32、controllers中注释编写">3.2、controllers中注释编写</h3>
+<p>在控制器文件中下的每个controller中编写函数，注释写在函数之上，注释的内容就是我们要实现接口的功能。包括接口含义，传递参数，返回结果等。</p>
+<ul>
+<li>
+<p>@Title</p>
+<p>这个 API 所表达的含义，是一个文本，空格之后的内容全部解析为 title</p>
+</li>
+<li>
+<p>@Description</p>
+<p>这个 API 详细的描述，是一个文本，空格之后的内容全部解析为 Description</p>
+</li>
+<li>
+<p>@Param</p>
+<p>参数，表示需要传递到服务器端的参数，有五列参数，使用空格或者 tab 分割，五个分别表示的含义如下</p>
+<ol>
+<li>参数名</li>
+<li>参数类型，可以有的值是 formData、query、path、body、header，formData 表示是 post 请求的数据，query 表示带在 url 之后的参数，path 表示请求路径上得参数，header 表示带在 header 信息中得参数，body表示是一个raw数据请求，比如结构体的方式传递。</li>
+<li>参数类型</li>
+<li>是否必须</li>
+<li>注释</li>
+</ol></li>
+<li>
+<p>@Success</p>
+<p>成功返回给客户端的信息，三个参数，第一个是 status code。第二个参数是返回的类型，必须使用 {} 包含，第三个是返回的对象或者字符串信息，如果是 {object} 类型，那么 bee 工具在生成 docs 的时候会扫描对应的对象，这里填写的是想对你项目的目录名和对象，例如 <code>models.ZDTProduct.ProductList</code> 就表示 <code>/models/ZDTProduct</code> 目录下的 <code>ProductList</code> 对象。</p>
+<blockquote>
+<blockquote>
+<blockquote>
+<p>三个参数必须通过空格分隔</p>
+</blockquote>
+</blockquote>
+</blockquote>
+</li>
+<li>
+<p>@Failure</p>
+<p>失败返回的信息，包含两个参数，使用空格分隔，第一个表示 status code，第二个表示错误信息</p>
+</li>
+<li>
+<p>@router</p>
+<p>路由信息，包含两个参数，使用空格分隔，第一个是请求的路由地址，支持正则和自定义路由，和之前的路由规则一样，第二个参数是支持的请求方法,放在 <code>[]</code> 之中，如果有多个方法，那么使用 <code>,</code> 分隔。</p>
+</li>
+</ul>
+<p>此处具体记录几个例子</p>
+<h4 id="321、post参数（body--直接访问">3.2.1、POST+参数（body) + 直接访问</h4>
+<p>post请求 <a href="http://127.0.0.1/v1/user" target="_blank">http://127.0.0.1/v1/user</a> , post内容为models.User，作为数据主体提交，结果返回user.id</p>
+<pre><code class="hljs sql">// @Title CreateUser
+// @Description <span class="hljs-keyword">create <span class="hljs-keyword">users
+// @Param	<span class="hljs-keyword">body		<span class="hljs-keyword">body 	models.User	<span class="hljs-literal">true		<span class="hljs-string">"body for user content"
+// @<span class="hljs-keyword">Success <span class="hljs-number">200 {<span class="hljs-built_in">int} models.User.Id
+// @<span class="hljs-keyword">Failure <span class="hljs-number">403 <span class="hljs-keyword">body <span class="hljs-keyword">is <span class="hljs-keyword">empty
+// @router / [post]
+func (u *UserController) Post() {
+	<span class="hljs-keyword">var <span class="hljs-keyword">user models.User
+	json.Unmarshal(u.Ctx.Input.RequestBody, &amp;<span class="hljs-keyword">user)
+	uid := models.AddUser(<span class="hljs-keyword">user)
+	u.Data[<span class="hljs-string">"json"] = <span class="hljs-keyword">map[<span class="hljs-keyword">string]<span class="hljs-keyword">string{<span class="hljs-string">"uid": uid}
+	u.ServeJSON()
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="322、post参数（path）提交内容（formdata）">3.2.2、POST+参数（path）+提交内容（formData）</h4>
+<p>post请求 <a href="http://127.0.0.1/v1/user/%7Buserid%7D" target="_blank">http://127.0.0.1/v1/user/{userid}</a> ,post内容分两部分，一部分为path路径上的参数，一部分为提交的表单内容。</p>
+<pre><code class="hljs sql">// @Title CreateUser
+// @Description <span class="hljs-keyword">create <span class="hljs-keyword">users
+// @Param	userid		<span class="hljs-keyword">path 	<span class="hljs-keyword">string	<span class="hljs-literal">true		<span class="hljs-string">"user id"
+// @Param	<span class="hljs-keyword">name		formData 	<span class="hljs-keyword">string	<span class="hljs-literal">true		<span class="hljs-string">"user name"
+// @Param	<span class="hljs-keyword">status		formData 	<span class="hljs-keyword">string	<span class="hljs-literal">true		<span class="hljs-string">"user status"
+// @<span class="hljs-keyword">Success <span class="hljs-number">200 {<span class="hljs-keyword">string} <span class="hljs-keyword">success
+// @<span class="hljs-keyword">Failure <span class="hljs-number">403 <span class="hljs-keyword">error
+// @router /:userid [post]
+func (u *UserController) Post() {
+	uid := u.GetString(<span class="hljs-string">":userid")
+	//解析表单数据，两种方法
+	//<span class="hljs-number">1、GetString方法
+	<span class="hljs-keyword">name := u.GetString(<span class="hljs-string">"name")
+	<span class="hljs-keyword">status := u.GetString(<span class="hljs-string">"status")
+	//<span class="hljs-number">2、beego提供的parseForm方法解析到结构体
+	//定义接收结构体<span class="hljs-keyword">user
+	//err := u.ParseForm(&amp;<span class="hljs-keyword">user)
+	u.Data[<span class="hljs-string">"json"] = <span class="hljs-string">"delete success!"
+	u.ServeJSON()
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="323、get-直接访问">3.2.3、Get 直接访问</h4>
+<p>Get请求http://127.0.0.1/v1/user/ Get所有user信息</p>
+<pre><code class="hljs go"><span class="hljs-comment">// @Title GetAll
+<span class="hljs-comment">// @Description get all Users
+<span class="hljs-comment">// @Success 200 {object} models.User
+<span class="hljs-comment">// @router / [get]
+<span class="hljs-function"><span class="hljs-keyword">func <span class="hljs-params">(u *UserController) <span class="hljs-title">GetAll<span class="hljs-params">() {
+	users := models.GetAllUsers()
+	u.Data[<span class="hljs-string">"json"] = users
+	u.ServeJSON()
+}
+</span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="324、get参数（path）">3.2.4、Get+参数（path）</h4>
+<p>Get请求 <a href="http://127.0.0.1/v1/user/%7Buid%7D" target="_blank">http://127.0.0.1/v1/user/{uid}</a> 获取指定uid用户信息</p>
+<pre><code class="hljs go"><span class="hljs-comment">// @Title Get
+<span class="hljs-comment">// @Description get user by uid
+<span class="hljs-comment">// @Param	uid		path 	string	true		"The key for staticblock"
+<span class="hljs-comment">// @Success 200 {object} models.User
+<span class="hljs-comment">// @Failure 403 :uid is empty
+<span class="hljs-comment">// @router /:uid [get]
+<span class="hljs-function"><span class="hljs-keyword">func <span class="hljs-params">(u *UserController) <span class="hljs-title">Get<span class="hljs-params">() {
+	uid := u.GetString(<span class="hljs-string">":uid")
+	<span class="hljs-keyword">if uid != <span class="hljs-string">"" {
+		user, err := models.GetUser(uid)
+		<span class="hljs-keyword">if err != <span class="hljs-literal">nil {
+			u.Data[<span class="hljs-string">"json"] = err.Error()
+		} <span class="hljs-keyword">else {
+			u.Data[<span class="hljs-string">"json"] = user
+		}
+	}
+	u.ServeJSON()
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="325、get参数（query）">3.2.5、Get+参数（query）</h4>
+<p>Get请求 <a href="http://127.0.0.1/v1/user/login?username=123&amp;password=456" target="_blank">http://127.0.0.1/v1/user/login?username=123&amp;password=456</a> url上外加层级，并获取查询字段</p>
+<pre><code class="hljs go"><span class="hljs-comment">// @Title Login
+<span class="hljs-comment">// @Description Logs user into the system
+<span class="hljs-comment">// @Param	username		query 	string	true		"The username for login"
+<span class="hljs-comment">// @Param	password		query 	string	true		"The password for login"
+<span class="hljs-comment">// @Success 200 {string} login success
+<span class="hljs-comment">// @Failure 403 user not exist
+<span class="hljs-comment">// @router /login [get]
+<span class="hljs-function"><span class="hljs-keyword">func <span class="hljs-params">(u *UserController) <span class="hljs-title">Login<span class="hljs-params">() {
+	username := u.GetString(<span class="hljs-string">"username")                        <span class="hljs-comment">// 区别于path,此处获取没有“：”
+	password := u.GetString(<span class="hljs-string">"password")
+	<span class="hljs-keyword">if models.Login(username, password) {
+		u.Data[<span class="hljs-string">"json"] = <span class="hljs-string">"login success"
+	} <span class="hljs-keyword">else {
+		u.Data[<span class="hljs-string">"json"] = <span class="hljs-string">"user not exist"
+	}
+	u.ServeJSON()
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="326、put参数（path）">3.2.6、Put+参数（path）</h4>
+<p>Put请求 <a href="http://127.0.0.1/v1/user/%7Buid%7D" target="_blank">http://127.0.0.1/v1/user/{uid}</a> 提交内容body，更新用户信息。</p>
+<pre><code class="hljs sql">// @Title <span class="hljs-keyword">Update
+// @Description <span class="hljs-keyword">update the <span class="hljs-keyword">user
+// @Param	uid		<span class="hljs-keyword">path 	<span class="hljs-keyword">string	<span class="hljs-literal">true		<span class="hljs-string">"The uid you want to update"
+// @Param	<span class="hljs-keyword">body		<span class="hljs-keyword">body 	models.User	<span class="hljs-literal">true		<span class="hljs-string">"body for user content"
+// @<span class="hljs-keyword">Success <span class="hljs-number">200 {<span class="hljs-keyword">object} models.User
+// @<span class="hljs-keyword">Failure <span class="hljs-number">403 :uid <span class="hljs-keyword">is <span class="hljs-keyword">not <span class="hljs-built_in">int
+// @router /:uid [put]
+func (u *UserController) Put() {
+	uid := u.GetString(<span class="hljs-string">":uid")
+	<span class="hljs-keyword">if uid != <span class="hljs-string">"" {
+		<span class="hljs-keyword">var <span class="hljs-keyword">user models.User
+		json.Unmarshal(u.Ctx.Input.RequestBody, &amp;<span class="hljs-keyword">user)
+		uu, err := models.UpdateUser(uid, &amp;<span class="hljs-keyword">user)
+		<span class="hljs-keyword">if err != nil {
+			u.Data[<span class="hljs-string">"json"] = err.Error()
+		} <span class="hljs-keyword">else {
+			u.Data[<span class="hljs-string">"json"] = uu
+		}
+	}
+	u.ServeJSON()
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="327、delete参数（path）">3.2.7、Delete+参数（path）</h4>
+<p>Delete请求 <a href="http://127.0.0.1/v1/user/%7Buid%7D" target="_blank">http://127.0.0.1/v1/user/{uid}</a> 提交内容uid，删除用户信息。</p>
+<pre><code class="hljs sql">// @Title <span class="hljs-keyword">Delete
+// @Description <span class="hljs-keyword">delete the <span class="hljs-keyword">user
+// @Param	uid		<span class="hljs-keyword">path 	<span class="hljs-keyword">string	<span class="hljs-literal">true		<span class="hljs-string">"The uid you want to delete"
+// @<span class="hljs-keyword">Success <span class="hljs-number">200 {<span class="hljs-keyword">string} <span class="hljs-keyword">delete <span class="hljs-keyword">success!
+// @<span class="hljs-keyword">Failure <span class="hljs-number">403 uid <span class="hljs-keyword">is <span class="hljs-keyword">empty
+// @router /:uid [<span class="hljs-keyword">delete]
+func (u *UserController) <span class="hljs-keyword">Delete() {
+	uid := u.GetString(<span class="hljs-string">":uid")
+	models.DeleteUser(uid)
+	u.Data[<span class="hljs-string">"json"] = <span class="hljs-string">"delete success!"
+	u.ServeJSON()
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>其他相关设计原则可以参照上面内容。</p>
+<h3 id="33、生成自动化文档">3.3、生成自动化文档</h3>
+<ul>
+<li>
+<p>配置文件设置 <code>EnableDocs=true</code></p>
+</li>
+<li>
+<p>运行启动命令</p>
+<pre><code class="language-shell hljs"><span class="hljs-meta">$<span class="bash"> bee run -gendoc=<span class="hljs-literal">true -downdoc=<span class="hljs-literal">true
+</span></span></span></span></code></pre>
+<p><code>-gendoc=true</code> 标识自动化的build文档，<code>-downdoc=true</code> 自动下载swagger文档查看器</p>
+</li>
+<li>
+<p>运行浏览器查看接口</p>
+<p><a href="http://127.0.0.1/swagger" target="_blank">http://127.0.0.1/swagger</a></p>
+</li>
+</ul>
+<h3 id="4、注意事项">4、注意事项</h3>
+<ul>
+<li>route.go注解路由运行是通过CommentRouterPath解析的，会在同文件下生成commentsRouter_controllers.go文件，但需要注意工程必须在GOPATH路径下，不然无法生成，也会无法匹配路由。</li>
+<li>CORS问题</li>
+</ul>
+<p>解决办法：在main.go中将swagger集成到应用中</p>
+<pre><code class="language-go hljs"><span class="hljs-keyword">if beego.BConfig.RunMode == <span class="hljs-string">"dev" {
+		beego.BConfig.WebConfig.DirectoryIndex = <span class="hljs-literal">true
+		beego.BConfig.WebConfig.StaticDir[<span class="hljs-string">"/swagger"] = <span class="hljs-string">"swagger"
+	}</span></span></span></span></span></code></pre>
+{% endraw %}

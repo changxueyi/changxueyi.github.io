@@ -1,0 +1,164 @@
+---
+title: "详细总结： Golang GC、三色标记、混合写屏障机制"
+date: 2022-05-28 20:45:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "大家好，我是小道哥 GC是面试里的老八股文了，提起GC，很多人心里会发怵，但好好准备一番后，弄清其中的来龙去脉，在面试的过程中，往往能够舌灿莲花。今天小道哥，特地梳理了一下GC的相关知识点，相信在各位道友看完后，也可以对面试官提出的GC问题，灰常自信的娓娓道来… 背景知识什么是GC？垃圾回收（Gar"
+read_minutes: 8
+cnblogs_id: 16321884
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/16321884.html"
+---
+{% raw %}
+<p>大家好，我是小道哥</p>
+<p>GC是面试里的老八股文了，提起GC，很多人心里会发怵，但好好准备一番后，弄清其中的来龙去脉，在面试的过程中，往往能够舌灿莲花。今天小道哥，特地梳理了一下GC的相关知识点，相信在各位道友看完后，也可以对面试官提出的GC问题，灰常自信的娓娓道来…</p>
+<p>背景知识<br/>什么是GC？<br/>垃圾回收（Garbage Collection，缩写为GC），是一种自动内存管理机制。</p>
+<p>即我们在程序中定义一个变量后，会在内存中开辟相应空间进行存储。当不需要此变量后，需要手动销毁此对象，并释放内存。而这种对不再使用的内存资源进行自动回收的功能即为垃圾回收</p>
+<p>GC相关术语<br/>在对GC开始讲解之前，有很多关于GC的行话，先普及一下，不然后文读起来会稍微有点懵。</p>
+<p>赋值器:说白了就是你写的程序代码，在程序的执行过程中，可能会改变对象的引用关系，或者创建新的引用。</p>
+<p>回收器:垃圾回收器的责任就是去干掉那些程序中不再被引用得对象</p>
+<p>STW:全称是stop the word，GC期间某个阶段会停止所有的赋值器，中断你的程序逻辑，以确定引用关系。举个栗子，有一个大院，孩子特别多，老师希望他们以班长为起点手牵手在一起，但总有几个不听话的孩子，没有牵手，你为了找出这些不听话的孩子，你会以班长为起点，一个一个的往后捋。但是如果有一个名叫张三的孩子，之前在队尾，后来在你数到队伍中间的时候，又跑到了队头和班长牵手去了，当你数完后，因为没有统计到张三，你就认为张三没有听话，没有奖励小红花，岂不让孩子比窦娥还冤…，所以这种情况下，你需要先让孩子们不动【映射到程序的概念，即STW停止程序运行】，然后再统计。</p>
+<p>root对象:根对象是指赋值器不需要通过其他对象就可以直接访问到的对象，通过Root对象, 可以追踪到其他存活的对象。常见的root对象有：</p>
+<p>全局变量：程序在编译期就能确定的那些存在于程序整个生命周期的变量。<br/>执行栈：每个 goroutine (包括main函数)都拥有自己的执行栈，这些执行栈上包含栈上的变量及堆内存指针。【堆内存指针即在gorouine中申请或者引用了在堆内存的变量】<br/>Go的GC发展演变史<br/>v 1.3-标记清除法<br/>标记清除法主要包含两个步骤：</p>
+<p>标记<br/>清除<br/>示例如下：</p>
+<p>开启STW，停止程序的运行，图中是本次GC涉及到的root节点和相关对象。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/9a7fcc50f9438d38.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><br/>从根节点出发，标记所有可达对象。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/33339ab32b27d8b7.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p><br/>停止STW，然后回收然后回收所有未被标记的对象</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/666d98a7ec5ad95f.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>标记清除法的最大弊端就是在整个GC期间需要STW，将整个程序暂停。因为如果不进行STW的话，会出现已经被标记的对象A，引用了新的未被标记的对象B，但由于对象A已经标记过了，不会再重新扫描A对B的可达性，从而将B对象当做垃圾回收掉。</p>
+<p>说实话这种全程STW的GC算法真的是如过街老鼠，人见人打…好家伙，让我程序停下来，专门去做垃圾回收这件事，在追求高性能的今天，很难有人可以接受这种性能损耗。</p>
+<p>所以Golang团队这个时期就开始专注于如何能提升GC的性能，这里希望各位道友能明白Golang团队对GC算法优化的方向是什么，或者目标是什么，那就是让GC和用户程序可以互不干扰，并发进行。所以才有了后面的三色标记法。</p>
+<p>v1.5 三色标记法<br/>三色标</p>
+<p> </p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/3ed98c487da594c9.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/fd3dc4e31f669c73.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/71493ffc4d4fb09a.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/2aad7b9456fa59c7.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/fd0c7c6b10c6b209.png"/></p>
+<p> </p>
+<p> </p>
+<p>对于上述的三色标记法来讲,仍然需要依赖STW的. 因为如果不暂停程序, 程序的逻辑改变对象引用关系, 这种动作如果在标记阶段做了修改，会影响标记结果的正确性。我们举一个场景。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/6aeccd1445e761ac.png"/></p>
+<p> </p>
+<p> </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/7e26ab9c4cf8a0f0.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/d064ccaa8853bb1c.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/78f332f1df80a2b1.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>看到这里，张三道友陷入了沉思，质疑小道哥说： “等等，普通的标记清除法，需要STW，好家伙，你这一顿操作猛如虎，咋还是需要STW，性能上没有什么优化啊…”</p>
+<p>好，那我们接着说，Golang是如何解决这个STW问题的呢？</p>
+<p>其实总结来看，在三色标记法的过程中对象丢失，需要同时满足下面两个条件：</p>
+<p>条件一：白色对象被黑色对象引用<br/>条件二：灰色对象与白色对象之间的可达关系遭到破坏<br/>看来只要把上面两个条件破坏掉一个，就可以保证对象不丢失，所以我们的golang团队就提出了两种破坏条件的方式：强三色不变式和弱三色不变式。</p>
+<p>两种不变式<br/>强三色不变式<br/>规则：不允许黑色对象引用白色对象</p>
+<p>破坏了条件一： 白色对象被黑色对象引用</p>
+<p>解释：如果一个黑色对象不直接引用白色对象，那么就不会出现白色对象扫描不到，从而被当做垃圾回收掉的尴尬。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/b7adccd5cd0725ef.png"/></p>
+<p> </p>
+<p> </p>
+<p>弱三色不变式<br/>规则：黑色对象可以引用白色对象，但是白色对象的上游必须存在灰色对象</p>
+<p>破坏了条件二：灰色对象与白色对象之间的可达关系遭到破坏</p>
+<p>解释： 如果一个白色对象的上游有灰色对象，则这个白色对象一定可以扫描到，从而不被回收</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/2a32b3e8a7bc98f3.png"/></p>
+<p> </p>
+<p> </p>
+<p><br/>屏障机制<br/>Golang团队遵循上述两种不变式提到的原则，分别提出了两种实现机制：插入写屏障和删除写屏障。</p>
+<p>插入写屏障：<br/>规则：当一个对象引用另外一个对象时，将另外一个对象标记为灰色。</p>
+<p>满足：强三色不变式。不会存在黑色对象引用白色对象</p>
+<p>这里需要注意一点，插入屏障仅会在堆内存中生效，不对栈内存空间生效，这是因为go在并发运行时，大部分的操作都发生在栈上，函数调用会非常频繁。数十万goroutine的栈都进行屏障保护自然会有性能问题。</p>
+<p>下面我们看看插入写屏障机制，在插入写屏障机制下是如何保护对象不丢失的。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/adeb23611157536b.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/70bf030cddc2c476.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/f396b8d674ecbe8d.png"/></p>
+<p> </p>
+<p> </p>
+<p><br/>可以发现，对象3在插入写屏障机制下，得到了保护，但是由于栈上的对像没有插入写机制，在扫描完成后，仍然可能存在栈上的白色对象被黑色对象引用，所以在最后需要对栈上的空间进行STW，防止对象误删除。如下所示：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/f2481737aa710ae3.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/806aab5927e1ba8a.png"/></p>
+<p> </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/33810cd1dc5c6eb7.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>对于插入写屏障来讲，道友们需记住，插入写屏障最大的弊端就是，在一次正常的三色标记流程结束后，需要对栈上重新进行一次stw，然后再rescan一次。</p>
+<p>删除写屏障<br/>规则：在删除引用时，如果被删除引用的对象自身为灰色或者白色，那么被标记为灰色。</p>
+<p>满足弱三色不变式。灰色对象到白色对象的路径不会断</p>
+<p>解释：白色对象始终会被灰色对象保护</p>
+<p>下面我们看看在删除写屏障机制下是如何保护对象不丢失的。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/de704c7d382d156b.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/05afd3455e54c640.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/0ca373419fe8e371.png"/></p>
+<p> </p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/57190a19bc56a779.png"/></p>
+<p> </p>
+<p> </p>
+<p>但是引入删除写屏障，有一个弊端，就是一个对象的引用被删除后，即使没有其他存活的对象引用它，它仍然会活到下一轮。如此一来，会产生很多的冗余扫描成本，且降低了回收精度，举例来讲。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/f259b0ce64979464.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>小结<br/>从上面示例来看，插入写屏障机制和删除写屏障机制中任一机制均可保护对象不被丢失。在V1.5的版本中采用的是插入写机制实现。</p>
+<p>对比插入写屏障和删除写屏障：</p>
+<p>插入写屏障：<br/>插入写屏障哪里都好，就是栈上的操作管不到，所以最后需要对栈空间进行stw保护，然后rescan保证引用的白色对象存活。<br/>删除写屏障：<br/>在GC开始时，会扫描记录整个栈做快照，从而在删除操作时，可以拦截操作，将白色对象置为灰色对象。<br/>回收精度低。<br/>v1.8 混合写屏障机制<br/>讲到这里，如果是你，你会怎么做呢？当然是取其精华，去其糟泊啦…没错，Golang团队，正是结合了这两点，在v1.8版本下引入了混合写屏障机制。下面我们看下混合屏障机制的核心定义：</p>
+<p>GC刚开始的时候，会将栈上的可达对象全部标记为黑色。</p>
+<p>GC期间，任何在栈上新创建的对象，均为黑色。</p>
+<p>上面两点只有一个目的，将栈上的可达对象全部标黑，最后无需对栈进行STW，就可以保证栈上的对象不会丢失。有人说，一直是黑色的对象，那么不就永远清除不掉了么，这里强调一下，标记为黑色的是可达对象，不可达的对象一直会是白色，直到最后被回收。</p>
+<p>堆上被删除的对象标记为灰色</p>
+<p>堆上新添加的对象标记为灰色</p>
+<p>下面我们看看混合写屏障机制的示例图。</p>
+<p> </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/a365df408ccb3b74.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/6e4cc84e3b798aee.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/171bb8c7e543ecf7.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/66306e5295bdd625.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/7382be53bd0822c4.png"/></p>
+<p> </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/0d01215bb011f9df.png"/></p>
+<p> </p>
+<p> </p>
+<p> </p>
+<p>张三道友看到这里，提出了一个问题，万一栈上的对象1引用了堆上的对象8，由于不触发混合写屏障机制，那对象8一直是白色的，最后不就被垃圾回收走了么，谁来保护它？</p>
+<p>这个问题很好，私下里很多粉丝也咨询过我，这里统一解释一下，这个情况是不会发生的，因为一个对象之所以可以引用另外一个对象，它的前提是需要另外一个对象可达，图中的8号显然是不可达的，所以不会出现这种情况。</p>
+<p>那又有道友问了，为什么1号对象可以引用7号对象呢？这是因为1号对象在引用7号对象的时候，对象7是在对象6的下游，本身是可达。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/33f1784838df44c3.png"/></p>
+<p> </p>
+<p> </p>
+<p>总结<br/>Golang v1.3之前采用传统采取标记-清除法，需要STW，暂停整个程序的运行。</p>
+<p>在v1.5版本中，引入了三色标记法和插入写屏障机制，其中插入写屏障机制只在堆内存中生效。但在标记过程中，最后需要对栈进行STW。</p>
+<p>在v1.8版本中结合删除写屏障机制，推出了混合屏障机制，屏障限制只在堆内存中生效。避免了最后节点对栈进行STW的问题，提升了GC效率</p>
+<p> </p>
+<p>特别感谢：<span class="name"><span class="name"><a data-report-click='{"mod":"popu_379","spm":"1001.2101.3001.4122","dest":"https://blog.csdn.net/xiaodaoge_it","ab":"new"}' href="https://blog.csdn.net/xiaodaoge_it/article/details/121890145?spm=1001.2101.3001.6650.1&amp;utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_default&amp;depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7Edefault-1.pc_relevant_default&amp;utm_relevant_index=2" id="uid" target="_blank" title="我是小道哥">我是小道哥</a></span></span></p>
+{% endraw %}

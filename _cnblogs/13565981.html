@@ -1,0 +1,240 @@
+---
+title: "MyBatis中的JdbcType映射介绍"
+date: 2020-08-26 16:32:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "Java项目涉及到数据库交互，以往常用的是JDBC，现在则有Hibernate、Mybatis等这些持久化支持。 项目中用到了MyBatis，和JDBC最显著的区别，就是SQL语句配置化，通过xml文件定义SQL语句，当然JDBC也可以将SQL配置化，需要定制开发，MyBatis则直接支持这种方法。"
+read_minutes: 2
+cnblogs_id: 13565981
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13565981.html"
+tags_inferred: true
+---
+{% raw %}
+<p>Java项目涉及到数据库交互，以往常用的是JDBC，现在则有Hibernate、Mybatis等这些持久化支持。</p>
+<p> </p>
+<p>项目中用到了MyBatis，和JDBC最显著的区别，就是SQL语句配置化，通过xml文件定义SQL语句，当然JDBC也可以将SQL配置化，需要定制开发，MyBatis则直接支持这种方法。</p>
+<p> </p>
+<p>官方对于MyBatis的介绍，</p>
+<blockquote>
+<p>MyBatis is a first class persistence framework with support for custom SQL,   stored procedures and advanced mappings. MyBatis eliminates almost all of the JDBC code and manual setting of parameters and retrieval of results. MyBatis can use simple XML or Annotations for configuration and map primitives, Map interfaces and Java POJOs (Plain Old Java Objects) to database records.        </p>
+</blockquote>
+<p> </p>
+<p>简单来讲，MyBatis几乎屏蔽了所有JDBC代码，用一种简单的xml，或者注解，就能完成数据库交互。</p>
+<p> </p>
+<p>xml配置文件，可用MyBatis自己定义的数据类型，引自：http://www.mybatis.org/mybatis-3/configuration.html</p>
+<blockquote>
+<p>Associated JDBC type can be specified by two means:</p>
+<ul>
+<li>
+<p>Adding a jdbcType attribute to the typeHandler element (for example: jdbcType="VARCHAR").</p>
+</li>
+<li>
+<p>Adding a @MappedJdbcTypes annotation to your TypeHandler class specifying the list of JDBC types to associate it with. This annotation will be ignored if the jdbcType attribute as also been specified.</p>
+</li>
+</ul>
+</blockquote>
+<p> </p>
+<p>例如下面的配置，指定companyid参数类型为BIGINT，</p>
+<blockquote>
+<p>&lt;select id='getMeetingnoByCompanyid' parameterType="java.lang.Integer"<br/>        resultType="java.lang.String"&gt;<br/>        select a.meetingno<br/>        from xxx a<br/>        where a.companyid = #{companyid, jdbcType=BIGINT}<br/>&lt;/select&gt;</p>
+</blockquote>
+<p> </p>
+<p>对于jdbcType，MyBatis的API文档有说明，引自：http://www.mybatis.org/mybatis-3/apidocs/reference/org/apache/ibatis/type/JdbcType.html</p>
+<p><img alt="" class="has" height="425" loading="lazy" src="/images/cnblogs/ac5fae8d0b749dd0.png" width="742"/></p>
+<p> </p>
+<p>另外，这篇文章，给出了JdbcType和Oracle以及MySQL，相互之间的映射关系，比较详细，引自：http://blog.csdn.net/loongshawn/article/details/50496460</p>
+<div class="table-box">
+<table>
+<thead>
+<tr><th style="text-align: left;"> </th><th style="text-align: left;">JdbcType</th><th style="text-align: left;">Oracle</th><th style="text-align: left;">MySql</th></tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">ARRAY</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">BIGINT</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;">BIGINT</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">BINARY</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">BIT</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;">BIT</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">BLOB</td>
+<td style="text-align: left;">BLOB</td>
+<td style="text-align: left;">BLOB</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">BOOLEAN</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">CHAR</td>
+<td style="text-align: left;">CHAR</td>
+<td style="text-align: left;">CHAR</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">CLOB</td>
+<td style="text-align: left;">CLOB</td>
+<td style="text-align: left;">修改为TEXT</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">CURSOR</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">DATE</td>
+<td style="text-align: left;">DATE</td>
+<td style="text-align: left;">DATE</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">DECIMAL</td>
+<td style="text-align: left;">DECIMAL</td>
+<td style="text-align: left;">DECIMAL</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">DOUBLE</td>
+<td style="text-align: left;">NUMBER</td>
+<td style="text-align: left;">DOUBLE</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">FLOAT</td>
+<td style="text-align: left;">FLOAT</td>
+<td style="text-align: left;">FLOAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">INTEGER</td>
+<td style="text-align: left;">INTEGER</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">LONGVARBINARY</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">LONGVARCHAR</td>
+<td style="text-align: left;">LONG VARCHAR</td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">NCHAR</td>
+<td style="text-align: left;">NCHAR</td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">NCLOB</td>
+<td style="text-align: left;">NCLOB</td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">NULL</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">NUMERIC</td>
+<td style="text-align: left;">NUMERIC/NUMBER</td>
+<td style="text-align: left;">NUMERIC/</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">NVARCHAR</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">OTHER</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">REAL</td>
+<td style="text-align: left;">REAL</td>
+<td style="text-align: left;">REAL</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">SMALLINT</td>
+<td style="text-align: left;">SMALLINT</td>
+<td style="text-align: left;">SMALLINT</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">STRUCT</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">TIME</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;">TIME</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">TIMESTAMP</td>
+<td style="text-align: left;">TIMESTAMP</td>
+<td style="text-align: left;">TIMESTAMP/DATETIME</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">TINYINT</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;">TINYINT</td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">UNDEFINED</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">VARBINARY</td>
+<td style="text-align: left;"> </td>
+<td style="text-align: left;"> </td>
+</tr>
+<tr>
+<td style="text-align: left;">JdbcType</td>
+<td style="text-align: left;">VARCHAR</td>
+<td style="text-align: left;">VARCHAR</td>
+<td style="text-align: left;">VARCHAR</td>
+</tr>
+</tbody>
+</table>
+</div>
+{% endraw %}

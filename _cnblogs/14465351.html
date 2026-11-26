@@ -1,0 +1,105 @@
+---
+title: "Go语言 函数return值的几种情况"
+date: 2021-03-01 19:11:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "分三种情况 （以下 “指定返回值”这句话， 仅指return后面直接跟着的返回值） 退出执行，不指定返回值(1) 函数没有返回值 package main import ( \"fmt\" ) func GetMoney(){ fmt.Println(\"money\") return } func mai"
+read_minutes: 1
+cnblogs_id: 14465351
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14465351.html"
+---
+{% raw %}
+<div class="blogpost-body blogpost-body-html" id="cnblogs_post_body">
+<div>
+<h3>分三种情况</h3>
+<p>（以下 “指定返回值”这句话， 仅指return后面直接跟着的返回值）</p>
+<ul>
+<li><strong>退出执行，不指定返回值</strong><br/><strong>(1) 函数没有返回值</strong></li>
+</ul>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token keyword"><span class="hljs-keyword">package main
+<span class="token keyword"><span class="hljs-keyword">import <span class="token punctuation">(
+    <span class="token string"><span class="hljs-string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">GetMoney<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string"><span class="hljs-string">"money"<span class="token punctuation">)
+  <span class="token keyword"><span class="hljs-keyword">return
+<span class="token punctuation">}
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">main<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+  <span class="token function">GetMoney<span class="token punctuation">(<span class="token punctuation">)
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p><strong>(2) 函数返回值有变量名</strong></p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token keyword"><span class="hljs-keyword">package main
+<span class="token keyword"><span class="hljs-keyword">import <span class="token punctuation">(
+    <span class="token string"><span class="hljs-string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">GetMoney<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">) <span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(_amount <span class="token builtin"><span class="hljs-function"><span class="hljs-params"><span class="hljs-keyword">int<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+ _amount <span class="token operator">= <span class="token number"><span class="hljs-number">88
+ fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string"><span class="hljs-string">"money: "<span class="token punctuation">,_amount<span class="token punctuation">)
+  <span class="token keyword"><span class="hljs-keyword">return
+<span class="token punctuation">}
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">main<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+  <span class="token keyword"><span class="hljs-keyword">var amount  <span class="token operator">= <span class="token function">GetMoney<span class="token punctuation">(<span class="token punctuation">)
+  fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string"><span class="hljs-string">"money: "<span class="token punctuation">,amount<span class="token punctuation">)
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<ul>
+<li><strong>退出执行，指定返回值</strong></li>
+</ul>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token keyword"><span class="hljs-keyword">package main
+<span class="token keyword"><span class="hljs-keyword">import <span class="token punctuation">(
+    <span class="token string"><span class="hljs-string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">GetMoney<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">) <span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(_amount <span class="token builtin"><span class="hljs-function"><span class="hljs-params"><span class="hljs-keyword">int<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+ fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string"><span class="hljs-string">"money: "<span class="token punctuation">,_amount<span class="token punctuation">)
+  <span class="token keyword"><span class="hljs-keyword">return <span class="token number"><span class="hljs-number">88
+<span class="token punctuation">}
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">main<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+  <span class="token keyword"><span class="hljs-keyword">var amount  <span class="token operator">= <span class="token function">GetMoney<span class="token punctuation">(<span class="token punctuation">)
+  fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string"><span class="hljs-string">"money: "<span class="token punctuation">,amount<span class="token punctuation">)
+<span class="token punctuation">}
+
+运行结果：
+money<span class="token punctuation">:  <span class="token number"><span class="hljs-number">0
+money<span class="token punctuation">:  <span class="token number"><span class="hljs-number">88
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<ul>
+<li><strong>退出执行，指定返回值和指定默认值</strong></li>
+</ul>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go codeblock"><code class="language-go hljs"><span class="token keyword"><span class="hljs-keyword">package main
+<span class="token keyword"><span class="hljs-keyword">import <span class="token punctuation">(
+    <span class="token string"><span class="hljs-string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">GetMoney<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">) <span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(_amount <span class="token builtin"><span class="hljs-function"><span class="hljs-params"><span class="hljs-keyword">int<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+_amount  <span class="token operator">= <span class="token number"><span class="hljs-number">99     <span class="token comment"><span class="hljs-comment">//如果return后面没有指定返回值，就用赋给“返回值变量”的值
+ fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string"><span class="hljs-string">"money: "<span class="token punctuation">,_amount<span class="token punctuation">)
+  <span class="token keyword"><span class="hljs-keyword">return <span class="token number"><span class="hljs-number">88       <span class="token comment"><span class="hljs-comment">//如果return后面跟有返回值，就使用return后面的返回值
+<span class="token punctuation">}
+
+<span class="token keyword"><span class="hljs-function"><span class="hljs-keyword">func <span class="token function"><span class="hljs-function"><span class="hljs-title">main<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">(<span class="token punctuation"><span class="hljs-function"><span class="hljs-params">)<span class="token punctuation">{
+  <span class="token keyword"><span class="hljs-keyword">var amount  <span class="token operator">= <span class="token function">GetMoney<span class="token punctuation">(<span class="token punctuation">)  
+  fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string"><span class="hljs-string">"money: "<span class="token punctuation">,amount<span class="token punctuation">)
+<span class="token punctuation">}
+
+运行结果：
+money<span class="token punctuation">:  <span class="token number"><span class="hljs-number">99
+money<span class="token punctuation">:  <span class="token number"><span class="hljs-number">88</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+</div>
+<p> </p>
+</div>
+<div id="MySignature">Don't Repeat Yourself !</div>
+{% endraw %}

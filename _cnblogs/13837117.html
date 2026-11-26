@@ -1,0 +1,29 @@
+---
+title: "maven 随笔，周末重拾maven"
+date: 2020-10-18 21:01:00 +0800
+tags: ["【框架】-- SpringBoot"]
+excerpt: "1. 没有maven的时候，遇到的问题 2. maven可以解决的问题 3.maven中仓库的分类 4.maven使用依赖范围 基于maven，maven主要做了就是java 包中放自己的代码，test放测试的代码，pom文件主要用来管理自己的jar包等 1.Maven本地仓库中存放的是什么？ 1."
+read_minutes: 1
+cnblogs_id: 13837117
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13837117.html"
+---
+{% raw %}
+<h2>1. 没有maven的时候，遇到的问题</h2>
+<p><img alt="" loading="lazy" src="/images/cnblogs/958cbbe6ef0c03ee.png"/></p>
+<p> </p>
+<p> </p>
+<h2> 2. maven可以解决的问题</h2>
+<p><img alt="" loading="lazy" src="/images/cnblogs/1b3da51a40539175.png"/></p>
+<p> </p>
+<h2> 3.maven中仓库的分类</h2>
+<p><img alt="" loading="lazy" src="/images/cnblogs/150e830cae825011.png"/></p>
+<p> </p>
+<h2> 4.maven使用依赖范围</h2>
+<p><img alt="" loading="lazy" src="/images/cnblogs/f774da75fbc59ca7.png"/></p>
+<p> </p>
+<h4> 基于maven，maven主要做了就是java 包中放自己的代码，test放测试的代码，pom文件主要用来管理自己的jar包等</h4>
+<h4>1.Maven本地仓库中存放的是什么？ 1. maven使用的插件 2.项目中使用的jar</h4>
+<h4>2.package是把jar打到本项目的target下，而install时把target下的jar安装到本地仓库，供其他项目使用。</h4>
+<h4>3.install可以把项目安装到本地仓库，供其他项目调用， package只是打了一个jar包</h4>
+<h4>4.插件在build中配置（pom文件的build中配置）</h4>
+{% endraw %}

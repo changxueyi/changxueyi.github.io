@@ -1,0 +1,27 @@
+---
+title: "mysql用 法like concat()"
+date: 2020-08-17 11:40:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "对于mysql 的 like 而言，一般都要用 like concat() 组合，可以防止sql注入 所以用未注释掉的呢种方式会比较好，不推荐直接用like的方式 。 like concat('%/',#{datePath,jdbcType=VARCHAR},'/%') concat函数： 第一个参"
+read_minutes: 1
+cnblogs_id: 13516688
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13516688.html"
+tags_inferred: true
+---
+{% raw %}
+<p>对于mysql 的 like 而言，一般都要用 like concat() 组合，可以防止sql注入         </p>
+<p>  所以用未注释掉的呢种方式会比较好，不推荐直接用like的方式 。</p>
+<p>            like concat('%/',#{datePath,jdbcType=VARCHAR},'/%')</p>
+<p>            concat函数：<br/>               第一个参数 ，就是'%'，其中%后边可以加上一些常量字符比如  / 。<br/>               第二参数，基本上就是传递过来的参数 。<br/>               第三个参数，是结尾的 '%'， %前边可以加一定的常量字符比如  / 。</p>
+<p>例如</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;"> &lt;isNotEmpty property="XXX" prepend="and" removeFirstPrepend="true"&gt;
+                XXX  LIKE CONCAT('%', #xxx#, '%')
+            &lt;/isNotEmpty&gt;
+            &lt;isNotEmpty property="xxx" prepend="and" removeFirstPrepend="true"&gt;
+                XXXLIKE CONCAT('%', #XXX#, '%')
+            &lt;/isNotEmpty&gt;
+</pre>
+</div>
+<p>　　</p>
+{% endraw %}

@@ -1,0 +1,808 @@
+---
+title: "Java 之 JUC"
+date: 2020-06-26 20:00:00 +0800
+tags: ["【Java高级】-- java高级", "【Java】-- Java基础"]
+excerpt: "1. JUC 简介 在 Java 5.0 提供了 java.util.concurrent(简称JUC)包,在此包中增加了在并发编程中很常用的工具类,用于定义类似于线程的自定义子系统,包括线程池,异步 IO 和轻量级任务框架;还提供了设计用于多线程上下文中的 Collection 实现等; 2. v"
+read_minutes: 10
+cnblogs_id: 13196191
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13196191.html"
+tags_inferred: true
+---
+{% raw %}
+<h3 id="1-juc-简介">1. JUC 简介</h3>
+<ul>
+<li>在 Java 5.0 提供了 <code>java.util.concurrent</code>(简称JUC)包,在此包中增加了在并发编程中很常用的工具类,<br/>用于定义类似于线程的自定义子系统,包括线程池,异步 IO 和轻量级任务框架;还提供了设计用于多线程上下文中<br/>的 Collection 实现等;</li>
+</ul>
+<h3 id="2-volatile-关键字">2. volatile 关键字</h3>
+<ul>
+<li>volatile 关键字: 当多个线程进行操作共享数据时,可以保证内存中的数据是可见的;相较于 synchronized 是一种<br/>较为轻量级的同步策略;</li>
+<li>volatile 不具备"互斥性";</li>
+<li>volatile 不能保证变量的"原子性";</li>
+</ul>
+<pre><code class="hljs java"><span class="hljs-comment">// 使用 volatile 之前
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestVolatile{
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        ThreadDemo td = <span class="hljs-keyword">new ThreadDemo();
+        <span class="hljs-keyword">new Thread(td).start();
+
+        <span class="hljs-keyword">while(<span class="hljs-keyword">true){
+            <span class="hljs-keyword">if(td.isFlag()){
+                System.out.println(<span class="hljs-string">"########");
+                <span class="hljs-keyword">break;
+            }
+        }
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">ThreadDemo <span class="hljs-keyword">implements <span class="hljs-title">Runnable{
+    <span class="hljs-keyword">private <span class="hljs-keyword">boolean flag = <span class="hljs-keyword">false;
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+        <span class="hljs-keyword">try{
+            <span class="hljs-comment">// 该线程 sleep(200), 导致了程序无法执行成功
+            Thread.sleep(<span class="hljs-number">200);
+        }<span class="hljs-keyword">catch(InterruptedException e){
+            e.printStackTrace();
+        }
+
+        flag = <span class="hljs-keyword">true;
+
+        Sytem.out.println(<span class="hljs-string">"flag="+isFlag());
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">boolean <span class="hljs-title">isFlag<span class="hljs-params">(){
+        <span class="hljs-keyword">return flag;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">setFlag<span class="hljs-params">(<span class="hljs-keyword">boolean flag){
+        <span class="hljs-keyword">this.flag = flag;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p><img alt="" loading="lazy" src="/images/cnblogs/813a8b2b514f34ef.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/c43cbbf05a78a1fa.png"/></p>
+<pre><code class="hljs java"><span class="hljs-comment">// 解决问题方式一: 同步锁
+<span class="hljs-comment">//   但是,效率太低
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestVolatile{
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        ThreadDemo td = <span class="hljs-keyword">new ThreadDemo();
+        <span class="hljs-keyword">new Thread(td).start();
+
+
+        <span class="hljs-keyword">while(<span class="hljs-keyword">true){
+            <span class="hljs-comment">// 使用同步锁
+            <span class="hljs-keyword">synchronized(td){
+                <span class="hljs-keyword">if(td.isFlag()){
+                    System.out.println(<span class="hljs-string">"########");
+                    <span class="hljs-keyword">break;
+                }
+            }
+        }
+    }
+}
+
+<span class="hljs-comment">// 解决方式二: 使用 volatile 关键字
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestVolatile{
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        ThreadDemo td = <span class="hljs-keyword">new ThreadDemo();
+        <span class="hljs-keyword">new Thread(td).start();
+
+        <span class="hljs-keyword">while(<span class="hljs-keyword">true){
+            <span class="hljs-keyword">if(td.isFlag()){
+                System.out.println(<span class="hljs-string">"########");
+                <span class="hljs-keyword">break;
+            }
+        }
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">ThreadDemo <span class="hljs-keyword">implements <span class="hljs-title">Runnable{
+    <span class="hljs-keyword">private <span class="hljs-keyword">volatile <span class="hljs-keyword">boolean flag = <span class="hljs-keyword">false;
+
+    同上(略)
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="3-i-的原子性问题">3. <code>i++</code> 的原子性问题</h3>
+<ol>
+<li><code>i++</code>的操作实际上分为三个步骤: "读-改-写";</li>
+<li>原子性: 就是"i++"的"读-改-写"是不可分割的三个步骤;</li>
+<li>原子变量: JDK1.5 以后, <code>java.util.concurrent.atomic</code>包下,提供了常用的原子变量;
+<ul>
+<li>原子变量中的值,使用 <code>volatile</code> 修饰,保证了内存可见性;</li>
+<li>CAS(Compare-And-Swap) 算法保证数据的原子性;</li>
+</ul>
+</li>
+</ol>
+<pre><code class="hljs java"><span class="hljs-keyword">int i = <span class="hljs-number">10;
+i = i++;  <span class="hljs-comment">// 此时, i=10
+
+执行步骤:
+<span class="hljs-keyword">int temp = i;
+i = i + <span class="hljs-number">1;
+i = temp;
+
+
+<span class="hljs-comment">// 测试类
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestAtomicDemo{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+
+        AtomicDemo ad = <span class="hljs-keyword">new AtomicDemo();
+
+        <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i &lt; <span class="hljs-number">10; i++){
+            <span class="hljs-keyword">new Thread(ad).start();
+        }
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">AtomicDemo <span class="hljs-keyword">implements <span class="hljs-title">Runnable{
+    <span class="hljs-keyword">private <span class="hljs-keyword">int serialNumber = <span class="hljs-number">0;
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+
+        <span class="hljs-keyword">try{
+            Thread.sleep(<span class="hljs-number">200);
+        }<span class="hljs-keyword">catch(InterruptedException e){
+
+        }
+
+        System.out.println(Thread.currentThread().getName() + <span class="hljs-string">":" + getSerialNumber());
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">int <span class="hljs-title">getSerialNumber<span class="hljs-params">(){
+        <span class="hljs-keyword">return serialNumber++;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p><img alt="" loading="lazy" src="/images/cnblogs/2651ba7bda60778c.png"/></p>
+<pre><code class="hljs java"><span class="hljs-comment">// 改进: 使用原子变量
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">AtomicDemo <span class="hljs-keyword">implements <span class="hljs-title">Runnable{
+
+    <span class="hljs-keyword">private AtomicInteger serialNumber = <span class="hljs-keyword">new AtomicInteger();
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+        <span class="hljs-keyword">try{
+            Thread.sleep(<span class="hljs-number">200);
+        }<span class="hljs-keyword">catch(InterruptedException e){
+
+        }
+
+        System.out.println(Thread.currentThread().getName()+<span class="hljs-string">":"+getSerialNumber());
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">int <span class="hljs-title">getSerialNumber<span class="hljs-params">(){
+        <span class="hljs-comment">// 自增运算
+        <span class="hljs-keyword">return serialNumber.getAndIncrement();
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="31-cas-算法">3.1 CAS 算法</h4>
+<ul>
+<li>CAS(Compare-And-Swap) 算法是硬件对于并发的支持,针对多处理器操作而设计的处理器中的一种特殊指令,用于<br/>管理对共享数据的并发访问;</li>
+<li>CAS 是一种无锁的非阻塞算法的实现;</li>
+<li>CAS 包含了三个操作数:
+<ul>
+<li>需要读写的内存值: V</li>
+<li>进行比较的预估值: A</li>
+<li>拟写入的更新值: B</li>
+<li>当且仅当 V == A 时, V = B, 否则,将不做任何操作;</li>
+</ul>
+</li>
+</ul>
+<pre><code class="hljs java"><span class="hljs-comment">// 模拟CAS 算法
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">CompareAndSwap{
+    <span class="hljs-keyword">private <span class="hljs-keyword">int value;
+
+    <span class="hljs-comment">// 获取内存值
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">synchronized <span class="hljs-keyword">int <span class="hljs-title">get<span class="hljs-params">(){
+        <span class="hljs-keyword">return value;
+    }
+
+    <span class="hljs-comment">// 无论更新成功与否,都返回修改之前的内存值
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">synchronized <span class="hljs-keyword">int <span class="hljs-title">compareAndSwap<span class="hljs-params">(<span class="hljs-keyword">int expectedValue, <span class="hljs-keyword">int newValue){
+        <span class="hljs-comment">// 获取旧值
+        <span class="hljs-keyword">int oldValue = value;
+
+        <span class="hljs-keyword">if(oldValue == expectedValue){
+            <span class="hljs-keyword">this.value = newValue;
+        }
+
+        <span class="hljs-comment">// 返回修改之前的值
+        <span class="hljs-keyword">return oldValue;
+    }
+
+    <span class="hljs-comment">// 判断是否设置成功
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">synchronized <span class="hljs-keyword">boolean <span class="hljs-title">compareAndSet<span class="hljs-params">(<span class="hljs-keyword">int expectedValue, <span class="hljs-keyword">int newValue){
+        <span class="hljs-keyword">return expectedValue == compareAndSwap(expectedValue, newValue);
+    }
+}
+
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestCompareAndSwap{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        <span class="hljs-keyword">final CopareAndSwap cas = <span class="hljs-keyword">new CompareAndSwap();
+
+        <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i&lt;<span class="hljs-number">10; i++){
+            <span class="hljs-comment">// 创建10个线程,模拟多线程环境
+            <span class="hljs-keyword">new Thead(<span class="hljs-keyword">new Runnable(){
+                <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+                    <span class="hljs-keyword">int expectedValue = cas.get();
+
+                    <span class="hljs-keyword">boolean b = cas.compareAndSet(expectedValue, (<span class="hljs-keyword">int)(Math.random()*<span class="hljs-number">100));
+                    System.out.println(b);
+                }
+            }).start();
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="4-并发容器类">4. 并发容器类</h3>
+<ul>
+<li>Java 5.0 在 <code>java.util.concurrent</code> 包中提供了多种并发容器类来改进同步容器的性能;</li>
+</ul>
+<h4 id="41-concurrenthashmap">4.1 ConcurrentHashMap</h4>
+<ul>
+<li>ConcurrentHashMap 同步容器类是 Java5 增加的一个线程安全的哈希表;介于 HashMap 与 Hashtable 之间;<br/>内部采用"锁分段"机制替代Hashtable的独占锁,进而提高性能;</li>
+<li>此包还提供了设计用于多线程上下文中的<code>Collection</code>实现: <code>ConcurrentHashMap</code>,<code>ConcurrentSkipListMap</code><br/><code>ConcurrentSkipListSet</code>, <code>CopyOnWriteArrayList</code> 和 <code>CopyOnWriteArraySet</code>;
+<ul>
+<li>当期望许多线程访问一个给定collection时,<code>ConcurrentHashMap</code>通常优于同步的<code>HashMap</code>;<br/><code>ConcurrentSkipListMap</code>通常优于同步的<code>TreeMap</code>;</li>
+<li>当期望的读数和遍历远远大于列表的更新数时, <code>CopyOnWriteArrayList</code>优于同步的<code>ArrayList</code>;</li>
+</ul>
+</li>
+</ul>
+<h4 id="42-countdownlatch闭锁">4.2 CountDownLatch(闭锁)</h4>
+<ul>
+<li><code>CountDownLatch</code>是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待;</li>
+</ul>
+<pre><code class="hljs java"><span class="hljs-comment">// 测试类: 计算多线程的执行时间
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestCountDownLatch{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        <span class="hljs-keyword">final CountDownLatch latch = <span class="hljs-keyword">new CountDownLatch(<span class="hljs-number">10);
+        LatchDemo ld = <span class="hljs-keyword">new LatchDemo(latch);
+
+        <span class="hljs-keyword">long start = System.currentTimeMillis();
+
+        <span class="hljs-comment">// 创建10个线程
+        <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i&lt;<span class="hljs-number">10; i++){
+            <span class="hljs-keyword">new Thread(ld).start();
+        }
+
+        <span class="hljs-keyword">try{
+            latch.await();
+        }<span class="hljs-keyword">catch(InterruptedException e){
+
+        }
+
+        <span class="hljs-keyword">long end = System.currentTimeMillis();
+
+        System.out.println(<span class="hljs-string">"耗费时间为:"+(end - start));
+
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">LatchDemo <span class="hljs-keyword">implements <span class="hljs-title">Runnable{
+    <span class="hljs-keyword">private CountDownLatch latch;
+
+    <span class="hljs-comment">// 有参构造器
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-title">LatchDemo<span class="hljs-params">(CountDownLatch latch){
+        <span class="hljs-keyword">this.latch = latch;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+
+        <span class="hljs-keyword">synchronized(<span class="hljs-keyword">this){
+            <span class="hljs-keyword">try{
+                <span class="hljs-comment">// 打印50000以内的偶数
+                <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i&lt;<span class="hljs-number">50000; i++){
+                    <span class="hljs-keyword">if(i % <span class="hljs-number">2 == <span class="hljs-number">0){
+                        System.out.println(i);
+                    }
+                }
+            }<span class="hljs-keyword">finally{
+                <span class="hljs-comment">// 线程数量递减
+                latch.countDown();
+            }
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="5-创建执行线程的方式三">5. 创建执行线程的方式三</h3>
+<ul>
+<li>相较于实现 Runnable 接口的方式,实现 Callable 接口类中的方法可以有返回值,并且可以抛出异常;</li>
+</ul>
+<pre><code class="hljs java"><span class="hljs-comment">// 测试类
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestCallable{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+
+        ThreadDemo td = <span class="hljs-keyword">new ThreadDemo();
+
+        <span class="hljs-comment">// 执行 Callable 方式,需要 FutureTask 实现类的支持
+        <span class="hljs-comment">// FutureTask 实现类用于接收运算结果, FutureTask 是 Future 接口的实现类
+        FutureTask&lt;Integer&gt; result = <span class="hljs-keyword">new FutureTask&lt;&gt;(td);
+
+        <span class="hljs-keyword">new Thread(result).start();
+
+        <span class="hljs-comment">// 接收线程运算后的结果
+        <span class="hljs-keyword">try{
+            <span class="hljs-comment">// 只有当 Thread 线程执行完成后,才会打印结果;
+            <span class="hljs-comment">// 因此, FutureTask 也可用于闭锁
+            Integer sum = result.get();
+            System.out.println(sum);
+        }<span class="hljs-keyword">catch(InterruptedException | ExecutionException e){
+            e.printStackTrace();
+        }
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">ThreadDemo <span class="hljs-keyword">implements <span class="hljs-title">Callable&lt;<span class="hljs-title">Integer&gt;{
+
+    <span class="hljs-comment">// 需要实现的方法
+    <span class="hljs-function"><span class="hljs-keyword">public Integer <span class="hljs-title">call<span class="hljs-params">() <span class="hljs-keyword">throws Exception{
+        <span class="hljs-comment">// 计算 0~100 的和
+        <span class="hljs-keyword">int sum = <span class="hljs-number">0;
+
+        <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i&lt;=<span class="hljs-number">100; i++){
+            sum += i;
+        }
+
+        <span class="hljs-keyword">return sum;
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="6-同步锁lock">6. 同步锁(Lock)</h3>
+<ul>
+<li>参考 <a href="http://www.cnblogs.com/linkworld/p/7458559.html">"java 多线程间通信"</a></li>
+</ul>
+<pre><code class="hljs cs"><span class="hljs-comment">// 测试类: 以卖票为例
+<span class="hljs-comment">// 使用 lock 之前
+<span class="hljs-keyword">public <span class="hljs-keyword">class <span class="hljs-title">TestLock{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main(<span class="hljs-params">String[] args){
+        Ticket ticket = <span class="hljs-keyword">new Ticket();
+
+        <span class="hljs-keyword">new Thread(ticket,<span class="hljs-string">"1号窗口").start();
+        <span class="hljs-keyword">new Thread(ticket,<span class="hljs-string">"2号窗口").start();
+        <span class="hljs-keyword">new Thread(ticket,<span class="hljs-string">"3号窗口").start();
+    }
+}
+
+<span class="hljs-keyword">class <span class="hljs-title">Ticket <span class="hljs-title">implements <span class="hljs-title">Runnable{
+
+    <span class="hljs-keyword">private <span class="hljs-keyword">int tick = <span class="hljs-number">100;
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run(<span class="hljs-params">){
+        <span class="hljs-keyword">while(<span class="hljs-literal">true){
+            <span class="hljs-keyword">if(tick &gt; <span class="hljs-number">0){
+                <span class="hljs-keyword">try{
+                    Thread.sleep(<span class="hljs-number">200);
+                }<span class="hljs-keyword">catch(InterruptedException e){
+
+                }
+
+                System.<span class="hljs-keyword">out.println(Thread.currentThread().getName()+<span class="hljs-string">"完成售票,余票为: "+ --tick);
+            }
+        }
+    }
+}
+
+<span class="hljs-comment">// 使用 Lock
+<span class="hljs-keyword">class <span class="hljs-title">Ticket <span class="hljs-title">implements <span class="hljs-title">Runnable{
+
+    <span class="hljs-keyword">private <span class="hljs-keyword">int tick = <span class="hljs-number">100;
+
+    <span class="hljs-keyword">private Lock <span class="hljs-keyword">lock = <span class="hljs-keyword">new ReentrantLock();
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run(<span class="hljs-params">){
+        <span class="hljs-keyword">while(<span class="hljs-literal">true){
+            <span class="hljs-comment">// 上锁
+            <span class="hljs-keyword">lock.<span class="hljs-keyword">lock();
+
+            <span class="hljs-keyword">try{
+                <span class="hljs-keyword">if(tick &gt; <span class="hljs-number">0){
+                    <span class="hljs-keyword">try{
+                        Thread.sleep(<span class="hljs-number">200);
+                    }<span class="hljs-keyword">catch(InterruptedException e){
+
+                    }
+                    System.<span class="hljs-keyword">out.println(Thread.currentThread().getName()+<span class="hljs-string">"完成售票,余票为: "+ --tick);
+                }
+            }<span class="hljs-keyword">finally{
+                <span class="hljs-comment">// 释放锁
+                <span class="hljs-keyword">lock.unlock();
+            }
+        }
+    }
+}
+
+<span class="hljs-comment">// 练习: 程序按序交替
+<span class="hljs-comment">// 编写一个程序,开启3个线程,这三个线程的 ID 分别为 A, B, C, 每个线程将自己的 ID 在屏幕上打印10遍,
+<span class="hljs-comment">// 要求输出的结果必须按顺序显示:
+<span class="hljs-comment">// 如: ABCABCABC... 依次递归
+
+<span class="hljs-keyword">public <span class="hljs-keyword">class <span class="hljs-title">TestABCAlternate{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main(<span class="hljs-params">String[] args){
+        AlternateDemo ad = <span class="hljs-keyword">new AlternateDemo();
+
+        <span class="hljs-keyword">new Thread(<span class="hljs-keyword">new Runnable(){
+            <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run(<span class="hljs-params">){
+                <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">1; i&lt;<span class="hljs-number">20; i++){
+                    ad.loopA(i);
+                }
+            }
+        },<span class="hljs-string">"A").start();
+
+        <span class="hljs-keyword">new Thread(<span class="hljs-keyword">new Runnable(){
+            <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run(<span class="hljs-params">){
+                <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">1; i&lt;<span class="hljs-number">20; i++){
+                    ad.loopB(i);
+                }
+            }
+        },<span class="hljs-string">"B").start();
+
+        <span class="hljs-keyword">new Thread(<span class="hljs-keyword">new Runnable(){
+            <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run(<span class="hljs-params">){
+                <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">1; i&lt;<span class="hljs-number">20; i++){
+                    ad.loopC(i);
+
+                    System.<span class="hljs-keyword">out.println(<span class="hljs-string">"--------------------");
+                }
+            }
+        },<span class="hljs-string">"C").start();
+    }
+}
+
+<span class="hljs-keyword">class <span class="hljs-title">AlternateDemo{
+
+    <span class="hljs-keyword">private <span class="hljs-keyword">int number = <span class="hljs-number">1; <span class="hljs-comment">// 当前正在执行线程的标记
+
+    <span class="hljs-keyword">private Lock <span class="hljs-keyword">lock = <span class="hljs-keyword">new ReentrantLock();
+    <span class="hljs-keyword">private Condition condition1 = <span class="hljs-keyword">lock.newCondition();
+    <span class="hljs-keyword">private Condition condition2 = <span class="hljs-keyword">lock.newCondition();
+    <span class="hljs-keyword">private Condition condition3 = <span class="hljs-keyword">lock.newCondition();
+
+    <span class="hljs-comment">// totalLoop 表示循环第几轮
+    <span class="hljs-comment">// 线程A
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">loopA(<span class="hljs-params"><span class="hljs-keyword">int totalLoop){
+        <span class="hljs-comment">// 上锁
+        <span class="hljs-keyword">lock.<span class="hljs-keyword">lock();
+
+        <span class="hljs-keyword">try{
+            <span class="hljs-comment">// 1. 判断
+            <span class="hljs-keyword">if(number != <span class="hljs-number">1){
+                condition1.<span class="hljs-keyword">await();
+            }
+
+            <span class="hljs-comment">// 2. 打印
+            <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">1; i &lt;= <span class="hljs-number">5; i++){
+                System.<span class="hljs-keyword">out.println(Thread.currentThread().getName()+<span class="hljs-string">"\t"+i+<span class="hljs-string">"\t"+totalLoop);
+            }
+
+            <span class="hljs-comment">// 3. 唤醒线程B
+            number = <span class="hljs-number">2;
+            condition2.signal();
+
+        }<span class="hljs-keyword">catch(Exception e){
+            e.printStackTrace();
+        }<span class="hljs-keyword">finally{
+            <span class="hljs-comment">// 释放锁
+            <span class="hljs-keyword">lock.unlock();
+        }
+    }
+
+    <span class="hljs-comment">// 线程B
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">loopB(<span class="hljs-params"><span class="hljs-keyword">int totalLoop){
+        <span class="hljs-comment">// 上锁
+        <span class="hljs-keyword">lock.<span class="hljs-keyword">lock();
+
+        <span class="hljs-keyword">try{
+            <span class="hljs-comment">// 1. 判断
+            <span class="hljs-keyword">if(number != <span class="hljs-number">2){
+                condition2.<span class="hljs-keyword">await();
+            }
+
+            <span class="hljs-comment">// 2. 打印
+            <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">1; i &lt;= <span class="hljs-number">15; i++){
+                System.<span class="hljs-keyword">out.println(Thread.currentThread().getName()+<span class="hljs-string">"\t"+i+<span class="hljs-string">"\t"+totalLoop);
+            }
+
+            <span class="hljs-comment">// 3. 唤醒线程C
+            number = <span class="hljs-number">3;
+            condition3.signal();
+
+        }<span class="hljs-keyword">catch(Exception e){
+            e.printStackTrace();
+        }<span class="hljs-keyword">finally{
+            <span class="hljs-comment">// 释放锁
+            <span class="hljs-keyword">lock.unlock();
+        }
+    }
+
+    <span class="hljs-comment">// 线程C
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">loopC(<span class="hljs-params"><span class="hljs-keyword">int totalLoop){
+        <span class="hljs-comment">// 上锁
+        <span class="hljs-keyword">lock.<span class="hljs-keyword">lock();
+
+        <span class="hljs-keyword">try{
+            <span class="hljs-comment">// 1. 判断
+            <span class="hljs-keyword">if(number != <span class="hljs-number">3){
+                condition3.<span class="hljs-keyword">await();
+            }
+
+            <span class="hljs-comment">// 2. 打印
+            <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">1; i &lt;= <span class="hljs-number">20; i++){
+                System.<span class="hljs-keyword">out.println(Thread.currentThread().getName()+<span class="hljs-string">"\t"+i+<span class="hljs-string">"\t"+totalLoop);
+            }
+
+            <span class="hljs-comment">// 3. 唤醒线程A
+            number = <span class="hljs-number">1;
+            condition1.signal();
+
+        }<span class="hljs-keyword">catch(Exception e){
+            e.printStackTrace();
+        }<span class="hljs-keyword">finally{
+            <span class="hljs-comment">// 释放锁
+            <span class="hljs-keyword">lock.unlock();
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="7-readwritelock读写锁">7. ReadWriteLock(读写锁)</h3>
+<pre><code class="hljs cs"><span class="hljs-comment">// 测试类
+<span class="hljs-keyword">public <span class="hljs-keyword">class <span class="hljs-title">TestReadWriteLock{
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main(<span class="hljs-params">String[] args){
+        ReadWriteLockDemo rw = <span class="hljs-keyword">new ReadWriteLockDemo();
+
+        <span class="hljs-comment">// 一个线程进行写
+        <span class="hljs-keyword">new Thread(<span class="hljs-keyword">new Runnable(){
+            <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run(<span class="hljs-params">){
+                rw.<span class="hljs-keyword">set((<span class="hljs-keyword">int)(Math.random()*<span class="hljs-number">100));
+            }
+        },<span class="hljs-string">"Write:").start();
+
+        <span class="hljs-comment">// 100个线程进行读操作
+        <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i&lt;<span class="hljs-number">100; i++){
+            <span class="hljs-keyword">new Thread(<span class="hljs-keyword">new Runnable(){
+                <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run(<span class="hljs-params">){
+                    rw.<span class="hljs-keyword">get();
+                }
+            },<span class="hljs-string">"Read:").start();
+        }
+    }
+
+}
+
+<span class="hljs-keyword">class <span class="hljs-title">ReadWriteLockDemo{
+    <span class="hljs-keyword">private <span class="hljs-keyword">int number = <span class="hljs-number">0;
+
+    <span class="hljs-keyword">private ReadWriteLock <span class="hljs-keyword">lock = <span class="hljs-keyword">new ReentrantReadWriteLock();
+
+
+
+    <span class="hljs-comment">// 读
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">get(<span class="hljs-params">){
+        <span class="hljs-keyword">lock.readLock().<span class="hljs-keyword">lock(); <span class="hljs-comment">// 上锁
+
+        <span class="hljs-keyword">try{
+            System.<span class="hljs-keyword">out.println(Thread.currentThread().getName()+<span class="hljs-string">":"+number);
+        }<span class="hljs-keyword">finally{
+            <span class="hljs-keyword">lock.readLock().unlock(); <span class="hljs-comment">// 释放锁
+        }
+    }
+
+    <span class="hljs-comment">// 写
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">set(<span class="hljs-params"><span class="hljs-keyword">int number){
+
+        <span class="hljs-keyword">lock.writeLock().<span class="hljs-keyword">lock();
+
+        <span class="hljs-keyword">try{    
+            System.<span class="hljs-keyword">out.println(Thread.currentThread().getName());
+
+            <span class="hljs-keyword">this.number = number;
+        }<span class="hljs-keyword">finally{
+            <span class="hljs-keyword">lock.writeLock().unlock();
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="8-线程八锁">8. 线程八锁</h3>
+<pre><code class="hljs java"><span class="hljs-comment">// 测试类
+<span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Test{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        Demo demo = <span class="hljs-keyword">new Demo();
+
+        Demo demo2 = <span class="hljs-keyword">new Demo();
+
+        <span class="hljs-keyword">new Thread(<span class="hljs-keyword">new Runnable(){
+            <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+                demo.getOne();
+            }
+        }).start();
+
+        <span class="hljs-keyword">new Thread(<span class="hljs-keyword">new Runnable(){
+            <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+
+                <span class="hljs-comment">// demo2.getTwo();
+                demo.getTwo();
+            }
+        }).start();
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">Demo{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">synchronized <span class="hljs-keyword">void <span class="hljs-title">getOne<span class="hljs-params">(){
+        <span class="hljs-keyword">try{
+            Thread.sleep(<span class="hljs-number">3000);
+        }<span class="hljs-keyword">catch(InterruptedException e){
+
+        }
+
+        System.out.println(<span class="hljs-string">"one");
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">synchronized <span class="hljs-keyword">void <span class="hljs-title">getTwo<span class="hljs-params">(){
+        System.out.println(<span class="hljs-string">"two");
+    }
+
+}
+
+<span class="hljs-comment">/*
+ * 1. 两个普通同步方法,两个线程,标准打印, 打印输出: one  two
+ * 2. 新增 Thread.sleep() 给 getOne(), 打印输出: one  two
+ * 3. 新增普通方法 getThree(), 打印输出: three  one  two
+ * 4. 两个普通同步方法,两个Demo对象, 两个线程,打印输出: two  one
+ * 5. 修改 getOne() 为静态同步方法, 一个Demo对象, 打印输出: two  one
+ * 6. 修改两个方法都为静态同步方法, 一个 Demo 对象, 打印输出: one  two
+ * 7. 修改 getone() 为静态同步方法, 两个 Demo 对象, 打印输出: two  one
+ * 8. 两个均为静态同步方法,两个 Demo 对象,打印输出: one  two
+ */
+
+ <span class="hljs-comment">// 总结:
+ <span class="hljs-comment">//    1. 非静态方法的锁默认为 this, 静态方法的锁为 "对应的Class实例";
+ <span class="hljs-comment">//    2. 在某一个时刻内,只能有一个线程持有锁,无论几个方法;
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="9-线程池">9. 线程池</h3>
+<ul>
+<li>线程池提供了一个线程队列,队列中保存着所有等待状态的线程;</li>
+<li>避免了创建与销毁线程的额外开销,提高了响应速度;</li>
+<li>线程池的体系结构
+<ul>
+<li><code>java.util.concurrent.Executor</code>: 负责线程的使用和调度的根接口;</li>
+<li><code>ExecutorService</code>: 子接口,线程池的主要接口;</li>
+<li><code>ThreadPoolExecutor</code>: 线程池的实现类;</li>
+<li><code>ScheduledExecutorService</code>: 子接口,负责线程的调度;</li>
+<li><code>ScheduledThreadPoolExecutor</code>: 继承了线程池的实现类,实现了负责线程调度的子接口;</li>
+</ul>
+</li>
+<li>工具类: <code>Executors</code>
+<ul>
+<li><code>ExecutorService newFixedThreadPool()</code>: 创建固定大小的线程池;</li>
+<li><code>ExecutorService newCachedThreadPool()</code>: 缓存线程池,线程池中线程的数量不固定,可以根据需求自动更改数量;</li>
+<li><code>ExecutorService newSingleThreadExecutor()</code>: 创建单个线程池, 线程池中只有一个线程;</li>
+<li><code>ScheduledExecutorService newScheduledThreadPool()</code>: 创建固定大小的线程,可以延时或定时的执行任务;</li>
+</ul>
+</li>
+</ul>
+<pre><code class="hljs java"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestThreadPool{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        <span class="hljs-comment">// 1. 创建线程池
+        ExecutorService pool = Executors.newFixedThreadPool(<span class="hljs-number">5);
+
+        ThreadPoolDemo tpd = <span class="hljs-keyword">new ThreadPoolDemo();
+
+        <span class="hljs-comment">// 2. 为线程池中线程分配任务
+        <span class="hljs-comment">//    submit(Callable&lt;T&gt; task)
+        <span class="hljs-comment">//    submit(Runnable task)
+
+        <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i&lt;<span class="hljs-number">10; i++){
+            pool.submit(tpd);
+        }
+
+        <span class="hljs-comment">// 3. 关闭线程池
+        pool.shutdown();
+    }
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">ThreadPoolDemo <span class="hljs-keyword">implements <span class="hljs-title">Runnable{
+
+    <span class="hljs-keyword">private <span class="hljs-keyword">int i=<span class="hljs-number">0;
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">run<span class="hljs-params">(){
+        <span class="hljs-keyword">while(i &lt;= <span class="hljs-number">100){
+            System.out.println(Thread.currentThread().getName()+<span class="hljs-string">" : "+ i++)
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4 id="91-线程调度">9.1 线程调度</h4>
+<pre><code class="hljs cs"><span class="hljs-keyword">public <span class="hljs-keyword">class <span class="hljs-title">TestScheduledThreadPool{
+
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main(<span class="hljs-params">String[] args) throws Exception{
+        <span class="hljs-comment">// 1. 创建线程池
+        ScheduledExecutorService pool = Executors.newScheduledThreadPool(<span class="hljs-number">5);
+
+        <span class="hljs-comment">// 2. 分配任务
+        <span class="hljs-comment">//      pool.shedule(Callalbe&lt;T&gt; callable, long delay, TimeUnit unit(时间单位))
+
+        <span class="hljs-keyword">for(<span class="hljs-keyword">int i=<span class="hljs-number">0; i &lt; <span class="hljs-number">10; i++){
+            Future&lt;Integer&gt; result = pool.schedule(<span class="hljs-keyword">new Callable&lt;Integer&gt;(){
+
+                <span class="hljs-function"><span class="hljs-keyword">public Integer <span class="hljs-title">call(<span class="hljs-params">) throws Exception{
+                        <span class="hljs-comment">// 产生100以内的随机数
+                        <span class="hljs-keyword">int num = <span class="hljs-keyword">new Random().nextInt(<span class="hljs-number">100);
+
+                        System.<span class="hljs-keyword">out.println(Thread.currentThread().getName()+ <span class="hljs-string">":" + num);
+
+                        <span class="hljs-keyword">return num;
+                    }
+                }, <span class="hljs-number">3, TimeUnit.SECONDS);
+
+                System.<span class="hljs-keyword">out.println(result.<span class="hljs-keyword">get());
+        }
+
+        <span class="hljs-comment">//3. 关闭线程池
+        pool.shutdown();
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3 id="10-forkjoin-框架">10 Fork/Join 框架</h3>
+<pre><code class="hljs java"><span class="hljs-keyword">public <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">TestForkJoinPool{
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">static <span class="hljs-keyword">void <span class="hljs-title">main<span class="hljs-params">(String[] args){
+        ForkJoinPool pool = <span class="hljs-keyword">new ForkJoinPool();
+
+        ForkJoinTask&lt;Long&gt; task = <span class="hljs-keyword">new ForkJoinSumCalculate(<span class="hljs-number">0L, <span class="hljs-number">100000000L);
+
+        Long sum = pool.invoke(task);
+
+        System.out.println(sum);
+    }
+
+}
+
+<span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">ForkJoinSumCalculate <span class="hljs-keyword">extends <span class="hljs-title">RecursiveTask&lt;<span class="hljs-title">Long&gt;{
+
+    <span class="hljs-keyword">private <span class="hljs-keyword">static <span class="hljs-keyword">final <span class="hljs-keyword">long serialVersionUID = <span class="hljs-number">24340990L;
+
+    <span class="hljs-keyword">private <span class="hljs-keyword">long start;
+    <span class="hljs-keyword">private <span class="hljs-keyword">long end;
+
+    <span class="hljs-keyword">private <span class="hljs-keyword">static <span class="hljs-keyword">final <span class="hljs-keyword">long THURSHOLD = <span class="hljs-number">10000L;  <span class="hljs-comment">// 拆分临界值
+
+    <span class="hljs-comment">// 有参构造器
+    <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-title">ForkJoinSumCalculate<span class="hljs-params">(<span class="hljs-keyword">long start, <span class="hljs-keyword">long end){
+        <span class="hljs-keyword">this.start = start;
+        <span class="hljs-keyword">this.end = end;
+    }
+
+    <span class="hljs-function"><span class="hljs-keyword">public Long <span class="hljs-title">compute<span class="hljs-params">(){
+        <span class="hljs-keyword">long length = end - start;
+
+        <span class="hljs-keyword">if(length &lt;= THURSHOLD){
+            <span class="hljs-keyword">long  sum = <span class="hljs-number">0L;
+
+            <span class="hljs-keyword">for(<span class="hljs-keyword">long i = start; i&lt;=end; i++){
+                sum += i;
+            }
+            <span class="hljs-keyword">return sum;
+        }<span class="hljs-keyword">else{
+            <span class="hljs-keyword">long middle = (start + end ) / <span class="hljs-number">2;
+            ForkJoinSumCalculate left = <span class="hljs-keyword">new ForkJoinSumCalculate(start, middle);
+            left.fork(); <span class="hljs-comment">// 进行拆分,同时压入线程队列
+
+            ForkJoinSumCalculate right = <span class="hljs-keyword">new ForkJoinSumCalculate(middle + <span class="hljs-number">1, end);
+            right.fork(); <span class="hljs-comment">// 进行拆分,同时压入线程队列
+
+            <span class="hljs-keyword">return left.join() + right.join();
+        }
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p> </p>
+<p><strong>参考资料</strong></p>
+<ul>
+<li><a href="https://www.bilibili.com/video/av14396461/">Java JUC</a></li>
+<li><a href="http://blog.csdn.net/xiangwanpeng/article/details/54960288">原子变量和CAS 算法</a></li>
+<li><a href="https://yemengying.com/2016/06/05/interview/">java 面试相关</a></li>
+<li><a href="https://www.cnblogs.com/nullzx/p/5270233.html">三个同步工具:Semaphore,countDownLatch,CyclicBarrier</a></li>
+</ul>
+{% endraw %}

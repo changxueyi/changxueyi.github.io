@@ -1,0 +1,105 @@
+---
+title: "PHP后端技术能力模型"
+date: 2021-01-19 22:02:00 +0800
+tags: ["【PHP】-- PHP基础"]
+excerpt: "技能 初级 中级 高级 技能 初级 中级 高级 mysql 1 能够搭建一个可运行的MySQL数据库2 知道innodb和myisam的区别3 了解、遵守mysql开发规范4 索引的使用， 优化explain5 能使用事务 1 常规SQL参数优化知道影响innodb/myisam性能的配置选项（比如"
+read_minutes: 5
+cnblogs_id: 14300375
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14300375.html"
+---
+{% raw %}
+<div class="wiki-content" id="main-content">
+<div class="table-wrap">
+<table class="wrapped relative-table confluenceTable tablesorter tablesorter-default stickyTableHeaders"><colgroup><col/><col/><col/><col/></colgroup>
+<thead class="tableFloatingHeaderOriginal">
+<tr class="tablesorter-headerRow"><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="0" scope="col">
+<div class="tablesorter-header-inner">技能</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="1" scope="col">
+<div class="tablesorter-header-inner">初级</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="2" scope="col">
+<div class="tablesorter-header-inner">中级</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="3" scope="col">
+<div class="tablesorter-header-inner">高级</div>
+</th></tr>
+</thead>
+<thead class="tableFloatingHeader">
+<tr class="tablesorter-headerRow"><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="0" scope="col">
+<div class="tablesorter-header-inner">技能</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="1" scope="col">
+<div class="tablesorter-header-inner">初级</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="2" scope="col">
+<div class="tablesorter-header-inner">中级</div>
+</th><th class="confluenceTh tablesorter-header sortableHeader tablesorter-headerUnSorted" data-column="3" scope="col">
+<div class="tablesorter-header-inner">高级</div>
+</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="confluenceTd">mysql</td>
+<td class="confluenceTd">1 能够搭建一个可运行的MySQL数据库<br/>2 知道innodb和myisam的区别<br/>3 了解、遵守mysql开发规范<br/>4 索引的使用， 优化explain<br/>5 能使用事务</td>
+<td class="confluenceTd">
+<p>1 常规SQL参数优化<br/>知道影响innodb/myisam性能的配置选项（比如key_buffer/query_cache/sort_buffer/innodb_buffer_pool_size/</p>
+<p>innodb_flush_log_at_trx_commit等）<br/>2 知道基本的InnoDB/MyISAM索引存储结构和不同（聚簇索引，B树）<br/>3 理解事务的原理<br/>4 掌握mysqladmin，授权、备份等知识</p>
+</td>
+<td class="confluenceTd">1 能够处理更多复杂的MySQL的问题，比如各种问题的追查，主从同步延迟问题的解决、跨机房同步数据方案、MySQL高可用架构等都有涉及了解<br/>2 对MySQL应用层面，对MySQL的核心关键技术比较熟悉，比如事务机制（隔离级别、锁等）、分区等技术有一定了解和应用<br/>3 innodb并发事务处理带来的问题（更新丢失、脏读、不可重复读、幻读），如何产生的和如何避免</td>
+</tr>
+<tr>
+<td class="confluenceTd">php</td>
+<td class="confluenceTd">1.环境搭建<br/>2. 基础知识（基本语法，数据类型，基础函数）、代码规范<br/>3. 主流框架(odp,yii,thinkPhp)<br/>4. 请求生命周期，fast-cgi, php-fpm<br/>5. 错误日志分析</td>
+<td class="confluenceTd">1. 内存管理，gc机制，内存池<br/>2. PHP的构成，生命周期，SAPI<br/>3. 面向对象，命名空间，自动加载机制，异常处理，SPL，动态属性，魔术方法<br/>4. 动态追踪，trace工具应用<br/>5. 变量作用域，静态变量，临时变量等</td>
+<td class="confluenceTd">1. 扩展开发，构成及编译，钩子函数，全局资源，Zval的操作<br/>2. 内核原理，Zend虚拟机，Opcache，JIT<br/>3. PHP的编译与执行， 调度方式，执行流程，运行时缓存<br/>4. hvvm，swoole了解和使用</td>
+</tr>
+<tr>
+<td class="confluenceTd">nginx</td>
+<td class="confluenceTd">1.了解nginx安装和配置, 熟悉反向代理,静态缓存等相关配置<br/>2.能配置Nginx+FastCGI集成,并解决开发中的问题.</td>
+<td class="confluenceTd">1. 深入了解异步非阻塞模型的工作原理<br/>2. 能结合业务设计使用静态缓存,负载均衡,跨域解决方案</td>
+<td class="confluenceTd">1. 掌握nginx扩展开发 （OpenResty、lua）<br/>2. 配置nginx安全策略<br/>3. 能Nginx进行高可用优化<br/>4. 结合业务, 设计高峰期的削峰,降级, 限流方案</td>
+</tr>
+<tr>
+<td class="confluenceTd">linux</td>
+<td class="confluenceTd">1. 熟悉crontab,wget,grep,vim,tar,make,gcc,管道操作等系统命令<br/>2. 熟悉awk/sed文本工具 .<br/>3. 熟悉linux用户和组,用户权限配置<br/>4. 熟悉linux软件包安装,yum,rpm,apt-get,源码<br/>5. 熟悉常用网络协议,icmp/dns/udp/ssh/ftp/dhcp/arp等<br/>6. 熟悉relay命令,fsh,myquery等<br/>7. 熟悉磁盘管理进程管理,内存管理等工具.</td>
+<td class="confluenceTd">1. 掌握LA/NMP的安装.排错.<br/>2. 掌握shell语法,熟练编写shell脚本.<br/>3. 掌握进程,线程,进程通信,进程调度,线程共享<br/>4. 理解虚拟化技术,kvm,docker<br/>5. 掌握iptables,selinux安全策略.</td>
+<td class="confluenceTd">1. 精通linux监控,能编写自动化脚本,熟练使用nagios/cacti.<br/>2. 精通性能调优,io/反代,内存等<br/>3. 精通tcp/ip原理,网络编程(socket).<br/>4. 精通linux集群,devops,k8s<br/>5. 深入理解linux内核设计,信号机制</td>
+</tr>
+<tr>
+<td class="confluenceTd">缓存应用</td>
+<td class="confluenceTd">1. 了解服务端常用缓存技术, 代理缓存 数据库缓存 Opcache.<br/>2. 了解浏览器缓存和CDN缓存<br/>3. memcache&amp;redis使用</td>
+<td class="confluenceTd">1. 在业务中能熟练使用各项缓存技术,进行性能优化<br/>2. 理解缓存雪崩、缓存穿透的原理,并能通过技术手段避免和解决</td>
+<td class="confluenceTd">1. 设计高并发与高可用的的缓存架构,<br/>2. 设计出适合的分布式缓存的一致性方案,<br/>3. 根据业务场景定制不同的缓存更新,降级,预热,同步等策略.</td>
+</tr>
+<tr>
+<td class="confluenceTd">安全</td>
+<td class="confluenceTd">1 了解生产系统常见的会导致后台系统被入侵的安全漏洞（缓冲区溢出，SQL注入，直连DB，无鉴权等），<br/>2 能按照日常开发当中理解并按规范避免这些漏洞，遵守开发安全规范</td>
+<td class="confluenceTd">1 了解前台安全知识<br/>2 权限控制、存储安全、传输安全、反作弊、资源隔离、信息加密技术及密钥安全管理 等安全相关知识应用</td>
+<td class="confluenceTd">1 根据负责业务的特点灵活运用安全知识。<br/>2 安全的核心原则（SDL）能在架构设计中大部分应用</td>
+</tr>
+<tr>
+<td class="confluenceTd">数据结构与算法</td>
+<td class="confluenceTd">1. 常见数据结构：链表、树（如二叉树）<br/>2. 常见算法思想：递归，分治，动态规划，贪心<br/>3. 复杂度分析，时间复杂度，空间复杂度<br/>4. 基本排序算法，冒泡，插入</td>
+<td class="confluenceTd">1. 排序算法：快速排序，堆排序，优先队列，归并排序，线性时间排序（基数，计数，桶排序）<br/>2. 中位数和顺序统计量：最大最小值，中位数，选择算法<br/>3. 概率分析和随机算法<br/>4. 散列表，散列算法<br/>5. 二叉搜索树，红黑树</td>
+<td class="confluenceTd">1. 动态规划原理，最长公共子序列，最优二叉搜索树<br/>2. 贪心算法原理<br/>3. 图算法，最小生成树，单源最短路径，最大流等基本原理</td>
+</tr>
+<tr>
+<td class="confluenceTd">设计模式</td>
+<td class="confluenceTd">1 了解设计原则(SOLID).<br/>2 了解常用的设计模式(单例,适配器,简单工厂)，有哪些设计模式，什么场景可用</td>
+<td class="confluenceTd"><br/>1. 在项目中合理的使用设计模式(单例,抽象工厂,装饰者模式,策略模式,观察者模式,模板模式)等<br/>2. 了解各种设计模式的差异(比如简单工厂,抽象工厂).</td>
+<td class="confluenceTd">1 熟练掌握大部分的设计模式，<br/>2 能发现系统的一些设计问题，能在项目设计、重构中应用</td>
+</tr>
+<tr>
+<td class="confluenceTd">监控</td>
+<td class="confluenceTd">1 了解什么是监控，哪些需要监控，常用的监控系统noah<br/>2 服务器系统的load、CPU的利用率、I/O繁忙程度、网络traffic、内存利用率等常用指标 如何查看<br/>3 运行期间业务数据、日志的记录和问题定位</td>
+<td class="confluenceTd">1 在业务中Noah的使用，系统监控、日志监控、流量监控、数据库监控、memcache、redis、mysql等监控，有一定的报警策略，提前发现问题<br/>2 核心页面监控、核心接口监控等业务检测和报警<br/>3 使用 uda &amp; crm 对业务系统监控</td>
+<td class="confluenceTd">1 第三方接口、依赖服务的监控<br/>2 浏览器用户访问性能等监控<br/>3 业务指标监控，性能指标监控<br/>4 分级报警策略的合理应用</td>
+</tr>
+<tr>
+<td class="confluenceTd">消息队列</td>
+<td class="confluenceTd">1 了解什么是MQ，常用的使用场景（异步处理，应用解耦，流量削峰和消息通讯）<br/>2 基础使用redis、nmq</td>
+<td class="confluenceTd">1 在项目设计中能灵活应用NMQ、REDIS<br/>2 了解Kafka、RabbitMQ、RocketMQ等消息队列<br/>3消息类型：点对点、多订阅模式、推拉模式原理和应用</td>
+<td class="confluenceTd">1 架构设计中关于高性能、高可用、可伸缩和最终一致性， 如何合理应用 达到耦合，异步消息，流量削峰等。<br/>2 消息消费如何实现幂等性、可靠性、时序性，队列堆积、消息丢失场景和处理方式</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="likes-and-labels-container"> </div>
+{% endraw %}

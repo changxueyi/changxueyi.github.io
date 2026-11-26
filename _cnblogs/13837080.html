@@ -1,0 +1,43 @@
+---
+title: "分布式演进的一点理解"
+date: 2020-10-18 20:53:00 +0800
+tags: ["【微服务】-- 架构思想"]
+excerpt: "单体架构->垂直架构->分布式架构 1.单体架构 单一架构和分布式架构，区别就是：分布式架构，去访问JD，像去访问一个系统一样， 但是后面有成千上万台服务器的支持，不能把这么多服务放在一台服务器上面去. 如果放在一台服务器上，扩展麻烦，需要重新打包放上去，多人开发同一个系统，不易维护。 2.垂直架构"
+read_minutes: 1
+cnblogs_id: 13837080
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13837080.html"
+---
+{% raw %}
+<p><strong><span style="font-size: 15px;">单体架构-&gt;垂直架构-&gt;分布式架构</span></strong></p>
+<h2><strong><span style="font-size: 15px;">1.单体架构</span></strong></h2>
+<p><strong><span style="font-size: 15px;">单一架构和分布式架构，区别就是</span></strong><strong><span style="font-size: 15px;">：分布式架构，去访问JD，像去访问一个系统一样，</span></strong></p>
+<p><strong><span style="font-size: 15px;">但是后面有成千上万台服务器的支持，不能把这么多服务放在一台服务器上面去.</span></strong></p>
+<p><strong><span style="font-size: 15px;">如果放在一台服务器上，扩展麻烦，需要重新打包放上去，多人开发同一个系统，不易维护。</span></strong></p>
+<p><strong><span style="font-size: 15px;"><img alt="" loading="lazy" src="/images/cnblogs/9ff077bfa65a3d8a.png"/></span></strong></p>
+<p> </p>
+<p> </p>
+<h2><strong><span style="font-size: 16px;"> 2.垂直架构</span></strong></h2>
+<p><strong><span style="font-size: 16px;">优点：1)如果商品模块访问量大，就增加商品的服务器，订单大，增加订单的服务器</span></strong></p>
+<p><strong><span style="font-size: 16px;">这样开发人员就可以去维护自己的模块了</span></strong></p>
+<p><strong><span style="font-size: 16px;">缺点：</span></strong></p>
+<p><strong><span style="font-size: 16px;">1. 界面+业务逻辑的分离，比如界面经常的更改，需要重新都去修改</span></strong></p>
+<p><strong><span style="font-size: 16px;">2. 如果增加要给订单服务，增加一个秒杀信息，增加一个物流的信息，大量应用之间需要交互，不能完全解耦</span></strong></p>
+<p><strong><span style="font-size: 16px;"><img alt="" loading="lazy" src="/images/cnblogs/b6ea0257cbb0a767.png"/></span></strong></p>
+<p> </p>
+<p> </p>
+<h2><strong><span style="font-size: 18px;"> 3.分布式架构</span></strong></h2>
+<p><strong><span style="font-size: 18px;">问题：1. 用户服务在服务器A，订单在服务器B，商品在服务器C，需要来会调用，<span style="color: #ff0000;">需要使用RPC 远程过程调用</span></span></strong></p>
+<p> </p>
+<p><strong><span style="font-size: 18px;"><img alt="" loading="lazy" src="/images/cnblogs/c359288538d9ca52.png"/></span></strong></p>
+<h2> 4.什么是注册中心</h2>
+<p><img alt="" loading="lazy" src="/images/cnblogs/f9ab659437730f3c.png"/></p>
+<p> </p>
+<p> </p>
+<h2>Dubbo机制（服务自动注册与发现）</h2>
+<h2> 1. 假设额度管理接口在很多台服务器部署，这个时候有人去调用额度管理查询这个接口，注册中心的作用就是：可以给调用者说明，额度管理接口都在那个服务器上面，注册中心有一个这个接口都在那个服务器的清单。</h2>
+<h2>调用者会先问注册中心：额度管理接口在那个服务器上，然后RPC框架就可以<span style="color: #ff0000;"><strong>随机选</strong></span>择服务器，或者请求量最小的（负载均衡机制）</h2>
+<p> </p>
+<p> </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/79e1aef669c99e81.png"/></p>
+<p> </p>
+{% endraw %}

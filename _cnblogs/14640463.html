@@ -1,0 +1,111 @@
+---
+title: "【NLP】初探自然语言处理"
+date: 2021-04-10 12:02:00 +0800
+tags: ["【人工智能】AI"]
+excerpt: "自然语言处理，英文Natural Language Processing，简写NLP。NLP这个概念本身过于庞大，很难通过简短的几句定义就能明白它是什么。不妨把它分成“自然语言”和“处理”两部分。先来看自然语言。区分于计算机语言，自然语言是人类发展过程中形成的一种信息交流的方式，包括口语及书面语，反"
+read_minutes: 12
+cnblogs_id: 14640463
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14640463.html"
+---
+{% raw %}
+<div class="wiki-content" id="main-content">
+<p>自然语言处理，英文Natural Language Processing，简写NLP。NLP这个概念本身过于庞大，很难通过简短的几句定义就能明白它是什么。不妨把它分成“自然语言”和“处理”两部分。先来看自然语言。区分于计算机语言，自然语言是人类发展过程中形成的一种信息交流的方式，包括口语及书面语，反映了人类的思维。简单的一句问候“你好”，以及正在看的这篇，都是以自然语言的形式表达。现在世界上所有的语种语言，都属于自然语言，包括汉语、英语、法语等。然后再来看“处理”。如果只是人工处理的话，那我们原本就有专门的语言学来研究，也没必要特地强调“自然”。因此，这个“处理”必须是计算机处理的。但计算机毕竟不是人，无法像人一样处理文本，需要有自己的处理方式。因此自然语言处理，简单来说即是<strong>计算机接受用户自然语言形式的输入，并在内部通过人类所定义的算法进行加工、计算等系列操作，以模拟人类对自然语言的理解，并返回用户所期望的结果</strong>。正如机械解放人类的双手一样，自然语言处理的目的在于<strong>用计算机代替人工来处理大规模的自然语言信息</strong>。它是人工智能、计算机科学、信息工程的交叉领域，涉及统计学、语言学等的知识。由于语言是人类思维的证明，故自然语言处理是人工智能的最高境界，被誉为“人工智能皇冠上的明珠”。</p>
+<p>下面，统一以NLP来指代自然语言处理。</p>
+<p><strong>【NLP的终极目标】</strong></p>
+<p>从计算机诞生，NLP这个概念被提出伊始，人们便希望计算机能够理解人类的语言，于是便有了图灵测试。尽管今年google I/O大会上的Google Assistant宣称已经通过了图灵测试，但离真正理解人类语言仍有很长的距离（并且我对其生成的对话是否完全由机器生成而不是用规则定义表示深深的怀疑。。。）<strong>让计算机能够确切理解人类的语言，并自然地与人进行交互</strong>是NLP的最终目标<strong>，</strong>也是大多数NLPer的最高信仰。为此各路大佬挥舞手中的代码不断挖坑填坑，攻克一个又一个难题，推动NLP一直往前发展。</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>【NLP的技术概貌】</strong></p>
+<p>NLP里细分领域和技术实在太多，根据NLP的终极目标，大致可以分为<strong>自然语言理解</strong>（NLU）和<strong>自然语言生成</strong>（NLG）两种。NLU侧重于如何理解文本，包括文本分类、命名实体识别、指代消歧、句法分析、机器阅读理解等；NLG则侧重于理解文本后如何生成自然文本，包括自动摘要、机器翻译、问答系统、对话机器人等。两者间不存在有明显的界限，如机器阅读理解实际属于问答系统的一个子领域。</p>
+<p>大致来说，NLP可以分为以下几个领域：</p>
+<ul>
+<li><strong>【文本检索】</strong>：多用于大规模数据的检索，典型的应用有搜索引擎</li>
+<li><strong>【机器翻译】</strong>：跨语种翻译，该领域目前已较为成熟。目前谷歌翻译已用上机翻技术</li>
+<li><strong>【文本分类/情感分析】</strong>：本质上就是个分类问题。目前也较为成熟，难点在于多标签分类（即一个文本对应多个标签，把这些标签全部找到）以及细粒度分类（二极情感分类精度很高，即好中差三类，而五级情感分类精度仍然较低，即好、较好、中、较差、差）</li>
+<li><strong>【信息抽取】</strong>：从不规则文本中抽取想要的信息，包括命名实体识别、关系抽取、事件抽取等。应用极广。</li>
+<li><strong>【序列标注】</strong>：给文本中的每一个字/词打上相应的标签。是大多数NLP底层技术的核心，如分词、词性标注、关键词抽取、命名实体识别、语义角色标注等等。曾是HMM、CRF的天下，近年来逐步稳定为BiLSTM-CRF体系。</li>
+<li><strong>【文本摘要】</strong>：从给定的文本中，聚焦到最核心的部分，自动生成摘要。</li>
+<li><strong>【问答系统】</strong>：接受用户以自然语言表达的问题，并返回以自然语言表达的回答。常见形式为<strong>检索式</strong>、<strong>抽取式</strong>和<strong>生成式</strong>三种。近年来<strong>交互式</strong>也逐渐受到关注。典型应用有智能客服</li>
+<li><strong>【对话系统】</strong>：与问答系统有许多相通之处，区别在于问答系统旨在<strong>直接给出精准回答</strong>，回答是否口语化不在主要考虑范围内；而对话系统旨在<strong>以口语化的自然语言对话的方式解决用户问题</strong>。对话系统目前分闲聊式和任务导向型。前者主要应用有siri、小冰等；后者主要应用有车载聊天机器人。<em>（对话系统和问答系统应该是最接近NLP终极目标的领域）</em></li>
+<li><strong>【知识图谱】</strong>：从规则或不规则的文本中提取结构化的信息，并以可视化的形式将实体间以何种方式联系表现出来。图谱本身不具有应用意义，建立在图谱基础上的<strong>知识检索、知识推理、知识发现</strong>才是知识图谱的研究方向</li>
+<li><strong>【文本聚类】</strong>：一个古老的领域，但现在仍未研究透彻。从大规模文本数据中自动发现规律。核心在于<strong>如何表示文本</strong>以及<strong>如何度量文本之间的距离</strong></li>
+</ul>
+<p class="ztext-empty-paragraph"> </p>
+<p>所涉及的基本技术有：</p>
+<ul>
+<li><strong>分词</strong>：基本算是所有NLP任务中最底层的技术。不论解决什么问题，分词永远是第一步</li>
+<li><strong>词性标注</strong>：判断文本中的词的词性（名词、动词、形容词等等），一般作为额外特征使用</li>
+<li><strong>句法分析</strong>：分为<strong>句法结构分析</strong>和<strong>依存句法分析</strong>两种</li>
+<li><strong>词干提取</strong>：从单词各种前缀后缀变化、时态变化等变化中还原词干，常见于英文文本处理</li>
+<li><strong>命名实体识别</strong>：识别并抽取文本中的实体，一般采用BIO形式</li>
+<li><strong>指代消歧</strong>：文本中的代词，如“他”“这个”等，还原成其所指实体</li>
+<li><strong>关键词抽取</strong>：提取文本中的关键词，用以表征文本或下游应用</li>
+<li><strong>词向量与词嵌入</strong>：把单词映射到低维空间中，并保持单词间相互关系不变。是NLP深度学习技术的基础</li>
+<li><strong>文本生成</strong>：给定特定的文本输入，生成所需要的文本，主要应用于文本摘要、对话系统、机器翻译、问答系统等领域</li>
+<li>……</li>
+</ul>
+<p class="ztext-empty-paragraph"> </p>
+<p>常用算法有：</p>
+<p>tfidf、BM25、TextRank、HMM、CRF、LSI、主题模型、word2vec、GloVe、LSTM/GRU、CNN、seq2seq、Attention……</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>【NLP的发展历程】</strong></p>
+<p>1948年，香农提出信息熵的概念。此时尚未有NLP，但由于熵也是NLP的基石之一，在此也算作是NLP的发展历程。</p>
+<p>按照维基百科的说法，NLP发源于1950年。图灵于该年提出“图灵测试”，用以检验计算机是否真正拥有智能。</p>
+<p>-----------NLP规则时代-----------</p>
+<p>1950-1970年，模拟人类学习语言的习惯，以语法规则为主流。除了参照乔姆斯基文法规则定义的上下文无关文法规则外，NLP领域几乎毫无建树。</p>
+<p>-----------NLP统计时代-----------</p>
+<p>70年代开始统计学派盛行，NLP转向统计方法，此时的核心是以具有马尔科夫性质的模型（包括语言模型，隐马尔可夫模型等）。</p>
+<p>2001年，神经语言模型，将神经网络和语言模型相结合，应该是历史上第一次用神经网络得到词嵌入矩阵，是后来所有神经网络词嵌入技术的实践基础。也证明了神经网络建模语言模型的可能性。</p>
+<p>2001年，条件随机场CRF，从提出开始就一直是序列标注问题的利器，即便是深度学习的现在也常加在神经网络的上面，用以修正输出序列。</p>
+<p>2003年，LDA模型提出，概率图模型大放异彩，NLP从此进入“主题”时代。Topic模型变种极多，参数模型LDA，非参数模型HDP，有监督的LabelLDA，PLDA等。</p>
+<p>2008年，分布式假设理论提出，为词嵌入技术的理论基础。（分布式假设的思想并非直到08年才有，详见<a class="external-link" href="https://link.zhihu.com/?target=https%3A//www.gavagai.se/distributional_semantics.php" rel="nofollow">Gavagai - Distributional Semantics - gavagai.se</a>）</p>
+<p>在统计时代，NLP专注于数据本身的分布，如何从文本的分布中设计更多更好的特征模式是这时期的主流。在这期间，还有其他许多经典的NLP传统算法诞生，包括tfidf、BM25、PageRank、LSI、向量空间与余弦距离等。值得一提的是，在20世纪80、90年代，卷积神经网络、循环神经网络等就已经被提出，但受限于计算能力，NLP的神经网络方向不适于部署训练，多停留于理论阶段。</p>
+<p>-----------NLP深度时代-----------</p>
+<p>2013年，word2vec提出，NLP的里程碑式技术，从此万物embedding</p>
+<p>2013年，CNNs/RNNs/Recursive NN，随着算力的发展，神经网络可以越做越深，之前受限的神经网络不再停留在理论阶段。在图像领域证明过实力后，Text CNN问世；同时，RNNs也开始崛起。在如今的NLP技术上，一般都能看见CNN/LSTM的影子。</p>
+<p>本世纪算力的提升，使神经网络的计算不再受限。有了深度神经网络，加上嵌入技术，人们发现虽然神经网络是个黑盒子，但能省去好多设计特征的精力。至此，NLP深度学习时代开启。</p>
+<p>2014年，seq2seq提出，在机器翻译领域，神经网络碾压基于统计的SMT模型。</p>
+<p>2015年，attention提出，可以说是NLP另一里程碑式的存在。带attention的seq2seq，碾压上一年的原始seq2seq。记得好像17年年初看过一张图，调侃当时学术界都是attention的现象，也证明了attention神一般的效果。</p>
+<p>2017年末，Transformer提出。似乎是为了应对Facebook纯用CNN来做seq2seq的“挑衅”，google就纯用attention，并发表著名的《Attention is All You Need》。初看时以为其工程意义大于学术意义，直到BERT的提出才知道自己还是too young。</p>
+<p>2018年末，BERT提出，横扫11项NLP任务，奠定了预训练模型方法的地位，NLP又一里程碑诞生。光就SQuAD2.0上前6名都用了BERT技术就知道BERT的可怕。</p>
+<p>深度学习时代，神经网络能够自动从数据中挖掘特征，人们从复杂的特征中脱离出来，得以更专注于模型算法本身的创新以及理论的突破。并且深度学习从一开始的机器翻译领域逐渐扩散到NLP其他领域，传统的经典算法地位大不如前。但神经网络似乎一直是个黑箱，可解释性一直是个痛点，且由于其复杂度更高，在工业界经典算法似乎还是占据主流（这半句为个人感觉，并无可靠依据）。</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><em>（迁移学习、强化学习、对抗学习、模仿学习等方法虽然也极大地推动了NLP的发展，但由于它们不单为NLP所独有，主要是深度学习的发展，故此处不列出）</em></p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>【NLP的目前难点】</strong></p>
+<p>目前，仍有很多制约NLP发展的因素，这些因素构成了NLP的难点。而且要命的是，大多数是基础技术的难点。个人不完全统计，有：</p>
+<ul>
+<li><strong>中文分词</strong>，这条是专门针对中文说的。众所周知汉语博大精深，老外学汉语尚且虐心，更别提计算机了。同一个任务，同一个模型在英文语料的表现上一般要比中文语料好。无论是基于统计的还是基于深度学习的NLP方法，分词都是第一步。分词表现不好的话，后面的模型最多也只能尽力纠偏</li>
+<li><strong>词义消歧</strong>：很多单词不只有一个意思，但这个在今年BERT推出后应该不成问题，可以通过上下文学到不同的意思。另一个较难的是指代消歧，即句子中的指代词还原，如“小明受到了老师的表扬，他很高兴”，这个“他”是指“小明”还是指“老师”。由于对指代消歧领域没有深入的了解过，这里不好展开</li>
+<li><strong>二义性</strong>：有些句子，往往有多种理解方式，其中以两种理解方式的最为常见，称二义性。如“我们两人一组”，究竟是“我们两人/一组”（这个组就2个人），还是“我们/两人一组”（每组2个人）</li>
+<li><strong>OOV问题</strong>：随着词嵌入技术大热后，使用预训练的词向量似乎成为了一个主流。但有个问题就是，数据中的词很可能不在预训练好的词表里面，此即OOV（out of vocabulary）。目前主流方法是要么当做UNK处理，要么生成随机向量或零向量处理，当然都存在一定的弊端。更合理的是用subword和char-CNN（感谢评论区
+<p><a class="external-link" href="http://www.zhihu.com/people/157deec64cc5e062b2207aeece42f50f" rel="nofollow">@Towser</a></p>
+的指出）。</li>
+<li><strong>文本相似度计算</strong>：是的你没有看错。文本相似度计算依旧算是难点之一。不过与其说难点，主要是至今没有一种方法能够从理论证明。目前主流认可的是用余弦相似度。但看论文就会发现，除了余弦相似度外，有人用欧式距离，有人用曼哈顿距离，有人直接向量內积，且效果还都不错；还有到底用什么去计算呢？传统的tfidf？还是词向量求平均？或者tfidf加权词向量平均？还是说过RNN/CNN/MLP得到向量再计算？总之大家好像都还处于经验阶段，缺少真正的理论证明。</li>
+<li><strong>文本生成的评价指标</strong>：目前文本生成的评价指标多用BLEU或者ROUGE，但尴尬的是，这两个指标都是基于n-gram的，也就是说会判断生成的句子与标签句子词粒度上的相似度。然而由于自然语言的特性（同一个意思可以有多种不同的表达），会出现生成的句子尽管被人为判定有意义，在BLEU或ROUGE上仍可能会得到很低的分数的情况。这两个指标用在机翻领域倒是没多大问题（本身就是机翻的评价指标），但用在文本摘要和对话生成就明显不合适了。这个现象大概17年中就有大佬发文批判过，然而一年过去了情况还是依旧（摊手）</li>
+<li>……（想到再补充）</li>
+</ul>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>【NLP对其他领域的影响】</strong></p>
+<p>由于自然语言作为人类社会信息的载体，使得NLP不只是计算机科学的专属。在其他领域，同样存在着海量的文本，NLP也成为了重要支持技术：</p>
+<ul>
+<li>在社会科学领域，关系网络挖掘、社交媒体计算、人文计算等，国内一些著名的大学实验室，如清华的自然语言处理与社会人文计算实验室、哈工大的社会计算与信息检索研究中心均冠有社会计算的关键词</li>
+<li>在金融领域，单A股就有300多家上市公司，这些公司每年都有年报、半年报、一季报、三季报等等，加上瞬息万变的金融新闻，金融界的文本数量是海量的。金融领域的NLP公司举例：李纪为大佬的香侬科技；</li>
+<li>在法律领域，中国裁判文书网上就有几千万公开的裁判文书，此外还有丰富的流程数据、文献数据、法律条文等，且文本相对规范。该领域已经有不少公司在做，如涂存超大佬的幂律智能；</li>
+<li>在医疗健康领域，除了影像信息，还有大量的体检数据、临床数据、诊断报告等，同样也是NLP大展身手的地方。该领域的NLP公司：碳云智能</li>
+<li>在教育领域，智能阅卷、机器阅读理解等都可以运用NLP技术。国内这方面目前领先者应该是科大讯飞和猿辅导。</li>
+<li>……</li>
+</ul>
+<p>（列举的公司名字为当时脑里想到的第一个名字，不具普遍性）</p>
+<p class="ztext-empty-paragraph"> </p>
+<p>以上，仅以我近2年的NLP入坑经历的角度出发。根据《2018年新一代人工智能白皮书：产业增长点研判》，全球（包括我国）在NLP产业均处于产业培育阶段，或许不出几年我们就能有幸见证NLP产业的扩张。希望能有更多的人分享自己的看法，也希望有更多的人对NLP产生兴趣。</p>
+<p class="ztext-empty-paragraph"> </p>
+<p><strong>参考</strong></p>
+<p><a class="external-link" href="https://link.zhihu.com/?target=https%3A//www.gavagai.se/distributional_semantics.php" rel="nofollow">Gavagai - Distributional Semantics - gavagai.se</a></p>
+<p><a class="external-link" href="https://link.zhihu.com/?target=https%3A//en.wikipedia.org/wiki/Natural_language_processing" rel="nofollow">Natural language processing</a></p>
+<p><a class="external-link" href="https://link.zhihu.com/?target=http%3A//ruder.io/a-review-of-the-recent-history-of-nlp/index.html" rel="nofollow"><span class="invisible">http://<span class="visible">ruder.io/a-review-of-th<span class="invisible">e-recent-history-of-nlp/index.html</span></span></span></a></p>
+<p>《数学之美》吴军，第2章 自然语言处理——从规则到统计</p>
+<p><a class="external-link" href="https://zhuanlan.zhihu.com/p/39379943" rel="nofollow">拥有少见的技术实力，这两位清华博士想让法律人用上真正的AI</a></p>
+<p><a class="external-link" href="https://link.zhihu.com/?target=https%3A//mp.weixin.qq.com/s%3F__biz%3DMzU2OTA0NzE2NA%3D%3D%26mid%3D2247501516%26idx%3D1%26sn%3D0310792e16c421aa3fe22ba0af2c0562%26chksm%3Dfc8627dfcbf1aec945741d0dd35d725c1d4a77c2e72c9ff0c8a7bab23188c5128fe8fec7f866%26scene%3D0%26xtrack%3D1%23rd" rel="nofollow">中国电子学会发布《2018新一代人工智能白皮书：产业增长点研判》（附白皮书下载）</a></p>
+</div>
+<div id="likes-and-labels-container"> </div>
+{% endraw %}

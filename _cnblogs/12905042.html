@@ -1,0 +1,146 @@
+---
+title: "常见的内存溢出与解决办法"
+date: 2020-05-17 13:59:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "引起内存溢出的原因有很多种，常见的有以下几种： 1.内存中加载的数据量过于庞大，如一次从数据库取出过多数据； 2.集合类中有对对象的引用，使用完后未清空，使得JVM不能回收； 3.代码中存在死循环或循环产生过多重复的对象实体； 4.使用的第三方软件中的BUG； 5.启动参数内存值设定的过小； 1 2"
+read_minutes: 2
+cnblogs_id: 12905042
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12905042.html"
+tags_inferred: true
+---
+{% raw %}
+<div class="cnblogs_code">
+<pre>引起内存溢出的原因有很多种，常见的有以下几种：
+　　1.内存中加载的数据量过于庞大，如一次从数据库取出过多数据；
+　　2.集合类中有对对象的引用，使用完后未清空，使得JVM不能回收；
+　　3.代码中存在死循环或循环产生过多重复的对象实体；
+　　4.使用的第三方软件中的BUG；
+　　5.启动参数内存值设定的过小；</pre>
+</div>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_809237">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+<div class="line number7 index6 alt2">7</div>
+<div class="line number8 index7 alt1">8</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java value">1</code><code class="java plain">.堆</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">设置jvm值的方法是通过-Xms(堆的最小值)，-Xmx(堆的最大值)</code></div>
+<div class="line number3 index2 alt2"><code class="java value">2</code><code class="java plain">.栈</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">设置栈大小的方法是设置-Xss参数</code></div>
+<div class="line number5 index4 alt2"><code class="java value">3</code><code class="java plain">.PermGen space</code></div>
+<div class="line number6 index5 alt1"><code class="java plain">第三个异常是关于perm的异常内容，我们需要的是设置方法区的大小，实现方式是通过设置-XX:PermSize和-XX:MaxPermSize参数</code></div>
+<div class="line number7 index6 alt2"><code class="java value">4</code><code class="java plain">.DirectMemory</code></div>
+<div class="line number8 index7 alt1"><code class="java plain">第四个异常估计遇到的人就不多了，是DirectMemory内存相关的</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_340788">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">DirectMemoruSize可以通过设置 -XX:MaxDirectMemorySize参数指定容量大小，如果不指定的话，那么就跟堆的最大值一致</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　<img alt="" loading="lazy" src="/images/cnblogs/1a9279e35ada6e7e.png"/></p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_44784">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">内存使用监控工具jvmstat</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　<strong>解決辦法:</strong></p>
+<p><strong>　　</strong></p>
+<div class="cnblogs_code">
+<pre>【情况一】：
+java.lang.OutOfMemoryError:Javaheapspace：这种是java堆内存不够，一个原因是真不够（如递归的层数太多等），另一个原因是程序中有死循环；
+　　如果是java堆内存不够的话，可以通过调整JVM下面的配置来解决：
+　　-Xms3062m
+　　-Xmx3062m</pre>
+</div>
+<div class="cnblogs_code">
+
+<pre>【情况二】
+　　java.lang.OutOfMemoryError:GCoverheadlimitexceeded
+　　【解释】：JDK6新增错误类型，当GC为释放很小空间占用大量时间时抛出；一般是因为堆太小，导致异常的原因，没有足够的内存。
+　　【解决方案】：
+　　1、查看系统是否有使用大内存的代码或死循环；
+　　2、通过添加JVM配置，来限制使用内存：
+　　-XX:-UseGCOverheadLimit</pre>
+
+</div>
+<div class="cnblogs_code">
+
+<pre>【情况三】：
+　　java.lang.OutOfMemoryError:PermGenspace：这种是P区内存不够，可通过调整JVM的配置：
+　　-XX:MaxPermSize=128m
+　　-XXermSize=128m
+　　【注】：
+　　JVM的Perm区主要用于存放Class和Meta信息的,Class在被Loader时就会被放到PermGenspace，这个区域成为年老代，GC在主程序运行期间不会对年老区进行清理，<br/>　　默认是64M大小，当程序需要加载的对象比较多时，超过64M就会报这部分内存溢出了，需要加大内存分配，一般128m足够。</pre>
+
+</div>
+<div class="cnblogs_code">
+<pre>【情况四】：
+　　java.lang.OutOfMemoryError:Directbuffermemory
+　　调整-XX:MaxDirectMemorySize=参数，如添加JVM配置：
+　　-XX:MaxDirectMemorySize=128m</pre>
+</div>
+<div class="cnblogs_code">
+
+<pre>【情况五】：
+　　java.lang.OutOfMemoryError:unabletocreatenewnativethread
+　　【原因】：Stack空间不足以创建额外的线程，要么是创建的线程过多，要么是Stack空间确实小了。
+　　【解决】：由于JVM没有提供参数设置总的stack空间大小，但可以设置单个线程栈的大小；而系统的用户空间一共是3G，<br/>　　　　　　　除了Text/Data/BSS/MemoryMapping几个段之外，Heap和Stack空间的总量有限，是此消彼长的。因此遇到这个错误，<br/>　　　　　　  可以通过两个途径解决：1.通过-Xss启动参数减少单个线程栈大小，这样便能开更多线程（当然不能太小，太小会出现StackOverflowError）；<br/>　　　　　　　　　　　　　　　　　　2.通过-Xms-Xmx两参数减少Heap大小，将内存让给Stack（前提是保证Heap空间够用）。</pre>
+
+</div>
+<div class="cnblogs_code">
+<pre>【情况六】：
+　　java.lang.StackOverflowError
+　　【原因】：这也内存溢出错误的一种，即线程栈的溢出，要么是方法调用层次过多（比如存在无限递归调用），要么是线程栈太小。
+　　【解决】：优化程序设计，减少方法调用层次；调整-Xss参数增加线程栈大小</pre>
+</div>
+{% endraw %}

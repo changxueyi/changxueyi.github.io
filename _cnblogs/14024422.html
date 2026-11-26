@@ -1,0 +1,1266 @@
+---
+title: "非关系型数据库MongoDB初探，以及和Redis的对比"
+date: 2020-11-23 14:49:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "MongoDB的使用 什么是MongoDB? mongodb是一个基于分布式文件储存的数据库,由C++编写。是一个文档型数据库，提供好的性能，领先的非关系型数据库 MongoDB的储存形式类似于python的字典，以{‘key’：‘value’}的形式储存 mongoDB适用于那些场景? 1.网站数"
+read_minutes: 30
+cnblogs_id: 14024422
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14024422.html"
+---
+{% raw %}
+<h1 class="postTitle"><a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/for-easy-fast/p/12914718.html" id="cb_post_title_url">MongoDB的使用</a></h1>
+<div class="postBody">
+<div class="blogpost-body" id="cnblogs_post_body">
+<h2 class="md-end-block md-heading" id="autoid-0-0-0"><span class="md-plain md-expand">什么是MongoDB?</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">mongodb是一个基于分布式文件储存的数据库,由C++编写。是一个文档型数据库，提供好的性能，领先的非关系型数据库</span></p>
+<p class="md-end-block md-p"><span class="md-plain">MongoDB的储存形式类似于python的字典，以{‘key’：‘value’}的形式储存</span></p>
+<h2 class="md-end-block md-heading" id="autoid-1-0-0"><span class="md-plain">mongoDB适用于那些场景?</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">1.网站数据量大</span></p>
+<p class="md-end-block md-p"><span class="md-plain">2,网站数据读写操作频繁</span></p>
+<p class="md-end-block md-p"><span class="md-plain">3.价值较低</span></p>
+<p class="md-end-block md-p"> </p>
+<h1 class="postTitle"><a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/java-spring/p/9488227.html" id="cb_post_title_url">Redis和MongoDB的区别(面试受用)</a></h1>
+<p>项目中用的是MongoDB，但是为什么用其实当时选型的时候也没有太多考虑，只是认为数据量比较大，所以采用MongoDB。</p>
+<p>最近又想起为什么用MongoDB，就查阅一下，汇总汇总：</p>
+<p>之前也用过redis，当时是用来存储一些热数据，量也不大，但是操作很频繁。现在项目中用的是MongoDB，目前是百万级的数据，将来会有千万级、亿级。</p>
+<p>就Redis和MongoDB来说，大家一般称之为<strong>Redis缓存、MongoDB数据库</strong>。这也是有道有理有根据的，</p>
+<p>Redis主要把数据存储在内存中，其“缓存”的性质远大于其“数据存储“的性质，其中数据的增删改查也只是像变量操作一样简单；</p>
+<p>MongoDB却是一个“存储数据”的系统，增删改查可以添加很多条件，就像SQL数据库一样灵活，这一点在面试的时候很受用。</p>
+<p class="postTitle">点击查看：<a class="postTitle2" href="https://www.cnblogs.com/java-spring/p/9488200.html" id="cb_post_title_url">MongoDB语法与现有关系型数据库SQL语法比较</a></p>
+<h2><strong>Mongodb与Redis应用指标对比</strong></h2>
+<p>MongoDB和Redis都是NoSQL，采用结构型数据存储。二者在使用场景中，存在一定的区别，这也主要由于<br/>二者在内存映射的处理过程，持久化的处理方法不同。MongoDB建议集群部署，更多的考虑到集群方案，Redis<br/>更偏重于进程顺序写入，虽然支持集群，也仅限于主-从模式。</p>
+<p> </p>
+<table>
+<tbody>
+<tr><th>指标 </th><th>MongoDB(v2.4.9) </th><th>Redis(v2.4.17) </th><th>比较说明</th></tr>
+</tbody>
+<tbody>
+<tr>
+<td>实现语言 </td>
+<td>C++</td>
+<td>C/C++</td>
+<td>-</td>
+</tr>
+<tr>
+<td>协议</td>
+<td>BSON、自定义二进制</td>
+<td>类Telnet</td>
+<td>-</td>
+</tr>
+<tr>
+<td>性能</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i6.7d635507TrfY7H">依赖内存，TPS较高</td>
+<td>依赖内存，TPS非常高</td>
+<td>Redis优于MongoDB</td>
+</tr>
+<tr>
+<td>可操作性</td>
+<td>丰富的数据表达、索引；最类似于关系数据库，支持丰富的查询语言</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i5.7d635507TrfY7H">数据丰富，较少的IO</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i4.7d635507TrfY7H">MongoDB优于Redis</td>
+</tr>
+<tr>
+<td>内存及存储</td>
+<td>适合大数据量存储，依赖系统虚拟内存管理，采用镜像文件存储；内存占有率比较高，官方建议独立部署在64位系统（32位有最大2.5G文件限制，64位没有改限制）</td>
+<td>Redis2.0后增加虚拟内存特性，突破物理内存限制；数据可以设置时效性，类似于memcache</td>
+<td>不同的应用角度看，各有优势</td>
+</tr>
+<tr>
+<td>可用性</td>
+<td>支持master-slave,replicaset（内部采用paxos选举算法，自动故障恢复）,auto sharding机制，对客户端屏蔽了故障转移和切分机制</td>
+<td>依赖客户端来实现分布式读写；主从复制时，每次从节点重新连接主节点都要依赖整个快照,无增量复制；不支持自动sharding,需要依赖程序设定一致hash机制</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i7.7d635507TrfY7H">MongoDB优于Redis；单点问题上，MongoDB应用简单，相对用户透明，Redis比较复杂，需要客户端主动解决。（MongoDB 一般会使用replica sets和sharding功能结合，replica sets侧重高可用性及高可靠性，而sharding侧重于性能、易扩展）</td>
+</tr>
+<tr>
+<td>可靠性</td>
+<td>从1.8版本后，采用binlog方式（MySQL同样采用该方式）支持持久化，增加可靠性</td>
+<td>依赖快照进行持久化；AOF增强可靠性；增强可靠性的同时，影响访问性能</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i8.7d635507TrfY7H">MongoDB优于Redis</td>
+</tr>
+<tr>
+<td>一致性</td>
+<td>不支持事务，靠客户端自身保证</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i9.7d635507TrfY7H">支持事务，比较弱，仅能保证事务中的操作按顺序执行</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i10.7d635507TrfY7H">Redis优于MongoDB</td>
+</tr>
+<tr>
+<td>数据分析</td>
+<td>内置数据分析功能（mapreduce）</td>
+<td>不支持</td>
+<td>MongoDB优于Redis</td>
+</tr>
+<tr>
+<td>应用场景</td>
+<td>海量数据的访问效率提升</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i11.7d635507TrfY7H">较小数据量的性能及运算</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i12.7d635507TrfY7H">MongoDB优于Redis</td>
+</tr>
+</tbody>
+</table>
+<h2 id="MySignature" style="text-align: center;"><span style="background-color: #ffffff;"><strong>行动——岸上的人永远学不会游泳</strong></span></h2>
+<p class="md-end-block md-p"><strong>数据库mysql和mongdb的区别?</strong></p>
+<p class="md-end-block md-p"><strong>SQL：mysql、Oracle、sqlserver、db2</strong></p>
+<ol class="ol-list">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">高度事务性场景：银行、会计、贸易，库管，需要大量原子性操作</span></p>
+</li>
+</ol><ol class="ol-list" start="2">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">适合存储结构化数据，如用户的帐号、地址，预先定义明确的字段</span></p>
+</li>
+</ol><ol class="ol-list" start="3">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">数据价值高、对安全性要求高、稳定性要求高</span></p>
+</li>
+</ol><ol class="ol-list" start="4">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">需要持久化存储的 "冷数据"(不需要经常读写的数据)</span></p>
+</li>
+</ol><ol class="ol-list" start="5">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">需要通过SQL语言做关联查询，比如join</span></p>
+</li>
+</ol>
+<p class="md-end-block md-p"><span class="md-plain">6.这些数据的规模、增长的速度通常是可以预期的</span></p>
+<p class="md-end-block md-p"><span class="md-plain">NoSQL：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">redis key:value(string、hash、set、zset、list）、</span></p>
+<p class="md-end-block md-p"><span class="md-plain">mongodb {"name" : "xiaoming", "age" : 18}, {}</span></p>
+<p class="md-end-block md-p"><strong>mongodb:字典格式，支持分组、索引、主从备份、集群</strong></p>
+<ol class="ol-list">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">灵活的数据结构，适合存储非结构化数据，如文章、评论，需要事先设计 数据的增删改 的字段</span></p>
+</li>
+</ol><ol class="ol-list" start="2">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">高度收缩性场景，社交网络、热点资讯，NoSQL数据库通常具有无限（至少接近）伸缩性</span></p>
+</li>
+</ol><ol class="ol-list" start="3">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">处理 "热数据"（经常需要读写的数据），这些数据通常用于模糊处理，如全文搜索、机器学习</span></p>
+</li>
+</ol><ol class="ol-list" start="4">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">这些数据是海量的，而且增长的速度是难以预期的，更容易扩展</span></p>
+</li>
+</ol><ol class="ol-list" start="5">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">按key获取数据效率很高，但是对join或其他结构化查询的支持就比较差</span></p>
+</li>
+</ol>
+<p class="md-end-block md-p"><span class="md-plain">大型互联网项目都会选用MySQL（或任何关系型数据库） + NoSQL的组合方案</span></p>
+<p class="md-end-block md-p"><strong>端口号：</strong></p>
+<p class="md-end-block md-p"><span class="md-plain">mysql: 3306</span></p>
+<p class="md-end-block md-p"><span class="md-plain">redis: 6379</span></p>
+<p class="md-end-block md-p"><span class="md-plain">mongodb: 27017</span></p>
+<h2 class="md-end-block md-heading" id="autoid-2-0-0"><span class="md-plain">mongodb安装教程</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">关于mongodb的好处，优点之类的这里就不说了，唯一要讲的一点就是mongodb中有三元素：数据库，集合，文档，其中“集合”</span></p>
+<p class="md-end-block md-p"><span class="md-plain">就是对应关系数据库中的“表”，“文档”对应“行”。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-3-0-0"><span class="md-plain">下载</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">上<span class="md-link"><a href="http://www.mongodb.org/downloads"><span class="md-plain">MongoDB官网</span></a><span class="md-plain"> ，我们发现有32bit和64bit，这个就要看你系统了，不过这里有两点注意：</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">①：根据业界规则，偶数为“稳定版”（如：1.6.X，1.8.X），奇数为“开发版”（如：1.7.X，1.9.X)，这两个版本的区别相信大家都知道吧。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">②：32bit的mongodb最大只能存放2G的数据，64bit就没有限制。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我这里就下载"2.0.2版本，32bit“，ok，下载之后我就放到”E盘“，改下文件夹名字为”mongodb“。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-3-1-0"><span class="md-plain">启动</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">①：启动之前，我们要给mongodb指定一个文件夹，这里取名为”db",用来存放mongodb的数据。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/ec87f44925a8cfd7.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">②：微软徽标+R，输入cmd，首先找到“mongodb”的路径，然后运行mongod开启命令，同时用--dbpath指定数据存放地点为“db”文件夹。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/90e1e2e9375bfb14.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">③：最后要看下是否开启成功，从图中的信息中获知，mongodb采用27017端口，那么我们就在浏览器里面键入“<span class="md-link"><a href="http://localhost:27017/">http://localhost:27017/</a><span class="md-plain">”，</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">打开后，mongodb告诉我们在27017上Add 1000可以用http模式查看mongodb的管理信息。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/5d095380d4483b25.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-3-2-0"><span class="md-plain">基本操作</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">由于是开篇，就大概的说下基本的“增删查改“，我们再开一个cmd，输入mongo命令打开shell，其实这个shell就是mongodb的客户端，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">同时也是一个js的编译器，默认连接的是“test”数据库。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/a991831c2da147f4.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain"><strong>insert 操作</strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">好，数据库有了，下一步就是集合，这里就取集合名为“person”，要注意的就是文档是一个json的扩展（Bson)形式。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/d1143c2e2f2362a8.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain"><strong>find 操作</strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们将数据插入后，肯定是要find出来，不然插了也白插，这里要注意两点：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">① “_id"： 这个字段是数据库默认给我们加的GUID，目的就是保证数据的唯一性。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">② 严格的按照Bson的形式书写文档，不过也没关系，错误提示还是很强大的。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/9dd73a8ba6d478e5.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain"><strong>update操作</strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">update方法的第一个参数为“查找的条件”，第二个参数为“更新的值”，学过C#，相信还是很好理解的。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/cacdaffdfd212cf6.png"/></span></p>
+<p class="md-end-block md-p"><strong>remove操作</strong></p>
+<p class="md-end-block md-p"><span class="md-plain">remove中如果不带参数将删除所有数据，呵呵，很危险的操作，在mongodb中是一个不可撤回的操作，三思而后行。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021800132992.png"><img alt="img" loading="lazy" src="/images/cnblogs/563f422c92fc0a15.png"/></span></p>
+<h2 class="md-end-block md-heading" id="autoid-3-3-0"><span class="md-plain">细说增删改查</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">有一天当我们用上一篇同样的方式打开mongodb，突然</span></p>
+<p class="md-end-block md-p"><span class="md-plain">傻眼了，擦，竟然开启不了，仔细观察“划线区域“的信息，发现db文件夹下有一个类似的”lock file”阻止了mongodb的开启，接下来我们要做的就</span></p>
+<p class="md-end-block md-p"><span class="md-plain">是干掉它，之后，开启成功，关于mongodb的管理方式将在后续文章分享。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021822210512.png"><img alt="img" loading="lazy" src="/images/cnblogs/24363f39de03cf12.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-4-0-0"><span class="md-plain">一： Insert操作</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">上一篇也说过,文档是采用“K-V”格式存储的，如果大家对JSON比较熟悉的话，我相信学mongodb是手到擒来，我们知道JSON里面Value</span></p>
+<p class="md-end-block md-p"><span class="md-plain">可能是“字符串”，可能是“数组”，又有可能是内嵌的一个JSON对象，相同的方式也适合于BSON。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">常见的插入操作也就两种形式存在：“单条插入”和“批量插入”。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">① 单条插入</span></p>
+<p class="md-end-block md-p"><span class="md-plain">先前也说了，mongo命令打开的是一个javascript shell。所以js的语法在这里面都行得通，看起来是不是很牛X。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/0ea8a558b9fbcfb8.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">② 批量插入</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这玩意跟“单条插入”的差异相信大家应该知道，由于mongodb中没有提供给shell的“批量插入方法”，没关系，各个语言的driver都打通</span></p>
+<p class="md-end-block md-p"><span class="md-plain">了跟mongodb内部的批量插入方法，因为该方法是不可或缺的，如果大家非要模拟下批量插入的话，可以自己写了for循环，里面就是insert。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-4-1-0"><span class="md-plain">二：Find操作</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">日常开发中，我们玩查询，玩的最多的也就是二类：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">①： &gt;, &gt;=, &lt;, &lt;=, !=, =。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">②：And，OR，In，NotIn</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这些操作在mongodb里面都封装好了，下面就一一介绍：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;1&gt;"$gt", "$gte", "$lt", "$lte", "$ne", "没有特殊关键字"，这些跟上面是一一对应的，举几个例子。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021823495458.png"><img alt="img" loading="lazy" src="/images/cnblogs/6ce474f56847339e.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;2&gt; "无关键字“, "$or", "$in"，"$nin" 同样我也是举几个例子</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021900175533.png"><img alt="img" loading="lazy" src="/images/cnblogs/116cc2584526e4b5.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;3&gt; 在mongodb中还有一个特殊的匹配，那就是“正则表达式”，这玩意威力很强的。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021900232833.png"><img alt="img" loading="lazy" src="/images/cnblogs/f3435feae7faf3a3.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;4&gt; 有时查询很复杂，很蛋疼，不过没关系，mongodb给我们祭出了大招，它就是$where，为什么这么说，是因为$where中的value</span></p>
+<p class="md-end-block md-p"><span class="md-plain">就是我们非常熟悉，非常热爱的js来助我们一马平川。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021900575333.png"><img alt="img" loading="lazy" src="/images/cnblogs/aa855e563614a931.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-4-2-0"><span class="md-plain">三：Update操作</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">更新操作无非也就两种，整体更新和局部更新，使用场合相信大家也清楚。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;1&gt; 整体更新</span></p>
+<p class="md-end-block md-p"><span class="md-plain">不知道大家可还记得，我在上一篇使用update的时候，其实那种update是属于整体更新。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/1c06a1785a54b9df.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;2&gt; 局部更新</span></p>
+<p class="md-end-block md-p"><span class="md-plain">有时候我们仅仅需要更新一个字段，而不是整体更新，那么我们该如何做呢？easy的问题，mongodb中已经给我们提供了两个</span></p>
+<p class="md-end-block md-p"><span class="md-plain">修改器： $inc 和 $set。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">① $inc修改器</span></p>
+<p class="md-end-block md-p"><span class="md-plain">$inc也就是increase的缩写，学过sql server 的同学应该很熟悉，比如我们做一个在线用户状态记录，每次修改会在原有的基础上</span></p>
+<p class="md-end-block md-p"><span class="md-plain">自增$inc指定的值，如果“文档”中没有此key，则会创建key，下面的例子一看就懂。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021901321851.png"><img alt="img" loading="lazy" src="/images/cnblogs/6454a51c4833d77e.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">② $set修改器</span></p>
+<p class="md-end-block md-p"><span class="md-plain">啥也不说了，直接上代码</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021901370591.png"><img alt="img" loading="lazy" src="/images/cnblogs/62cfc437caf78bf7.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;3&gt; upsert操作</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个可是mongodb创造出来的“词”，大家还记得update方法的第一次参数是“查询条件”吗？，那么这个upsert操作就是说：如果我</span></p>
+<p class="md-end-block md-p"><span class="md-plain">没有查到，我就在数据库里面新增一条，其实这样也有好处，就是避免了我在数据库里面判断是update还是add操作，使用起来很简单</span></p>
+<p class="md-end-block md-p"><span class="md-plain">将update的第三个参数设为true即可。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012021901495450.png"><img alt="img" loading="lazy" src="/images/cnblogs/89438339804e6de7.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;4&gt; 批量更新</span></p>
+<p class="md-end-block md-p"><span class="md-plain">在mongodb中如果匹配多条，默认的情况下只更新第一条，那么如果我们有需求必须批量更新，那么在mongodb中实现也是很简单</span></p>
+<p class="md-end-block md-p"><span class="md-plain">的，在update的第四个参数中设为true即可。例子就不举了。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-4-3-0"><span class="md-plain">四: Remove操作</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">这个操作在上一篇简单的说过，这里就不赘述了。</span></p>
+<h2 class="md-end-block md-heading" id="autoid-4-4-0"><span class="md-plain">细说高级操作</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">今天跟大家分享一下mongodb中比较好玩的知识，主要包括：聚合，游标。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-5-0-0"><span class="md-plain">一： 聚合</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">常见的聚合操作跟sql server一样，有：count，distinct，group，mapReduce。</span></p>
+<h4 class="md-end-block md-heading" id="autoid-5-1-0"><span class="md-plain">count</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">count是最简单，最容易，也是最常用的聚合工具，它的使用跟我们C#里面的count使用简直一模一样。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022022344936.png"><img alt="img" loading="lazy" src="/images/cnblogs/1ec02d977e99fa6d.png"/></span></p>
+<h4 class="md-end-block md-heading" id="autoid-5-1-1"><span class="md-plain">distinct</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">这个操作相信大家也是非常熟悉的，指定了谁，谁就不能重复，直接上图。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022022410978.png"><img alt="img" loading="lazy" src="/images/cnblogs/8c40bfa3ec18e2a9.png"/></span></p>
+<h4 class="md-end-block md-heading" id="autoid-5-1-2"><span class="md-plain">group</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">在mongodb里面做group操作有点小复杂，不过大家对sql server里面的group比较熟悉的话还是一眼</span></p>
+<p class="md-end-block md-p"><span class="md-plain">能看的明白的，其实group操作本质上形成了一种“k-v”模型，就像C#中的Dictionary，好，有了这种思维，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们来看看如何使用group。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">下面举的例子就是按照age进行group操作，value为对应age的姓名。下面对这些参数介绍一下：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">key： 这个就是分组的key，我们这里是对年龄分组。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">initial: 每组都分享一个”初始化函数“，特别注意：是每一组，比如这个的age=20的value的list分享一个</span></p>
+<p class="md-end-block md-p"><span class="md-plain">initial函数，age=22同样也分享一个initial函数。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">$reduce: 这个函数的第一个参数是当前的文档对象，第二个参数是上一次function操作的累计对象，第一次</span></p>
+<p class="md-end-block md-p"><span class="md-plain">为initial中的{”perosn“：[]}。有多少个文档， $reduce就会调用多少次。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022023404990.png"><img alt="img" loading="lazy" src="/images/cnblogs/bea15f69dac5d447.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">看到上面的结果，是不是有点感觉，我们通过age查看到了相应的name人员，不过有时我们可能有如下的要求：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">①：想过滤掉age&gt;25一些人员。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">②：有时person数组里面的人员太多，我想加上一个count属性标明一下。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">针对上面的需求，在group里面还是很好办到的，因为group有这么两个可选参数: condition 和 finalize。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">condition: 这个就是过滤条件。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">finalize:这是个函数，每一组文档执行完后，多会触发此方法，那么在每组集合里面加上count也就是它的活了。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022102293097.png"><img alt="img" loading="lazy" src="/images/cnblogs/76dbd12a2eeb27dc.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<h4 class="md-end-block md-heading" id="autoid-5-1-3"><span class="md-plain">mapReduce</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">这玩意算是聚合函数中最复杂的了，不过复杂也好，越复杂就越灵活。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">mapReduce其实是一种编程模型，用在分布式计算中，其中有一个“map”函数，一个”reduce“函数。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">① map：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个称为映射函数，里面会调用emit(key,value)，集合会按照你指定的key进行映射分组。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">② reduce：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个称为简化函数，会对map分组后的数据进行分组简化，注意：在reduce(key,value)中的key就是</span></p>
+<p class="md-end-block md-p"><span class="md-plain">emit中的key，vlaue为emit分组后的emit(value)的集合，这里也就是很多{"count":1}的数组。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">③ mapReduce:</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个就是最后执行的函数了，参数为map，reduce和一些可选参数。具体看图可知：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022111202288.png"><img alt="img" loading="lazy" src="/images/cnblogs/718e9ae05ffe079f.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">从图中我们可以看到如下信息：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">result: "存放的集合名“；</span></p>
+<p class="md-end-block md-p"><span class="md-plain">input:传入文档的个数。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">emit：此函数被调用的次数。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">reduce：此函数被调用的次数。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">output:最后返回文档的个数。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">最后我们看一下“collecton”集合里面按姓名分组的情况。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022111270618.png"><img alt="img" loading="lazy" src="/images/cnblogs/8c60b51e4aaec64e.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-5-1-4"><span class="md-plain">游标</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">mongodb里面的游标有点类似我们说的C#里面延迟执行，比如：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">var list=db.person.find();</span></p>
+<p class="md-end-block md-p"><span class="md-plain">针对这样的操作，list其实并没有获取到person中的文档，而是申明一个“查询结构”，等我们需要的时候通过</span></p>
+<p class="md-end-block md-p"><span class="md-plain">for或者next()一次性加载过来，然后让游标逐行读取，当我们枚举完了之后，游标销毁，之后我们在通过list获取时，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">发现没有数据返回了。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022112191440.png"><img alt="img" loading="lazy" src="/images/cnblogs/f8ec46c1b3439884.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">当然我们的“查询构造”还可以搞的复杂点，比如分页，排序都可以加进去。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">var single=db.person.find().sort({"name",1}).skip(2).limit(2);</span></p>
+<p class="md-end-block md-p"><span class="md-plain">那么这样的“查询构造”可以在我们需要执行的时候执行，大大提高了不必要的花销。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022112252930.png"><img alt="img" loading="lazy" src="/images/cnblogs/21b934df02b3678e.png"/></span></p>
+<h2 class="md-end-block md-heading" id="autoid-5-2-0"><span class="md-plain">索引操作</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">好，今天分享下mongodb中关于索引的基本操作，我们日常做开发都避免不了要对程序进行性能优化，而程序的操作无非就是CURD，通常我们</span></p>
+<p class="md-end-block md-p"><span class="md-plain">又会花费50%的时间在R上面，因为Read操作对用户来说是非常敏感的，处理不好就会被人唾弃，呵呵。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">从算法上来说有5种经典的查找，具体的可以参见我的算法速成系列，这其中就包括我们今天所说的“索引查找”，如果大家对sqlserver比较了解</span></p>
+<p class="md-end-block md-p"><span class="md-plain">的话，相信索引查找能给我们带来什么样的性能提升吧。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们首先插入10w数据，上图说话：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022823115964.png"><img alt="img" loading="lazy" src="/images/cnblogs/6eb8a1027c896e90.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-6-0-0"><span class="md-plain">一：性能分析函数（explain）</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">好了，数据已经插入成功，既然我们要做分析，肯定要有分析的工具，幸好mongodb中给我们提供了一个关键字叫做“explain"，那么怎么用呢？</span></p>
+<p class="md-end-block md-p"><span class="md-plain">还是看图，注意，这里的name字段没有建立任何索引，这里我就查询一个“name10000”的姓名。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022823182439.png"><img alt="img" loading="lazy" src="/images/cnblogs/7890710400b25077.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">仔细看红色区域，有几个我们关心的key。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">cursor: 这里出现的是”BasicCursor",什么意思呢，就是说这里的查找采用的是“表扫描”，也就是顺序查找，很悲催啊。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">nscanned: 这里是10w，也就是说数据库浏览了10w个文档，很恐怖吧，这样玩的话让人受不了啊。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">n: 这里是1，也就是最终返回了1个文档。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">millis: 这个就是我们最最最....关心的东西，总共耗时114毫秒。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-6-1-0"><span class="md-plain">建立索引（ensureIndex）</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">在10w条这么简单的集合中查找一个文档要114毫秒有一点点让人不能接收，好，那么我们该如何优化呢？mongodb中给</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们带来了索引查找，看看能不能让我们的查询一飞冲天.....</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/c0eb848c80fdb8a6.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里我们使用了ensureIndex在name上建立了索引。”1“：表示按照name进行升序，”-1“：表示按照name进行降序。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我的神啊，再来看看这些敏感信息。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">cursor: 这里出现的是”BtreeCursor"，这么牛X，mongodb采用B树的结构来存放索引，索引名为后面的“name_1"。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">nscanned: 我擦，数据库只浏览了一个文档就OK了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">n: 直接定位返回。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">millis: 看看这个时间真的不敢相信，秒秒杀。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">通过这个例子相信大家对索引也有了感官方面的认识了吧。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-6-2-0"><span class="md-plain">唯一索引</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">和sqlserver一样都可以建立唯一索引，重复的键值自然就不能插入，在mongodb中的使用方法是：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">db.person.ensureIndex({"name":1},{"unique":true})。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022900115280.png"><img alt="img" loading="lazy" src="/images/cnblogs/2a3ba65a0b008742.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-6-3-0"><span class="md-plain">组合索引</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">有时候我们的查询不是单条件的，可能是多条件，比如查找出生在‘1989-3-2’名字叫‘jack’的同学，那么我们可以建立“姓名”和"生日“</span></p>
+<p class="md-end-block md-p"><span class="md-plain">的联合索引来加速查询。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022900250710.png"><img alt="img" loading="lazy" src="/images/cnblogs/e10bd0791a91c4c8.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">看到上图，大家或者也知道name跟birthday的不同，建立的索引也不同，升序和降序的顺序不同都会产生不同的索引，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">那么我们可以用getindexes来查看下person集合中到底生成了那些索引。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022900305376.png"><img alt="img" loading="lazy" src="/images/cnblogs/e46428ffb6f229ef.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">此时我们肯定很好奇，到底查询优化器会使用哪个查询作为操作，呵呵，还是看看效果图：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022900352917.png"><img alt="img" loading="lazy" src="/images/cnblogs/1d76d1f99b97bff9.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">看完上图我们要相信查询优化器，它给我们做出的选择往往是最优的，因为我们做查询时，查询优化器会使用我们建立的这些索引来创建查询方案，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">如果某一个先执行完则其他查询方案被close掉，这种方案会被mongodb保存起来，当然如果非要用自己指定的查询方案，这也是</span></p>
+<p class="md-end-block md-p"><span class="md-plain">可以的，在mongodb中给我们提供了hint方法让我们可以暴力执行。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022900434745.png"><img alt="img" loading="lazy" src="/images/cnblogs/3b945a9edb3376f0.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<h3 class="md-end-block md-heading" id="autoid-6-4-0"><span class="md-plain">删除索引</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">可能随着业务需求的变化，原先建立的索引可能没有存在的必要了，可能有的人想说没必要就没必要呗，但是请记住，索引会降低CUD这三</span></p>
+<p class="md-end-block md-p"><span class="md-plain">种操作的性能，因为这玩意需要实时维护，所以啥问题都要综合考虑一下，这里就把刚才建立的索引清空掉来演示一下:dropIndexes的使用。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012022900492239.png"><img alt="img" loading="lazy" src="/images/cnblogs/660c90c1601ed154.png"/></span></p>
+<h2 class="md-end-block md-heading" id="autoid-6-5-0"><span class="md-plain">主从复制</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">开始我们主要讨论mongodb的部署技术。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们知道sql server能够做到读写分离，双机热备份和集群部署，当然mongodb也能做到，实际应用中我们不希望数据库采用单点部署，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">如果碰到数据库宕机或者被毁灭性破坏那是多么的糟糕。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-7-0-0"><span class="md-plain">一：主从复制</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">1： 首先看看模型图</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030419362291.png"><img alt="img" loading="lazy" src="/images/cnblogs/c752c18b70677fef.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">2: 从上面的图形中我们可以分析出这种架构有如下的好处：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;1&gt; 数据备份。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;2&gt; 数据恢复。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;3&gt; 读写分离。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">3：下面我们就一一实践</span></p>
+<p class="md-end-block md-p"><span class="md-plain">实际应用中我们肯定是多服务器部署，限于自己懒的装虚拟机，就在一台机器上实践了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">第一步：我们把mongodb文件夹放在D盘和E盘，模拟放在多服务器上。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">第二步：启动D盘上的mongodb，把该数据库指定为主数据库，其实命令很简单：&gt;mongodb --dbpath='XXX' --master，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">端口还是默认的27017.</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030419484115.png"><img alt="img" loading="lazy" src="/images/cnblogs/153dfa5cb49a2b4a.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">第三步：同样的方式启动E盘上的mongodb，指定该数据库为从属数据库，命令也很简单，当然我们要换一个端口，比如：8888。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">source 表示主数据库的地址。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&gt;<span class="md-plain">mongod --dbpath=xxxx --port=8888 --slave --source=127.0.0.1:27017</span></span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030419575325.png"><img alt="img" loading="lazy" src="/images/cnblogs/fca56925b3874a8a.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">第四步：从图中的红色区域我们发现了一条：“applied 1 operations"这样的语句，并且发生的时间相隔10s，也就说明从属数据库每10s</span></p>
+<p class="md-end-block md-p"><span class="md-plain">就向主数据库同步数据，同步依据也就是寻找主数据库的”OpLog“日志，可以在图中红色区域内发现”sync_pullOpLog“字样。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">接下来我们要做的就是测试，惊讶的发现数据已经同步更新，爽啊。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030420421064.png"><img alt="img" loading="lazy" src="/images/cnblogs/d175154b1e49ac17.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">4： 如果我还想增加一台从属数据库，但是我不想在启动时就指定，而是后期指定，那么mongodb可否做的到呢？答案肯定是可以的。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们的主或者从属数据库中都有一个叫做local的集合，主要是用于存放内部复制信息。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">好，那么我们就试一下，我在F盘再拷贝一份mongodb的运行程序，cmd窗口好多啊，大家不要搞乱了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/acadb92660c64670.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">看上面的log，提示没有主数据库，没关系，某一天我们良心发现，给他后期补贴一下，哈哈，再开一个cmd窗口，语句也就是</span></p>
+<p class="md-end-block md-p"><span class="md-plain">在sources中add一个host地址，最后发现数据也同步到127.0.0.1:5555这台从属数据库中....</span></p>
+<p class="md-end-block md-p"><span class="md-plain"><img alt="img" loading="lazy" src="/images/cnblogs/46591ceaf60a3123.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">5: 读写分离</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这种手段在大一点的架构中都有实现，在mongodb中其实很简单，在默认的情况下，从属数据库不支持数据的读取，但是没关系，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">在驱动中给我们提供了一个叫做“slaveOkay"来让我们可以显示的读取从属数据库来减轻主数据库的性能压力，这里就不演示了。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-7-1-0"><span class="md-plain">二：副本集</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">这个也是很牛X的主从集群，不过跟上面的集群还是有两点区别的。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;1&gt;: 该集群没有特定的主数据库。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;2&gt;: 如果哪个主数据库宕机了，集群中就会推选出一个从属数据库作为主数据库顶上，这就具备了自动故障恢复功能，很牛X的啊。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">好，我们现在就来试一下，首先把所有的cmd窗口关掉重新来，清掉db下的所有文件。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">第一步: 既然我们要建立集群，就得取个集群名字，这里就取我们的公司名shopex, --replSet表示让服务器知道shopex下还有其他数据库，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里就把D盘里面的mongodb程序打开，端口为2222。指定端口为3333是shopex集群下的另一个数据库服务器。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521115069.png"><img alt="img" loading="lazy" src="/images/cnblogs/857151f8f9b7cffb.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">第二步: 既然上面说3333是另一个数据库服务器，不要急，现在就来开，这里把E盘的mongodb程序打开。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521184360.png"><img alt="img" loading="lazy" src="/images/cnblogs/d986b5d7ff1f9757.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">第三步： ok，看看上面的日志红色区域，似乎我们还没有做完，是的，log信息告诉我们要初始化一下“副本集“，既然日志这么说，那我也就</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这么做，随便连接一下哪个服务器都行，不过一定要进入admin集合。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521211425.png"><img alt="img" loading="lazy" src="/images/cnblogs/93c0ca004c5581bd.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">第四步： 开启成功后，我们要看看谁才能成为主数据库服务器，可以看到端口为2222的已经成为主数据库服务器。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521231737.png"><img alt="img" loading="lazy" src="/images/cnblogs/130ec2ea1a6a16ca.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">第五步：我们知道sql server里面有一个叫做仲裁服务器，那么mongodb中也是有的，跟sql server一样，仲裁只参与投票选举，这里我们</span></p>
+<p class="md-end-block md-p"><span class="md-plain">把F盘的mongodb作为仲裁服务器，然后指定shopex集群中的任一个服务器端口，这里就指定2222。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521272659.png"><img alt="img" loading="lazy" src="/images/cnblogs/36e378d48246c12d.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">然后我们在admin集合中使用rs.addArb()追加即可。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521292450.png"><img alt="img" loading="lazy" src="/images/cnblogs/9d8ffaea0da4808b.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">追加好了之后，我们使用rs.status()来查看下集群中的服务器状态，图中我们可以清楚的看到谁是主，还是从，还是仲裁。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521311013.png"><img alt="img" loading="lazy" src="/images/cnblogs/704843782c387fdc.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">不是说该集群有自动故障恢复吗？那么我们就可以来试一下，在2222端口的cmd服务器按Ctrl+C来KO掉该服务器，立马我们发现</span></p>
+<p class="md-end-block md-p"><span class="md-plain">在3333端口的从属服务器即可顶上，最后大家也可以再次使用rs.status()来看下集群中服务器的状态。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030521333420.png"><img alt="img" loading="lazy" src="/images/cnblogs/7336645d1a555d65.png"/></span></p>
+<h2 class="md-end-block md-heading" id="autoid-7-2-0"><span class="md-plain">分片技术</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">在mongodb里面存在另一种集群，就是分片技术，跟sql server的表分区类似，我们知道当数据量达到T级别的时候，我们的磁盘，内存</span></p>
+<p class="md-end-block md-p"><span class="md-plain">就吃不消了，针对这样的场景我们该如何应对。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-8-0-0"><span class="md-plain">一：分片</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">mongodb采用将集合进行拆分，然后将拆分的数据均摊到几个片上的一种解决方案。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030710375715.png"><img alt="img" loading="lazy" src="/images/cnblogs/24cfc7d20aa4ae9a.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">下面我对这张图解释一下：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">人脸： 代表客户端，客户端肯定说，你数据库分片不分片跟我没关系，我叫你干啥就干啥，没什么好商量的。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">mongos： 首先我们要了解”片键“的概念，也就是说拆分集合的依据是什么？按照什么键值进行拆分集合....</span></p>
+<p class="md-end-block md-p"><span class="md-plain">好了，mongos就是一个路由服务器，它会根据管理员设置的“片键”将数据分摊到自己管理的mongod集群，数据</span></p>
+<p class="md-end-block md-p"><span class="md-plain">和片的对应关系以及相应的配置信息保存在"config服务器"上。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">mongod: 一个普通的数据库实例，如果不分片的话，我们会直接连上mongod。</span></p>
+<p class="md-end-block md-p"> </p>
+<h3 class="md-end-block md-heading" id="autoid-8-1-0"><span class="md-plain">二： 实战</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">首先我们准备4个mongodb程序，我这里是均摊在C，D，E，F盘上，当然你也可以做多个文件夹的形式。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1：开启config服务器</span></p>
+<p class="md-end-block md-p"><span class="md-plain">先前也说了，mongos要把mongod之间的配置放到config服务器里面，理所当然首先开启它，我这里就建立2222端口。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030710342674.png"><img alt="img" loading="lazy" src="/images/cnblogs/8d3d1ca7c7dc9622.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">2: 开启mongos服务器</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里要注意的是我们开启的是mongos，不是mongod，同时指定下config服务器，这里我就开启D盘上的mongodb，端口3333。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030710431854.png"><img alt="img" loading="lazy" src="/images/cnblogs/4308248d6f877087.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">3：启动mongod服务器</span></p>
+<p class="md-end-block md-p"><span class="md-plain">对分片来说，也就是要添加片了，这里开启E，F盘的mongodb，端口为：4444，5555。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030710475440.png"><img alt="img" loading="lazy" src="/images/cnblogs/eafea3248f87b961.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">4： 服务配置</span></p>
+<p class="md-end-block md-p"><span class="md-plain">哈哈，是不是很兴奋，还差最后一点配置我们就可以大功告成。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;1&gt; 先前图中也可以看到，我们client直接跟mongos打交道，也就说明我们要连接mongos服务器，然后将4444，5555的mongod</span></p>
+<p class="md-end-block md-p"><span class="md-plain">交给mongos,添加分片也就是addshard()。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030710594438.png"><img alt="img" loading="lazy" src="/images/cnblogs/5539f7c1f57780a4.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里要注意的是，在addshard中，我们也可以添加副本集，这样能达到更高的稳定性。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;2&gt;片已经集群了，但是mongos不知道该如何切分数据，也就是我们先前所说的片键，在mongodb中设置片键要做两步</span></p>
+<p class="md-end-block md-p"><span class="md-plain">①：开启数据库分片功能，命令很简单 enablesharding(),这里我就开启test数据库。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">②：指定集合中分片的片键，这里我就指定为person.name字段。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030711082695.png"><img alt="img" loading="lazy" src="/images/cnblogs/8e1d5afe4a15ed4c.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">5: 查看效果</span></p>
+<p class="md-end-block md-p"><span class="md-plain">好了，至此我们的分片操作全部结束，接下来我们通过mongos向mongodb插入10w记录，然后通过printShardingStatus命令</span></p>
+<p class="md-end-block md-p"><span class="md-plain">查看mongodb的数据分片情况。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030712295413.png"><img alt="img" loading="lazy" src="/images/cnblogs/ee353ed4f00e8879.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里主要看三点信息：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">① shards： 我们清楚的看到已经别分为两个片了，shard0000和shard0001。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">② databases: 这里有个partitioned字段表示是否分区，这里清楚的看到test已经分区。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">③ chunks： 这个很有意思，我们发现集合被砍成四段：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">无穷小 —— jack0，jack0 ——jack234813，jack234813——jack9999，jack9999——无穷大。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">分区情况为：3：1，从后面的 on shardXXXX也能看得出。</span></p>
+<h2 class="md-end-block md-heading" id="autoid-8-2-0"><span class="md-plain">运维技术</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">我们以管理员的视角来看mongodb，作为一名管理员，我们经常接触到的主要有4个方面：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1． 安装部署</span></p>
+<p class="md-end-block md-p"><span class="md-plain">2． 状态监控</span></p>
+<p class="md-end-block md-p"><span class="md-plain">3． 安全认证</span></p>
+<p class="md-end-block md-p"><span class="md-plain">4． 备份和恢复，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">下面我们就一点一点的讲解。</span></p>
+<h3 class="md-end-block md-heading" id="autoid-9-0-0"><span class="md-plain">一：安装部署</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">我之前的文章都是采用console程序来承载，不过在生产环境中这并不是最佳实践，谁也不愿意在机器重启后满地找牙似找mongodb，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">在mongodb里面提供了一个叫做“服务寄宿”的模式，我想如果大家对wcf比较熟悉的话很容易听懂。好了，我们实践一下，这里我开一下D盘</span></p>
+<p class="md-end-block md-p"><span class="md-plain">里面的mongodb。</span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030723525772.png"><img alt="img" loading="lazy" src="/images/cnblogs/d9255525be6587ee.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里要注意的有两点：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;1&gt; logpath: 当我们使用服务寄宿的时候，用眼睛都能想明白肯定不会用console来承载日志信息了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;2&gt; install: 开启安装服务寄宿，很happy啊，把管理员的手工操作降低到最小，感谢mongodb。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">好了，console程序叫我看log日志，那我就看看，发现mongodb已经提示我们如何开启mongodb，接着我照做就是了。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030723561075.png"><img alt="img" loading="lazy" src="/images/cnblogs/8fc473f507e26aa2.png"/></span></p>
+<p class="md-end-block md-p"> </p>
+<p class="md-end-block md-p"><span class="md-plain">还要提醒大家一点的就是，这些命令参数很多很复杂也就很容易忘，不过没关系，数据库给我们提供了一个help方法，我们可以</span></p>
+<p class="md-end-block md-p"><span class="md-plain">拿mongod和mongo说事。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">mongod：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800002917.png"><img alt="img" loading="lazy" src="/images/cnblogs/24e0baa837ac3960.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">mongo：</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800015077.png"><img alt="img" loading="lazy" src="/images/cnblogs/2c8f31dd3929de12.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-9-1-0"><span class="md-plain">二：状态监控</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">监控可以让我们实时的了解数据库的健康状况以及性能调优，在mongodb里面给我们提供了三种方式。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1：http监视器</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个我在先前的文章中也提到了，这里就不赘述了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">2：serverStatus()</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个函数可以获取到mongodb的服务器统计信息，其中包括 ：全局锁，索引，用户操作行为等等这些统计信息，对管理员来说非常</span></p>
+<p class="md-end-block md-p"><span class="md-plain">重要，具体的参数含义可以参考园友：<span class="md-link"><a href="http://www.cnblogs.com/xuegang/archive/2011/10/13/2210339.html">http://www.cnblogs.com/xuegang/archive/2011/10/13/2210339.html</a></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里还是截个图混个眼熟。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800124579.png"><img alt="img" loading="lazy" src="/images/cnblogs/6bd154d851015a03.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">3：mongostat</span></p>
+<p class="md-end-block md-p"><span class="md-plain">前面那些统计信息再牛X，那也是静态统计，不能让我观看实时数据变化，还好，mongodb里面提供了这里要说的mongodstat</span></p>
+<p class="md-end-block md-p"><span class="md-plain">监视器，这玩意会每秒刷新，在实际生产环境中大有用处，还是截张图，很有意思，是不是感觉大军压境了。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800183340.png"><img alt="img" loading="lazy" src="/images/cnblogs/eb5daee6bff4c8d0.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-9-2-0"><span class="md-plain">三: 安全认证</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">作为数据库软件，我们肯定不想谁都可以访问，为了确保数据的安全，mongodb也会像其他的数据库软件一样可以采用用户</span></p>
+<p class="md-end-block md-p"><span class="md-plain">验证的方法，那么该怎么做呢？其实很简单，mongodb提供了addUser方法，还有一个注意点就是如果在admin数据库中添加</span></p>
+<p class="md-end-block md-p"><span class="md-plain">将会被视为“超级管理员”。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800253942.png"><img alt="img" loading="lazy" src="/images/cnblogs/b8b2a7e0dc099b7c.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">上面的admin用户将会被视为超级管理员，“jack”用户追加的第三个参数表示是否是“只读用户”，好了，该添加的我们都添加了，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">我们第一次登录时不是采用验证模式，现在我们使用--reinstall重启服务并以--auth验证模式登录。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800311149.png"><img alt="img" loading="lazy" src="/images/cnblogs/707f915be890189c.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">好了，我们进入test集合翻翻数据看看情况，我们发现jack用户始终都是没有写入的权限，不管是授权或者未授权。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800392380.png"><img alt="img" loading="lazy" src="/images/cnblogs/c59c382b1650ed33.png"/></span></p>
+<h3 class="md-end-block md-heading" id="autoid-9-3-0"><span class="md-plain">四：备份和恢复</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">这玩意的重要性我想都不需要我来说了吧，这玩意要是搞不好会死人的,mongodb里面常用的手段有3种。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1： 直接copy</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个算是最简单的了，不过要注意一点，在服务器运行的情况下直接copy是很有风险的，可能copy出来时，数据已经遭到</span></p>
+<p class="md-end-block md-p"><span class="md-plain">破坏，唯一能保证的就是要暂时关闭下服务器，copy完后重开。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">2：mongodump和mongorestore</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个是mongo给我们提供的内置工具，很好用，能保证在不关闭服务器的情况下copy数据。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">为了操作方便，我们先删除授权用户。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800513783.png"><img alt="img" loading="lazy" src="/images/cnblogs/4836ecba367061f2.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">好了，我们转入正题，这里我先在D盘建立一个backup文件夹用于存放test数据库。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800560180.png"><img alt="img" loading="lazy" src="/images/cnblogs/538c8b2d621b3a9a.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">快看，数据已经备份过来了，太爽了，现在我们用mongorestore恢复过去，记住啊，它是不用关闭机器的。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030800591777.png"><img alt="img" loading="lazy" src="/images/cnblogs/6fbd6df00c95f51e.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">提一点的就是 drop选项，这里是说我将test数据恢复之前先删除原有数据库里面的数据，同样大家可以通过help查看。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">3：主从复制</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这个我在上上篇有所介绍，这里也不赘述了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">其实上面的1，2两点都不能保证获取数据的实时性，因为我们在备份的时候可能还有数据灌在内存中不出来，那么我们</span></p>
+<p class="md-end-block md-p"><span class="md-plain">想说能不能把数据暴力的刷到硬盘上，当然是可以的,mongodb给我们提供了fsync+lock机制就能满足我们提的需求。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">fsync+lock首先会把缓冲区数据暴力刷入硬盘，然后给数据库一个写入锁，其他实例的写入操作全部被阻塞，直到fsync</span></p>
+<p class="md-end-block md-p"><span class="md-plain">+lock释放锁为止。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">这里就不测试了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">加锁： db.runCommand({"fsync":1,"lock":1})</span></p>
+<p class="md-end-block md-p"><span class="md-plain">释放锁： db.$cmd.unlock.findOne()</span></p>
+<h2 class="md-end-block md-heading" id="autoid-9-4-0"><span class="md-plain">驱动实践</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">得要说说C#驱动对mongodb的操作，目前驱动有两种：官方驱动和samus驱动，不过我个人还是喜欢后者，</span></p>
+<p class="md-end-block md-p"><span class="md-plain">因为提供了丰富的linq操作，相当方便。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">官方驱动：<span class="md-link"><a href="https://github.com/mongodb/mongo-csharp-driver/downloads">https://github.com/mongodb/mongo-csharp-driver/downloads</a><span class="md-plain">。下载后，还提供了一个酷似msdn的帮助文档。</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">samus驱动：<span class="md-link"><a href="https://github.com/samus/mongodb-csharp/downloads">https://github.com/samus/mongodb-csharp/downloads</a><span class="md-plain">。</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">下面就具体看看samus驱动，<span class="md-link"><a href="https://github.com/samus/mongodb-csharp/blob/master/examples/Simple/Main.cs">https://github.com/samus/mongodb-csharp/blob/master/examples/Simple/Main.cs</a><span class="md-plain">上面提供了</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">一个简单的demo，大体上看看我们就知道怎么玩了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">一： 实践</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1：我们建立一个Person实体，MongoAlias特性表示取别名，这里的ID值将会覆盖掉数据库自动生成的_id。</span></p>
+<div class="cnblogs_code">
+<pre>#region 数据实体
+    /// &lt;summary&gt;
+/// 数据实体
+/// &lt;/summary&gt;
+    public class Person
+    {
+        [MongoAlias("_id")]
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+
+        public int Age { get; set; }
+
+        public DateTime CreateTime { get; set; }
+    }
+    #endregion</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-softbreak">2：初始化一些变量</span></p>
+<div class="cnblogs_code">
+<pre>string connectionString = string.Empty;
+
+        string databaseName = string.Empty;
+
+        string collectionName = string.Empty;
+
+        static MongodbHelper&lt;T&gt; mongodb;
+
+        #region 初始化操作
+/// &lt;summary&gt;
+/// 初始化操作
+/// &lt;/summary&gt;
+        public MongodbHelper()
+        {
+            connectionString = "Server=127.0.0.1:2222";
+            databaseName = "shopex";
+            collectionName = "person";
+        }
+        #endregion</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">3：为了方便T的继承类使用linq功能，我们还需要映射一下。</span></p>
+<div class="cnblogs_code">
+<pre>#region 实现linq查询的映射配置
+        /// &lt;summary&gt;
+/// 实现linq查询的映射配置
+/// &lt;/summary&gt;
+        public MongoConfiguration configuration
+        {
+            get
+            {
+                var config = new MongoConfigurationBuilder();
+
+                config.Mapping(mapping =&gt;
+                {
+                    mapping.DefaultProfile(profile =&gt;
+                    {
+                        profile.SubClassesAre(t =&gt; t.IsSubclassOf(typeof(T)));
+                    });
+                    mapping.Map&lt;T&gt;();
+                    mapping.Map&lt;T&gt;();
+                });
+
+                config.ConnectionString(connectionString);
+
+                return config.BuildConfiguration();
+            }
+        }
+        #endregion</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">4：下面是一些基本的CURD的代码，跟写EF代码很类似，写起来好舒服。</span></p>
+<div class="cnblogs_code">
+<pre>#region 插入操作
+        /// &lt;summary&gt;
+/// 插入操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Insert(T t)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    collection.Insert(t, true);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 更新操作
+        /// &lt;summary&gt;
+/// 更新操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Update(T t, Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    collection.Update&lt;T&gt;(t, func, true);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 获取集合
+        /// &lt;summary&gt;
+///获取集合
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public List&lt;T&gt; List(int pageIndex, int pageSize, Expression&lt;Func&lt;T, bool&gt;&gt; func, out int pageCount)
+        {
+            pageCount = 0;
+
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    pageCount = Convert.ToInt32(collection.Count());
+
+                    var personList = collection.Linq().Where(func).Skip(pageSize * (pageIndex - 1))
+                                                   .Take(pageSize).Select(i =&gt; i).ToList();
+
+                    mongo.Disconnect();
+
+                    return personList;
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 读取单条记录
+        /// &lt;summary&gt;
+///读取单条记录
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public T Single(Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    var single = collection.Linq().FirstOrDefault(func);
+
+                    mongo.Disconnect();
+
+                    return single;
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 删除操作
+        /// &lt;summary&gt;
+/// 删除操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Delete(Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    //这个地方要注意，一定要加上T参数，否则会当作object类型处理
+//导致删除失败
+                    collection.Remove&lt;T&gt;(func);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">5. 好，我们开一下2222端口，由于前前篇我已经把这个mongodb做成了服务，现在就直接连过去了，并做一下对Name的索引。</span></p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030900455844.png"><img alt="img" loading="lazy" src="/images/cnblogs/493ef03a68ba1670.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">6. 一切准备妥当，我们做下基本的操作，比如这里我添加一千条数据，注意我开启的是安全模式，如果插入不成功，将会抛出异常。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;1&gt; Add:</span></p>
+<div class="cnblogs_code">
+<pre>#region 插入操作
+        /// &lt;summary&gt;
+/// 插入操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Insert(T t)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    collection.Insert(t, true);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 更新操作
+        /// &lt;summary&gt;
+/// 更新操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Update(T t, Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    collection.Update&lt;T&gt;(t, func, true);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 获取集合
+        /// &lt;summary&gt;
+///获取集合
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public List&lt;T&gt; List(int pageIndex, int pageSize, Expression&lt;Func&lt;T, bool&gt;&gt; func, out int pageCount)
+        {
+            pageCount = 0;
+
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    pageCount = Convert.ToInt32(collection.Count());
+
+                    var personList = collection.Linq().Where(func).Skip(pageSize * (pageIndex - 1))
+                                                   .Take(pageSize).Select(i =&gt; i).ToList();
+
+                    mongo.Disconnect();
+
+                    return personList;
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 读取单条记录
+        /// &lt;summary&gt;
+///读取单条记录
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public T Single(Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    var single = collection.Linq().FirstOrDefault(func);
+
+                    mongo.Disconnect();
+
+                    return single;
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 删除操作
+        /// &lt;summary&gt;
+/// 删除操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Delete(Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    //这个地方要注意，一定要加上T参数，否则会当作object类型处理
+//导致删除失败
+                    collection.Remove&lt;T&gt;(func);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030900193928.png"><img alt="img" loading="lazy" src="/images/cnblogs/eea52b626d8c1e7b.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">乍一看显示的数据以为有问题，为什么没有出现jack0或者jack999，不过find的一下后心情舒坦了。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;2&gt; update: 这里就把jack941的名字改掉“mary”</span></p>
+<div class="cnblogs_code">
+<pre>static void Main(string[] args)
+        {
+            MongodbHelper&lt;Person&gt; helper = new MongodbHelper&lt;Person&gt;();
+
+            //修改jack941改成mary
+            var single = helper.Single(i =&gt; i.Name == "jack941");
+            single.Name = "mary";
+            helper.Update(single, i =&gt; i.ID == single.ID);
+
+            Console.WriteLine("修改成功");
+            Console.Read();
+        }</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030900241194.png"><img alt="img" loading="lazy" src="/images/cnblogs/b62ae702da48b35f.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">&lt;3&gt;Delete： 删除mary这条记录</span></p>
+<div class="cnblogs_code">
+<pre>static void Main(string[] args)
+        {
+            MongodbHelper&lt;Person&gt; helper = new MongodbHelper&lt;Person&gt;();
+
+            //删除mary这个记录
+            helper.Delete(i =&gt; i.Name == "mary");
+
+            Console.WriteLine("删除成功");
+            Console.Read();
+        }</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030900272887.png"><img alt="img" loading="lazy" src="/images/cnblogs/f12212687cb569d8.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-softbreak">&lt;4&gt; list操作： 这里我获取一下名字里面带9的人数列表</span></p>
+<div class="cnblogs_code">
+<pre>static void Main(string[] args)
+        {
+            MongodbHelper&lt;Person&gt; helper = new MongodbHelper&lt;Person&gt;();
+
+            int pagecount;
+
+            //获取名字里面带9的人数
+            var list = helper.List(1, 20, i =&gt; i.Name.Contains("9"), out pagecount);
+
+           Console.Read();
+        }</pre>
+</div>
+<p> </p>
+<p class="md-end-block md-p"><span class="md-image md-img-loaded" data-src="https://pic002.cnblogs.com/images/2012/214741/2012030900311418.png"><img alt="img" loading="lazy" src="/images/cnblogs/139010e48cdc7c61.png"/></span></p>
+<p class="md-end-block md-p"><span class="md-plain">总的运行代码</span></p>
+<div class="cnblogs_code">
+<pre>using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Configuration;
+using System.Linq.Expressions;
+
+using MongoDB.Configuration;
+using MongoDB.Linq;
+using MongoDB.Attributes;
+
+
+namespace MongoDB.Test
+{
+    public class MongodbHelper&lt;T&gt; where T : class
+    {
+        string connectionString = string.Empty;
+
+        string databaseName = string.Empty;
+
+        string collectionName = string.Empty;
+
+        static MongodbHelper&lt;T&gt; mongodb;
+
+        #region 初始化操作
+        /// &lt;summary&gt;
+/// 初始化操作
+/// &lt;/summary&gt;
+        public MongodbHelper()
+        {
+            connectionString = "Server=127.0.0.1:2222";
+            databaseName = "shopex";
+            collectionName = "person";
+        }
+        #endregion
+
+        #region 实现linq查询的映射配置
+        /// &lt;summary&gt;
+/// 实现linq查询的映射配置
+/// &lt;/summary&gt;
+        public MongoConfiguration configuration
+        {
+            get
+            {
+                var config = new MongoConfigurationBuilder();
+
+                config.Mapping(mapping =&gt;
+                {
+                    mapping.DefaultProfile(profile =&gt;
+                    {
+                        profile.SubClassesAre(t =&gt; t.IsSubclassOf(typeof(T)));
+                    });
+                    mapping.Map&lt;T&gt;();
+                    mapping.Map&lt;T&gt;();
+                });
+
+                config.ConnectionString(connectionString);
+
+                return config.BuildConfiguration();
+            }
+        }
+        #endregion
+
+        #region 插入操作
+        /// &lt;summary&gt;
+/// 插入操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Insert(T t)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    collection.Insert(t, true);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 更新操作
+        /// &lt;summary&gt;
+/// 更新操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Update(T t, Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    collection.Update&lt;T&gt;(t, func, true);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 获取集合
+        /// &lt;summary&gt;
+///获取集合
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public List&lt;T&gt; List(int pageIndex, int pageSize, Expression&lt;Func&lt;T, bool&gt;&gt; func, out int pageCount)
+        {
+            pageCount = 0;
+
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    pageCount = Convert.ToInt32(collection.Count());
+
+                    var personList = collection.Linq().Where(func).Skip(pageSize * (pageIndex - 1))
+                                                   .Take(pageSize).Select(i =&gt; i).ToList();
+
+                    mongo.Disconnect();
+
+                    return personList;
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 读取单条记录
+        /// &lt;summary&gt;
+///读取单条记录
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public T Single(Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    var single = collection.Linq().FirstOrDefault(func);
+
+                    mongo.Disconnect();
+
+                    return single;
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+
+        #region 删除操作
+        /// &lt;summary&gt;
+/// 删除操作
+/// &lt;/summary&gt;
+/// &lt;param name="person"&gt;&lt;/param&gt;
+/// &lt;returns&gt;&lt;/returns&gt;
+        public void Delete(Expression&lt;Func&lt;T, bool&gt;&gt; func)
+        {
+            using (Mongo mongo = new Mongo(configuration))
+            {
+                try
+                {
+                    mongo.Connect();
+
+                    var db = mongo.GetDatabase(databaseName);
+
+                    var collection = db.GetCollection&lt;T&gt;(collectionName);
+
+                    //这个地方要注意，一定要加上T参数，否则会当作object类型处理
+//导致删除失败
+                    collection.Remove&lt;T&gt;(func);
+
+                    mongo.Disconnect();
+
+                }
+                catch (Exception)
+                {
+                    mongo.Disconnect();
+                    throw;
+                }
+            }
+        }
+        #endregion
+    }
+
+    #region 数据实体
+    /// &lt;summary&gt;
+/// 数据实体
+/// &lt;/summary&gt;
+    public class Person
+    {
+        [MongoAlias("_id")]
+        public string ID { get; set; }
+
+        public string Name { get; set; }
+
+        public int Age { get; set; }
+
+        public DateTime CreateTime { get; set; }
+    }
+    #endregion
+}</pre>
+</div>
+<p> </p>
+</div>
+</div>
+{% endraw %}

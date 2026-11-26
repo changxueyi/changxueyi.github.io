@@ -1,0 +1,80 @@
+---
+title: "redis主从复制和集群实现原理"
+date: 2020-05-21 08:20:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "redis主从复制redis主从配置比较简单，基本就是在从节点配置文件加上:slaveof 192.168.33.130 6379主要是通过master server持久化的rdb文件实现的。master server 先dump出内存快照文件，然后将rdb文件传给slave server，slav"
+read_minutes: 5
+cnblogs_id: 12928178
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12928178.html"
+---
+{% raw %}
+<p><strong>redis主从复制</strong><br/>redis主从配置比较简单，基本就是在从节点配置文件加上:slaveof 192.168.33.130 6379<br/>主要是通过master server持久化的rdb文件实现的。master server 先dump出内存快照文件，然后将rdb文件传给slave server，slave server 根据rdb文件重建内存表。<br/>redis复制过程如下：<br/>1、slave server启动连接到master server之后，salve server主动发送SYNC命令给master server<br/>2、master server接受SYNC命令之后，判断，是否有正在进行内存快照的子进程，如果有，则等待其结束，否则，fork一个子进程，子进程把内存数据保存为文件，并发送给slave server<br/>3、master server子进程进程做数据快照时，父进程可以继续接收client端请求写数据，此时，父进程把新写入的数据放到待发送缓存队列中<br/>4、slave server 接收内存快照文件之后，清空内存数据，根据接收的快照文件，重建内存表数据结构<br/>5、master server把快照文件发送完毕之后，发送缓存队列中保存的子进程快照期间改变的数据给slave server，slave server做相同处理，保存数据一致性<br/>6、master server 后续接收的数据，都会通过步骤1建立的连接，把数据发送到slave server<br/>需要注意：slave server如果因为网络或其他原因断与master server的连接，当slave server重新连接时，需要重新获取master server的内存快照文件，slave server的数据会自动全部清空，然后再重新建立内存表，这样会让slave server 启动恢复服务比较慢，同时也给master server带来较大压力，可以看出redis的复制没有增量复制的概念，这是redis主从复制的一个主要弊端，在实际环境中，尽量规避中途增加从库<br/>redis2.8之前不支持增量，到2.8之后就支持增量了！<br/><br/><br/><strong>redis cluster（集群）</strong><br/>3.0之后的功能，至少需要3(Master)+3(Slave)才能建立集群，是无中心的分布式存储架构，可以在多个节点之间进行数据共享，解决了Redis高可用、可扩展等问题。</p>
+<p>redis集群提供了以下两个好处<br/>1、将数据自动切分(split)到多个节点<br/>2、当集群中的某一个节点故障时，redis还可以继续处理客户端的请求。<br/>一个 redis 集群包含 16384 个哈希槽（hash slot），数据库中的每个数据都属于这16384个哈希槽中的一个。集群使用公式 CRC16(key) % 16384 来计算键 key 属于哪个槽。集群中的每一个节点负责处理一部分哈希槽。<br/>集群中的主从复制<br/>集群中的每个节点都有1个至N个复制品，其中一个为主节点，其余的为从节点，如果主节点下线了，集群就会把这个主节点的一个从节点设置为新的主节点，继续工作。这样集群就不会因为一个主节点的下线而无法正常工作<br/>注意：<br/>1、如果某一个主节点和他所有的从节点都下线的话，redis集群就会停止工作了。redis集群不保证数据的强一致性，在特定的情况下，redis集群会丢失已经被执行过的写命令<br/>2、使用异步复制（asynchronous replication）是redis 集群可能会丢失写命令的其中一个原因，有时候由于网络原因，如果网络断开时间太长，redis集群就会启用新的主节点，之前发给主节点的数据就会丢失。</p>
+<p> </p>
+<h2>Redis集群</h2>
+<h3><a name="t3"></a><a name="t3"></a>基本介绍</h3>
+<p><code>Redis</code> 集群是一个可以在多个 <code>Redis</code> 节点之间进行数据共享的设施<code>installation</code>。</p>
+<p><code>Redis</code> 集群不支持那些需要同时处理多个键的 <code>Redis</code> 命令， 因为执行这些命令需要在多个 <code>Redis</code> 节点之间移动数据， 并且在高负载的情况下， 这些命令将降低<code>Redis</code>集群的性能， 并导致不可预测的行为。</p>
+<p><code>Redis</code> 集群通过分区<code>partition</code>来提供一定程度的可用性<code>availability</code>： 即使集群中有一部分节点失效或者无法进行通讯， 集群也可以继续处理命令请求。</p>
+<p><code>Redis</code>集群提供了以下两个好处：</p>
+<ul>
+<li>将数据自动切分<code>split</code>到多个节点的能力。</li>
+<li>当集群中的一部分节点失效或者无法进行通讯时， 仍然可以继续处理命令请求的能力。</li>
+</ul>
+<h3><a name="t4"></a><a name="t4"></a>集群原理</h3>
+<h4>redis-cluster架构图</h4>
+<p><img alt="redis-cluster架构图" loading="lazy" src="/images/cnblogs/f9df07090aa882d9.png" title=""/></p>
+<ol>
+<li>
+<p>所有的<code>redis</code>节点彼此互联(<code>PING</code>-<code>PONG</code>机制),内部使用二进制协议优化传输速度和带宽。</p>
+</li>
+<li>
+<p>节点的<code>fail</code>是通过集群中超过半数的节点检测失效时才生效。</p>
+</li>
+<li>
+<p>客户端与<code>redis</code>节点直连,不需要中间<code>proxy</code>层.客户端不需要连接集群所有节点,连接集群中任何一个可用节点即可。</p>
+</li>
+<li>
+<p><code>redis-cluster</code>把所有的物理节点映射到[<code>0-16383</code>]<code>slot</code>上,<code>cluster</code> 负责维护<code>node</code>&lt;-&gt;<code>slot</code>&lt;-&gt;<code>value</code></p>
+</li>
+</ol>
+<p><code>Redis</code>集群中内置了 <code>16384</code> 个哈希槽，当需要在 <code>Redis</code> 集群中放置一个 <code>key-value</code> 时，<code>redis</code> 先对<code>key</code> 使用 <code>crc16</code> 算法算出一个结果，然后把结果对 <code>16384</code> 求余数，这样每个 <code>key</code> 都会对应一个编号在 <code>0-16383</code> 之间的哈希槽，<code>redis</code> 会根据节点数量大致均等的将哈希槽映射到不同的节点</p>
+<h4>redis-cluster投票:容错</h4>
+<p><img alt="redis-cluster投票:容错" loading="lazy" src="/images/cnblogs/6c6a3f36fd436f84.png" title=""/></p>
+<ol>
+<li>
+<p>投票过程是集群中所有<code>master</code>参与,如果半数以上<code>master</code>节点与<code>master</code>节点通信超时(<code>cluster-node-timeout</code>),认为当前<code>master</code>节点挂掉.</p>
+</li>
+<li>
+<p>什么时候整个集群不可用(<code>cluster_state:fail</code>)?</p>
+<ul>
+<li>如果集群任意<code>master</code>挂掉,且当前<code>master</code>没有<code>slave</code>.集群进入<code>fail</code>状态,也可以理解成集群的<code>slot</code>映射[<code>0-16383</code>]不完整时进入fail状态. <br/>
+<ul>
+<li><code>redis-3.0.0.rc1</code>加入<code>cluster-require-full-coverage</code>参数,默认关闭,打开集群兼容部分失败.</li>
+</ul>
+</li>
+<li>如果集群超过半数以上<code>master</code>挂掉，无论是否有<code>slave</code>，集群进入<code>fail</code>状态.</li>
+</ul>
+</li>
+</ol>
+<h3> </h3>
+<p> </p>
+<h2 id="主从概念"><strong>主从概念</strong></h2>
+<ul>
+<ul>
+<li>一个master可以拥有多个slave，一个slave又可以拥有多个slave。如此下去，形成了强大的多级服务器集群架构。</li>
+<li>master用写数据，经统计：网站的读写比率是10：1</li>
+<li>通过主从分离可以实现读写分离</li>
+<li>master和slave都是一个redis实例（redis服务）<br/><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/3809b2013b26b990.png"/></li>
+<li>
+<p>因此，主从模型可以提高<strong>读的能力</strong>，在一定程度上缓解了写的能力。因为能写仍然只有Master节点一个，可以将读的操作全部移交到从节点上，变相提高了写能力。</p>
+<p>问题：我们已经部署好了redis，并且能启动一个redis，实现数据的读写，为什么还要学习redis集群？</p>
+<p>答：（1）单个redis存在不稳定性。当redis服务宕机了，就没有可用的服务了。</p>
+<p>（2）单个redis的读写能力是有限的。</p>
+<p><strong>redis</strong><strong>集群是为了强化redis</strong><strong>的读写能力。</strong></p>
+</li>
+</ul>
+</ul>
+<p> </p>
+<p><strong>总结：主从着眼于高可用，集群Cluster提高并发量</strong></p>
+{% endraw %}

@@ -1,0 +1,690 @@
+---
+title: "Golang 语言开发规范（JD）"
+date: 2021-01-18 09:39:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "Go语言开发规范指南 本规范制定主要用于开发及代码review时进行参考，保证平台开发的一致性与规范性。 1 命名规范 命名的规范性包括普通变量、结构体、指针类型等。 1.1 普通变量命名 1、不允许中文拼音命名。 2、Go中的命名推崇简洁，可以使用缩写方式，缩写表意不明请予以注释。UrlArray"
+read_minutes: 11
+cnblogs_id: 14291263
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14291263.html"
+---
+{% raw %}
+<h1 id="Go语言开发规范指南">Go语言开发规范指南</h1>
+<p>本规范制定主要用于开发及代码review时进行参考，保证平台开发的一致性与规范性。</p>
+<h2><strong>1 命名规范</strong></h2>
+<p>命名的规范性包括普通变量、结构体、指针类型等。</p>
+<h3 id="1.1普通变量命名">1.1 普通变量命名</h3>
+<p>1、不允许中文拼音命名。</p>
+<p>2、Go中的命名推崇简洁，可以使用缩写方式，缩写表意不明请予以注释。UrlArray，应该写成urlArray或者URLArray。</p>
+<p>3、不要以下划线或者数字开头。</p>
+<p>4、全局变量以及参数变量采用驼峰式结构且不能出现下划线。</p>
+<p>5、首字母大小写视变量可见范围而定。</p>
+<h3 id="1.2包及包内文件命名">1.2 包及包内文件命名</h3>
+<p>1、使用小写单词，缩写，不允许存在下划线或者驼峰式结构。</p>
+<p>2、包内文件名基本和上条保持一致，允许下划线连接单词的形式。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_164208">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java keyword">package</code> <code class="java plain">bds</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">bds_proto.go</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>3、包中名称的所有引用都将使用包名完成，因此您可以从标识符中省略该名称。例如，如果有一个 chubby 包，你不应该定义类型名称为 ChubbyFile ，否则使用者将写为 chubby.ChubbyFile。而是应该命名类型名称为 File，使用时将写为 chubby.File。避免使用无意义的包名称，如 util，common，misc，api，types 和 interfaces。有关更多信息，请参阅<a href="http://golang.org/doc/effective_go.html#package-names%E5%92%8C">http://golang.org/doc/effective_go.html#package-names和</a> <a href="http://blog.golang.org/package-names%E3%80%82">http://blog.golang.org/package-names。</a></p>
+<p>4、包名应为其源码目录的基本名称。在 src/pkg/encoding/base64 中的包应作为 “encoding/base64” 导入，其包名应为 base64， 而非 encoding_base64 或 encodingBase64。</p>
+<h3 id="1.3接口命名">1.3 接口命名</h3>
+<p>1、对于只包含单个函数的接口命名，一般以函数名加上er或者er类似物作为后缀。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_296618">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">type Reader </code><code class="java keyword">interface</code> <code class="java plain">{</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java plain">Read(p []</code><code class="java keyword">byte</code><code class="java plain">) (n </code><code class="java keyword">int</code><code class="java plain">, err error)</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>2、对于两个函数的接口，一般结合二者。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_164734">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">type WriteFlusher </code><code class="java keyword">interface</code> <code class="java plain">{</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java plain">Write([]</code><code class="java keyword">byte</code><code class="java plain">) (</code><code class="java keyword">int</code><code class="java plain">, error)</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java plain">Flush() error</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>3、对于三个及以上的函数命名，应该选取有意义的名称，类似其他面向对象中的类或者接口的取名方式。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_204200">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">type Car </code><code class="java keyword">interface</code> <code class="java plain">{</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java plain">Start([]</code><code class="java keyword">byte</code><code class="java plain">)</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java plain">Stop() error</code></div>
+<div class="line number4 index3 alt1"><code class="java spaces">    </code><code class="java plain">Recover()</code></div>
+<div class="line number5 index4 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h3 id="1.4函数相关命名">1.4 函数相关命名</h3>
+<p>1、函数名采用驼峰式结构，同样视其可见性设置函数名首字母大小写。</p>
+<p>2、命名返回值：<br/>* 为了提高代码可读性、建议慎用命名返回值。<br/>* 如果返回多个同样类型的返回值或者返回值的意思不够清晰，建议命名返回值。<br/>* 不要只为了减少函数内部定义变量而命名返回值<br/>例如：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_279606">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">func (n *Node) Parent1() (node *Node)</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">func (n *Node) Parent2() (node *Node, err error)</code></div>
+<div class="line number3 index2 alt2"><code class="java comments">//匿名返回值更简洁</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">func (n *Node) Parent1() *Node</code></div>
+<div class="line number5 index4 alt2"><code class="java plain">func (n *Node) Parent2() (*Node, error)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_282618">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">func (f *Foo) Location() (float64, float64, error)</code></div>
+<div class="line number2 index1 alt1"><code class="java comments">//同类型多返回值，命名返回值意义更明确</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">func (f *Foo) Location() (lat, </code><code class="java keyword">long</code> <code class="java plain">float64, err error)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>参考:<a href="https://github.com/golang/go/wiki/CodeReviewComments#named-result-parameters">https://github.com/golang/go/wiki/CodeReviewComments#named-result-parameters</a></p>
+<p>3、Go中默认不提供Getter/Setter方法，对于Getter方法建议直接大写变量首字母作为方法名，Setter方法建议Set+变量名（首字母大写）。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_506936">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">owner := obj.Owner()</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">if</code> <code class="java plain">owner != user {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java plain">obj.SetOwner(user)</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>4、函数的接收者命名，简洁的单词或者接口的缩写，不要使用self,this, me 等没有具体意义的单词。</p>
+<p>5、函数接收者的类型默认为指针类型，某些本身就是引用类型的除外（如：map，slice或者chan），当接收者是结构体并且结构体中包含sync.Mutex或者类似同步域；接收者是结构体并且结构体比较大的时候接收者需要设置为指针类型。<br/>选择到底是在方法上使用值接收器还是使用指针接收器可能会很困难。如有疑问，请使用指针接收器，但有时候值接收器是有意义的，通常是出于效率的原因，例如小的不变结构或基本类型的值。以下是一些有用的指导：</p>
+<p>① 如果接收器是 map，func或 chan，则不要使用指向它们的指针。如果接收器是 slice 并且该方法不重新切片或不重新分配切片，则不要使用指向它的指针。<br/>② 如果该方法需要改变接收器的值，则接收器必须是指针。<br/>③ 如果接收器是包含 sync.Mutex 或类似同步字段的 struct，则接收器必须是避免复制的指针。<br/>④ 如果接收器是大型结构或数组，则指针接收器更有效。多大才算大？假设它相当于将其包含的所有元素作为参数传递给方法。如果感觉太大，那么对接收器来说也太大了。<br/>⑤ 函数或方法可以改变接收器吗（并发调用或调用某方法时继续调用相关方法或函数）？在调用方法时，值类型会创建接收器的副本，因此外部更新将不会应用于此接收器。如果必须在原始接收器中看到更改效果，则接收器必须是指针。<br/>⑥ 如果接收器是 struct，数组或 slice，并且其任何元素是指向可能改变的对象的指针，则更倾向于使用指针接收器，因为它将使读者更清楚地意图。<br/>⑦ 如果接收器是一个小型数组或 struct，那么它自然是一个值类型（例如，类似于time.Time类型），对于没有可变字段，没有指针的类型，或者只是一个简单的基本类型，如 int 或 string，值接收器是合适的。值接收器可以⑧ 减少可以生成的垃圾量；如果将值作为参数传递给值类型方法，则可以使用堆栈上的副本而不需要在堆上进行分配。（编译器试图避免这种分配，但它不能总是成功）因此，在没有进行分析之前，不要选择值接收器类型。<br/>⑨ 最后，如有疑问，请使用指针接收器。</p>
+<h2><strong>2 注释规范性</strong></h2>
+<p>1、不允许中文注释。</p>
+<p>2、注释的风格可以选择//或者/**/，其中前者适合单行注释，后者适合注释区块，注释的正文应该以被注释的内容作为开头。如下：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_240310">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java comments">// Request represents a request to run a command.</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">type Request struct { ...</code></div>
+<div class="line number3 index2 alt2"><code class="java comments">// Encode writes the JSON encoding of req to w.</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">func Encode(w io.Writer, req *Request) { ...</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>3、注释文本应该以点号结束（方便日后godoc导出）</p>
+<p>4、每个程序包需要有包级注释，包内任一文件内写即可，注释的位置放在package前面且之间不可以有空行。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_644697">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java comments">// Package regexp implements a simple library</code></div>
+<div class="line number2 index1 alt1"><code class="java comments">// for regular expressions.</code></div>
+<div class="line number3 index2 alt2"><code class="java keyword">package</code> <code class="java plain">regexp</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>5、任何一个包外可见的变量或者方法应该需要注释（即大写开头的变量或者函数）。</p>
+<p>6、(可选)应该最好有文件级别的注释，注释应该位于import和文件代码之间的部分，如下：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_223157">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java keyword">import</code> <code class="java plain">(</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java string">"fmt"</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java string">"github.com/golang/protobuf/proto"</code>     </div>
+<div class="line number4 index3 alt1"><code class="java spaces">    </code><code class="java string">"github.com/op/go-logging"</code></div>
+<div class="line number5 index4 alt2"><code class="java plain">)</code></div>
+<div class="line number6 index5 alt1"><code class="java comments">/*</code></div>
+<div class="line number7 index6 alt2"><code class="java comments">⽂件级别的注释</code></div>
+<div class="line number8 index7 alt1"><code class="java comments">This file implement the API of consensus</code></div>
+<div class="line number9 index8 alt2"><code class="java comments">which can be invoked by outer services.</code></div>
+<div class="line number10 index9 alt1"><code class="java comments">*/</code></div>
+<div class="line number11 index10 alt2"><code class="java comments">// package-level logger</code></div>
+<div class="line number12 index11 alt1"><code class="java plain">var logger *logging.Logger</code></div>
+<div class="line number13 index12 alt2"><code class="java plain">func init() {</code></div>
+<div class="line number14 index13 alt1"><code class="java spaces">    </code><code class="java plain">logger = logging.MustGetLogger(</code><code class="java string">"consensus/pbft"</code><code class="java plain">)</code></div>
+<div class="line number15 index14 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2><strong>3 代码控制块规范</strong></h2>
+<h3 id="3.1条件控制语句if">3.1 条件控制语句if</h3>
+<p>1、If的条件临时变量创建方式，默认如下：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_399082">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java keyword">if</code> <code class="java plain">err := file.Chmod(</code><code class="java value">0664</code><code class="java plain">); err != nil {</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java keyword">return</code> <code class="java plain">err</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>2、If语句中如果存在对错误信息的判断，遇到错误及时返回，由于异常流程及时返回，正常流程不需要存在else{}代码块，如：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_562818">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">f, err := os.Open(name)</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">if</code> <code class="java plain">err != nil {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java keyword">return</code> <code class="java plain">err</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">}</code></div>
+<div class="line number5 index4 alt2"><code class="java plain">d, err := f.Stat()</code></div>
+<div class="line number6 index5 alt1"><code class="java keyword">if</code> <code class="java plain">err != nil {</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">    </code><code class="java plain">f.Close()</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">    </code><code class="java keyword">return</code> <code class="java plain">err</code></div>
+<div class="line number9 index8 alt2"><code class="java plain">}</code></div>
+<div class="line number10 index9 alt1"><code class="java plain">codeUsing(f, d)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>3、无论如何，你都不应将一个控制结构（if、for、switch 或 select）的左大括号放在下一行。如果这样做，就会在大括号前面插入一个分号，这可能引起不需要的效果。 你应该这样写</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_603936">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java keyword">if</code> <code class="java plain">i &lt; f() {</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java plain">g()</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+<div class="line number4 index3 alt1"><code class="java comments">//而不是这样</code></div>
+<div class="line number5 index4 alt2"> </div>
+<div class="line number6 index5 alt1"><code class="java keyword">if</code> <code class="java plain">i &lt; f()  </code><code class="java comments">// 错误!</code></div>
+<div class="line number7 index6 alt2"><code class="java plain">{           </code><code class="java comments">// 错误!</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">    </code><code class="java plain">g()</code></div>
+<div class="line number9 index8 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h3 id="3.2循环控制语句for">3.2 循环控制语句for</h3>
+<p>以简明的方式声明局部变量。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_517593">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">sum := </code><code class="java value">0</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">for</code> <code class="java plain">i := </code><code class="java value">0</code><code class="java plain">; i &lt; </code><code class="java value">10</code><code class="java plain">; i++ {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java plain">sum += i</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h3 id="3.3循环控制语句range">3.3 循环控制语句range</h3>
+<p>访问array，slice，string，map，channel优先使用range语法。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_484205">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java keyword">for</code> <code class="java plain">key, value := range oldMap {</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java plain">newMap[key] = value</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>上面的例子如果只需要value，key可以用下划线替代_,或者只需要key的情况可以省略value如下：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_643975">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">sum := </code><code class="java value">0</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">for</code> <code class="java plain">_, value := range array {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java plain">sum += value</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">}</code></div>
+<div class="line number5 index4 alt2"><code class="java keyword">for</code> <code class="java plain">key := range m {</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">    </code><code class="java keyword">if</code> <code class="java plain">key.expired() {</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">        </code><code class="java plain">delete(m, key)</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">    </code><code class="java plain">}</code></div>
+<div class="line number9 index8 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h3 id="3.4switch语句">3.4 switch语句</h3>
+<p>1、Go 的 switch 比 C 的更通用。其表达式无需为常量或整数，case 语句会自上而下逐一进行求值直到匹配为止。若 switch 后面没有表达式，它将匹配 true，因此，我们可以将 if-else-if-else 链写成一个 switch，这也更符合 Go 的风格。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_638646">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">func unhex(c </code><code class="java keyword">byte</code><code class="java plain">) </code><code class="java keyword">byte</code> <code class="java plain">{</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java keyword">switch</code> <code class="java plain">{</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java keyword">case</code> <code class="java string">'0'</code> <code class="java plain">&lt;= c &amp;&amp; c &lt;= </code><code class="java string">'9'</code><code class="java plain">:</code></div>
+<div class="line number4 index3 alt1"><code class="java spaces">        </code><code class="java keyword">return</code> <code class="java plain">c - </code><code class="java string">'0'</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">    </code><code class="java keyword">case</code> <code class="java string">'a'</code> <code class="java plain">&lt;= c &amp;&amp; c &lt;= </code><code class="java string">'f'</code><code class="java plain">:</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">        </code><code class="java keyword">return</code> <code class="java plain">c - </code><code class="java string">'a'</code> <code class="java plain">+ </code><code class="java value">10</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">    </code><code class="java keyword">case</code> <code class="java string">'A'</code> <code class="java plain">&lt;= c &amp;&amp; c &lt;= </code><code class="java string">'F'</code><code class="java plain">:</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">        </code><code class="java keyword">return</code> <code class="java plain">c - </code><code class="java string">'A'</code> <code class="java plain">+ </code><code class="java value">10</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">    </code><code class="java plain">}</code></div>
+<div class="line number10 index9 alt1"><code class="java spaces">    </code><code class="java keyword">return</code> <code class="java value">0</code></div>
+<div class="line number11 index10 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>2、switch 并不会自动下溯，但 case 可通过逗号分隔来列举相同的处理条件。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_210148">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">func shouldEscape(c </code><code class="java keyword">byte</code><code class="java plain">) bool {</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java keyword">switch</code> <code class="java plain">c {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java keyword">case</code> <code class="java string">' '</code><code class="java plain">, </code><code class="java string">'?'</code><code class="java plain">, </code><code class="java string">'&amp;'</code><code class="java plain">, </code><code class="java string">'='</code><code class="java plain">, </code><code class="java string">'#'</code><code class="java plain">, </code><code class="java string">'+'</code><code class="java plain">, </code><code class="java string">'%'</code><code class="java plain">:</code></div>
+<div class="line number4 index3 alt1"><code class="java spaces">        </code><code class="java keyword">return</code> <code class="java keyword">true</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">    </code><code class="java plain">}</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">    </code><code class="java keyword">return</code> <code class="java keyword">false</code></div>
+<div class="line number7 index6 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>3、尽管它们在 Go 中的用法和其它类 C 语言差不多，但 break 语句可以使 switch 提前终止。不仅是 switch， 有时候也必须打破层层的循环。在 Go 中，我们只需将标签放置到循环外，然后 “蹦” 到那里即可。下面的例子展示了二者的用法。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_647469">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">Loop:</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">   </code><code class="java keyword">for</code> <code class="java plain">n := </code><code class="java value">0</code><code class="java plain">; n &lt; len(src); n += size {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">       </code><code class="java keyword">switch</code> <code class="java plain">{</code></div>
+<div class="line number4 index3 alt1"><code class="java spaces">       </code><code class="java keyword">case</code> <code class="java plain">src[n] &lt; sizeOne:</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">           </code><code class="java keyword">if</code> <code class="java plain">validateOnly {</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">               </code><code class="java keyword">break</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">           </code><code class="java plain">}</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">           </code><code class="java plain">size = </code><code class="java value">1</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">           </code><code class="java plain">update(src[n])</code></div>
+<div class="line number10 index9 alt1"> </div>
+<div class="line number11 index10 alt2"><code class="java spaces">       </code><code class="java keyword">case</code> <code class="java plain">src[n] &lt; sizeTwo:</code></div>
+<div class="line number12 index11 alt1"><code class="java spaces">           </code><code class="java keyword">if</code> <code class="java plain">n+</code><code class="java value">1</code> <code class="java plain">&gt;= len(src) {</code></div>
+<div class="line number13 index12 alt2"><code class="java spaces">               </code><code class="java plain">err = errShortInput</code></div>
+<div class="line number14 index13 alt1"><code class="java spaces">               </code><code class="java keyword">break</code> <code class="java plain">Loop</code></div>
+<div class="line number15 index14 alt2"><code class="java spaces">           </code><code class="java plain">}</code></div>
+<div class="line number16 index15 alt1"><code class="java spaces">           </code><code class="java keyword">if</code> <code class="java plain">validateOnly {</code></div>
+<div class="line number17 index16 alt2"><code class="java spaces">               </code><code class="java keyword">break</code></div>
+<div class="line number18 index17 alt1"><code class="java spaces">           </code><code class="java plain">}</code></div>
+<div class="line number19 index18 alt2"><code class="java spaces">           </code><code class="java plain">size = </code><code class="java value">2</code></div>
+<div class="line number20 index19 alt1"><code class="java spaces">           </code><code class="java plain">update(src[n] + src[n+</code><code class="java value">1</code><code class="java plain">]&lt;&lt;shift)</code></div>
+<div class="line number21 index20 alt2"><code class="java spaces">       </code><code class="java plain">}</code></div>
+<div class="line number22 index21 alt1"><code class="java spaces">   </code><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>4、当然，continue 语句也能接受一个可选的标签，不过它只能在循环中使用。</p>
+<p>5、switch 也可用于判断接口变量的动态类型。如 类型选择 通过圆括号中的关键字 type 使用类型断言语法。若 switch 在表达式中声明了一个变量，那么该变量的每个子句中都将有该变量对应的类型。在这些 case 中重用一个名字也是符合语义的，实际上是在每个 case 里声明了一个不同类型但同名的新变量。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_996557">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">var t </code><code class="java keyword">interface</code><code class="java plain">{}</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">t = functionOfSomeType()</code></div>
+<div class="line number3 index2 alt2"><code class="java keyword">switch</code> <code class="java plain">t := t.(type) {</code></div>
+<div class="line number4 index3 alt1"><code class="java keyword">default</code><code class="java plain">:</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">    </code><code class="java plain">fmt.Printf(</code><code class="java string">"unexpected type %T"</code><code class="java plain">, t)       </code><code class="java comments">// %T 输出 t 是什么类型</code></div>
+<div class="line number6 index5 alt1"><code class="java keyword">case</code> <code class="java plain">bool:</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">    </code><code class="java plain">fmt.Printf(</code><code class="java string">"boolean %t\n"</code><code class="java plain">, t)             </code><code class="java comments">// t 是 bool 类型</code></div>
+<div class="line number8 index7 alt1"><code class="java keyword">case</code> <code class="java keyword">int</code><code class="java plain">:</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">    </code><code class="java plain">fmt.Printf(</code><code class="java string">"integer %d\n"</code><code class="java plain">, t)             </code><code class="java comments">// t 是 int 类型</code></div>
+<div class="line number10 index9 alt1"><code class="java keyword">case</code> <code class="java plain">*bool:</code></div>
+<div class="line number11 index10 alt2"><code class="java spaces">    </code><code class="java plain">fmt.Printf(</code><code class="java string">"pointer to boolean %t\n"</code><code class="java plain">, *t) </code><code class="java comments">// t 是 *bool 类型</code></div>
+<div class="line number12 index11 alt1"><code class="java keyword">case</code> <code class="java plain">*</code><code class="java keyword">int</code><code class="java plain">:</code></div>
+<div class="line number13 index12 alt2"><code class="java spaces">    </code><code class="java plain">fmt.Printf(</code><code class="java string">"pointer to integer %d\n"</code><code class="java plain">, *t) </code><code class="java comments">// t 是 *int 类型</code></div>
+<div class="line number14 index13 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2><strong>4 错误处理</strong></h2>
+<p>1、在重要函数，特别是作为lib提供其他服务的组件中需要显示返回错误信息。</p>
+<p>2、对于有错误返回的函数的调用必须进行错误判断及处理，实现返回错误的函数错误信息应简洁明确，如：“open /etc/passwx: no such file or directory” 这种 "动作 + 操作对象 + 错误提示"的⽅式⽐较推荐。</p>
+<p>3、错误信息字符串不应大写（除非以专有名词或首字母缩略词开头）或以标点符号结尾，因为它们通常是在其他上下文后打印的。即使用<code>fmt.Errorf("something bad")</code>而不要使用<code>fmt.Errorf("Something bad")</code>，因此<code>log.Printf("Reading %s: %v", filename, err)</code>的格式中将不会出现额外的大写字母。否则这将不适用于日志记录，因为它是隐式的面向行，而不是在其他消息中组合。</p>
+<p>4、你偶尔会看见为忽略错误而丢弃错误值的代码，这是种糟糕的实践。请务必检查错误返回，它们会提供错误的理由。</p>
+<p>5、为了方便错误的处理，可以自定义错误类型，使用switch的方式进行统一的错误处理，如下：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_635168">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">type error </code><code class="java keyword">interface</code> <code class="java plain">{</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java plain">Error() string</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+<div class="line number4 index3 alt1"><code class="java comments">// PathError records an error and the operation and</code></div>
+<div class="line number5 index4 alt2"><code class="java comments">// file path that caused it.</code></div>
+<div class="line number6 index5 alt1"><code class="java plain">type PathError struct {</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">    </code><code class="java plain">Op string </code><code class="java comments">// "open", "unlink", etc.</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">    </code><code class="java plain">Path string </code><code class="java comments">// The associated file.</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">    </code><code class="java plain">Err error </code><code class="java comments">// Returned by the system call.</code></div>
+<div class="line number10 index9 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>4、尽量不要使用Panic处理错误，两种情况除外：1、未知错误发生，2、系统关键组件初始化错误，如下：</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_964270">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java comments">// 1. unkown error</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">switch</code> <code class="java plain">s := suit(drawCard()); s {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">    </code><code class="java keyword">case</code> <code class="java string">"Spades"</code><code class="java plain">: </code><code class="java comments">//...</code></div>
+<div class="line number4 index3 alt1"><code class="java spaces">    </code><code class="java keyword">case</code> <code class="java string">"Hearts"</code><code class="java plain">: </code><code class="java comments">//...</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">    </code><code class="java keyword">case</code> <code class="java string">"Clubs"</code><code class="java plain">: </code><code class="java comments">//...</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">    </code><code class="java keyword">default</code><code class="java plain">:</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">        </code><code class="java plain">panic(fmt.Sprintf(</code><code class="java string">"INVALID suit %q"</code><code class="java plain">, s))</code></div>
+<div class="line number8 index7 alt1"><code class="java plain">}</code></div>
+<div class="line number9 index8 alt2"><code class="java comments">// 2. key init</code></div>
+<div class="line number10 index9 alt1"><code class="java plain">var user = os.Getenv(</code><code class="java string">"USER"</code><code class="java plain">)</code></div>
+<div class="line number11 index10 alt2"><code class="java plain">func init() {</code></div>
+<div class="line number12 index11 alt1"><code class="java spaces">    </code><code class="java keyword">if</code> <code class="java plain">user == </code><code class="java string">""</code> <code class="java plain">{</code></div>
+<div class="line number13 index12 alt2"><code class="java spaces">        </code><code class="java plain">panic(</code><code class="java string">"no value for $USER"</code><code class="java plain">)</code></div>
+<div class="line number14 index13 alt1"><code class="java spaces">    </code><code class="java plain">}</code></div>
+<div class="line number15 index14 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2><strong>5 日志打印</strong></h2>
+<p>1、日志输出格式需要基本统一格式。</p>
+<p>2、日志的输出级别仔细斟酌，特别是保证生产环境下不输出无效信息以及程序运行内部细节信息（如：某些具体数据结构）。</p>
+<p>3、日志的级别设置应该灵活，能够通过配置文件进行配置（后续需要一个日志模块支持）。</p>
+<p>4、若你想控制自定义类型的默认输出格式，只需为该类型定义一个具有 String() string 签名的方法。对于我们简单的类型 T，可进行如下操作。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_158758">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">func (t *T) String() string {</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code><code class="java keyword">return</code> <code class="java plain">fmt.Sprintf(</code><code class="java string">"%d/%g/%q"</code><code class="java plain">, t.a, t.b, t.c)</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">fmt.Printf(</code><code class="java string">"%v\n"</code><code class="java plain">, t)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>会打印出如下格式：</p>
+<pre><code>7/-2.35/"abc\tdef"
+</code></pre>
+<p>请勿通过调用 Sprintf 来构造 String 方法，因为它会无限递归你的的 String 方法。当 Sprintf 试图将一个接收者以字符串形式打印输出，而在此过程中反过来又调用了 Sprintf 时，这种情况就会出现。这是一个很常见的错误，如下例所示。</p>
+<div class="code panel pdl">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_351600">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">type MyString string</code></div>
+<div class="line number2 index1 alt1"> </div>
+<div class="line number3 index2 alt2"><code class="java plain">func (m MyString) String() string {</code></div>
+<div class="line number4 index3 alt1"><code class="java spaces">    </code><code class="java keyword">return</code> <code class="java plain">fmt.Sprintf(</code><code class="java string">"MyString=%s"</code><code class="java plain">, m) </code><code class="java comments">// 错误：会无限递归</code></div>
+<div class="line number5 index4 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2><strong>6 代码长度限制</strong></h2>
+<p>1、避免过多参数，超过4个参数即可视为过多。</p>
+<p>2、Go代码中没有严格的行长度限制，但避免使用造成阅读障碍的长行。类似的，如果长行的可读性更好，不要为了缩短行而添加换行符</p>
+<p>3、避免过长函数，经验表明“每当感觉像需要以注释来说明点很么的时候，我们把需要说明的东西写进一个独立函数中”。关于函数应该有多长的建议和代码长度完全相同。没有 “永远不会有超过N行的函数” 这样的规则，但是程序中肯定会存在行数太多，功能过于微弱的函数，而解决方案是改变这个函数边界的位置，而不是执着在行数上。</p>
+<p>4、避免过大的单文件组织。</p>
+<h2><strong>7 代码入库前自动化检查</strong></h2>
+<pre><code>代码入库前需经过go fmt、go vet、golint检查,建议进一步使用golangci-lint(https://github.com/golangci/golangci-lint/tree/master)检查代码。</code></pre>
+{% endraw %}

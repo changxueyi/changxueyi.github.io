@@ -1,0 +1,70 @@
+---
+title: "多线程必须用到的线程池(什么时候用多线程)"
+date: 2020-09-26 20:19:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "案例需求：要开发的项目是一个IT问答平台，其中用户发布问题后，需要给平台上所有选了该问题类别的邮箱中各发一份邮件。 分析：这个时候就必须用到多线程了，因为用户发布问题和给其他用户发邮件可以说是两个相互独立的步骤，如果让主程序一行一行执行的话，那如果发邮件的人很多的话，用户发一个问题要等很长时间页面才"
+read_minutes: 1
+cnblogs_id: 13736582
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13736582.html"
+---
+{% raw %}
+<div>案例需求：要开发的项目是一个IT问答平台，其中用户发布问题后，需要给平台上所有选了该问题类别的邮箱中各发一份邮件。</div>
+<div> <img alt="" loading="lazy" src="/images/cnblogs/55bb5833b11bbeda.png"/> <br/>
+</div>
+<div>
+<div>
+  分析：这个时候就必须用到多线程了，因为用户发布问题和给其他用户发邮件可以说是两个相互独立的步骤，如果让主程序一行一行执行的话，那如果发邮件的人很多的话，用户发一个问题要等很长时间页面才会响应，这个肯定是不能容忍的。但是用普通new一个线程，然后.start的话会出现大问题，很有可能服务器会崩掉，线程不能复用。
+ </div>
+<div>
+<img alt="" loading="lazy" src="/images/cnblogs/c24b8cc5c8d6d7c4.png"/>
+<br/>
+</div>
+<div><ol class="hljs-ln">
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">   ExecutorService pool = Executors.newCachedThreadPool();</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">   SendTwoEmailTools st=<span class="hljs-keyword">new SendTwoEmailTools();<span class="hljs-comment">//你的线程类</span></span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">   Thread thread = <span class="hljs-keyword">new Thread(st);</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-comment">//将线程放入池中进行执行</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">  pool.execute(thread);</div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line"> <span class="hljs-comment">//关闭线程池</span></div>
+</div>
+</li>
+<li>
+<div class="hljs-ln-numbers"> </div>
+<div class="hljs-ln-code">
+<div class="hljs-ln-line">  pool.shutdown();</div>
+</div>
+</li>
+</ol><br/>
+<div>
+   这样就比较好的解决问题了。</div>
+</div>
+</div>
+{% endraw %}

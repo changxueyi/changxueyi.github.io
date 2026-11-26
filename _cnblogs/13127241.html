@@ -1,0 +1,435 @@
+---
+title: "iBatis SQL 各种标签用法"
+date: 2020-06-14 21:52:00 +0800
+tags: ["【数据库】-- Mysql"]
+excerpt: "1、动态SQL片段 通过SQL片段达到代码复用 <!-- 动态条件分页查询 --> <sql id=\"sql_count\"> select count(*) </sql> <sql id=\"sql_select\"> select * </sql> <sql id=\"sql_where\"> from"
+read_minutes: 6
+cnblogs_id: 13127241
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13127241.html"
+tags_inferred: true
+---
+{% raw %}
+<p>1、动态SQL片段</p>
+<div>通过SQL片段达到代码复用</div>
+<div>
+<div>        &lt;!-- 动态条件分页查询 --&gt; <br/>      
+<div class="cnblogs_code">
+<pre>  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">sql </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="sql_count"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                select count(*) 
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">sql</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">sql </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="sql_select"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                select * 
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">sql</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">sql </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="sql_where"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                from icp 
+                </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">dynamic </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="where"</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="name"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                name like '%$name$%' 
+                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="path"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                path like '%path$%' 
+                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="area_id"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                area_id = #area_id# 
+                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="hided"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                hided = #hided# 
+                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">dynamic</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">dynamic </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">=""</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotNull </span><span style="color: #ff0000;">property</span><span style="color: #0000ff;">="_start"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotNull </span><span style="color: #ff0000;">property</span><span style="color: #0000ff;">="_size"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                        limit #_start#, #_size# 
+                                </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotNull</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotNull</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">dynamic</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">sql</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">select </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="findByParamsForCount"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="map"</span><span style="color: #ff0000;"> resultClass</span><span style="color: #0000ff;">="int"</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_count"</span><span style="color: #0000ff;">/&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_where"</span><span style="color: #0000ff;">/&gt;</span> 
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">select</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">select </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="findByParams"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="map"</span><span style="color: #ff0000;"> resultMap</span><span style="color: #0000ff;">="icp.result_base"</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_select"</span><span style="color: #0000ff;">/&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_where"</span><span style="color: #0000ff;">/&gt;</span> 
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">select</span><span style="color: #0000ff;">&gt;</span>
+ </pre>
+</div>
+</div>
+</div>
+<div>2、数字范围查询</div>
+<div>所传参数名称是捏造所得，非数据库字段，比如_img_size_ge、_img_size_lt字段</div>
+<div>
+<div>                   
+<div class="cnblogs_code">
+<pre>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_img_size_ge"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;![CDATA[</span><span style="color: #808080;"> 
+                                img_size &gt;= #_img_size_ge# 
+                        </span><span style="color: #0000ff;">]]&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_img_size_lt"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;![CDATA[</span><span style="color: #808080;"> 
+                                img_size &lt; #_img_size_lt# 
+                        </span><span style="color: #0000ff;">]]&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> </pre>
+</div>
+<p> </p>
+</div>
+</div>
+<div> </div>
+<div>多次使用一个参数也是允许的</div>
+<div>
+<div>                     
+<div class="cnblogs_code">
+<pre>   <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_now"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;![CDATA[</span><span style="color: #808080;"> 
+                                            execplantime &gt;= #_now# 
+                                     </span><span style="color: #0000ff;">]]&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_now"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;![CDATA[</span><span style="color: #808080;"> 
+                                            closeplantime &lt;= #_now# 
+                                     </span><span style="color: #0000ff;">]]&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span>
+ </pre>
+</div>
+<p> </p>
+</div>
+</div>
+<div>3、时间范围查询</div>
+<div>
+<div>                    
+<div class="cnblogs_code">
+<pre>    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_starttime"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_endtime"</span><span style="color: #0000ff;">&gt;</span> 
+                                        <span style="color: #0000ff;">&lt;![CDATA[</span><span style="color: #808080;"> 
+                                        createtime &gt;= #_starttime# 
+                                        and createtime &lt; #_endtime# 
+                                 </span><span style="color: #0000ff;">]]&gt;</span> 
+                                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> </pre>
+</div>
+<p> </p>
+</div>
+</div>
+<div> </div>
+<div>4、in查询</div>
+<div>
+<div>              
+<div class="cnblogs_code">
+<pre>          <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_in_state"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                state in ('$_in_state$') 
+                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+</div>
+</div>
+<div> </div>
+<div>5、like查询
+<div class="cnblogs_code">
+<pre>                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="chnameone"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                (chnameone like '%$chnameone$%' or spellinitial like '%$chnameone$%') 
+                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="chnametwo"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                chnametwo like '%$chnametwo$%' 
+                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> </pre>
+</div>
+<p> </p>
+</div>
+<div> </div>
+<div> </div>
+<div>6、or条件</div>
+<div>
+<div>                   
+<div class="cnblogs_code">
+<pre>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isEqual </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_exeable"</span><span style="color: #ff0000;"> compareValue</span><span style="color: #0000ff;">="N"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;![CDATA[</span><span style="color: #808080;"> 
+                                (t.finished='11'    or t.failure=3) 
+                        </span><span style="color: #0000ff;">]]&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isEqual</span><span style="color: #0000ff;">&gt;</span>
+ 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isEqual </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="_exeable"</span><span style="color: #ff0000;"> compareValue</span><span style="color: #0000ff;">="Y"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;![CDATA[</span><span style="color: #808080;"> 
+                                t.finished in ('10','19') and t.failure&lt;3 
+                        </span><span style="color: #0000ff;">]]&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isEqual</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+</div>
+</div>
+<div> </div>
+<div> </div>
+<div>7、where子查询</div>
+<div>
+<div>                      
+<div class="cnblogs_code">
+<pre>  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="exprogramcode"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotEmpty </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="isRational"</span><span style="color: #0000ff;">&gt;</span> 
+                                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isEqual </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="isRational"</span><span style="color: #ff0000;"> compareValue</span><span style="color: #0000ff;">="N"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                                code not in 
+                                                (select t.contentcode 
+                                                from cms_ccm_programcontent t 
+                                                where t.contenttype='MZNRLX_MA' 
+                                                and t.programcode = #exprogramcode#) 
+                                        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isEqual</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotEmpty</span><span style="color: #0000ff;">&gt;</span>
+ 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">select </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="findByProgramcode"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="string"</span><span style="color: #ff0000;"> resultMap</span><span style="color: #0000ff;">="cms_ccm_material.result"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                select * 
+                from cms_ccm_material 
+                where code in 
+                (select t.contentcode 
+                from cms_ccm_programcontent t 
+                where t.contenttype = 'MZNRLX_MA' 
+                and programcode = #value#) 
+                order by updatetime desc 
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">select</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+</div>
+</div>
+<div> </div>
+<div> </div>
+<div>
+<div>9、函数的使用</div>
+<div>
+<div>       
+<div class="cnblogs_code">
+<pre> <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 添加 </span><span style="color: #008000;">--&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">insert </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="insert"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="RuleMaster"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                insert into rulemaster( 
+                name, 
+                createtime, 
+                updatetime, 
+                remark 
+                ) values ( 
+                #name#, 
+                now(), 
+                now(), 
+                #remark# 
+                ) 
+                </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">selectKey </span><span style="color: #ff0000;">keyProperty</span><span style="color: #0000ff;">="id"</span><span style="color: #ff0000;"> resultClass</span><span style="color: #0000ff;">="long"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                        select LAST_INSERT_ID() 
+                </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">selectKey</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">insert</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 更新 </span><span style="color: #008000;">--&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">update </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="update"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="RuleMaster"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                update rulemaster set 
+                name = #name#, 
+                updatetime = now(), 
+                remark = #remark# 
+                where id = #id# 
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">update</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+</div>
+</div>
+</div>
+<div>10、map结果集
+<div>
+<div>     
+<div class="cnblogs_code">
+<pre>   <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 动态条件分页查询 </span><span style="color: #008000;">--&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">sql </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="sql_count"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                select count(a.*) 
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">sql</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">sql </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="sql_select"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                select a.id                vid, 
+                a.img             imgurl, 
+                a.img_s         imgfile, 
+                b.vfilename vfilename, 
+    b.name            name, 
+                c.id                sid, 
+                c.url             url, 
+                c.filename    filename, 
+                c.status        status 
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">sql</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">sql </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="sql_where"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                From secfiles c, juji b, videoinfo a 
+                where 
+                a.id = b. videoid 
+                and b.id = c.segmentid 
+                and c.status = 0 
+                order by a.id asc,b.id asc,c.sortnum asc 
+                </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">dynamic </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">=""</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotNull </span><span style="color: #ff0000;">property</span><span style="color: #0000ff;">="_start"</span><span style="color: #0000ff;">&gt;</span> 
+                                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isNotNull </span><span style="color: #ff0000;">property</span><span style="color: #0000ff;">="_size"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> 
+                                        limit #_start#, #_size# 
+                                </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotNull</span><span style="color: #0000ff;">&gt;</span> 
+                        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isNotNull</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">dynamic</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">sql</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 返回没有下载的记录总数 </span><span style="color: #008000;">--&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">select </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="getUndownFilesForCount"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="map"</span><span style="color: #ff0000;"> resultClass</span><span style="color: #0000ff;">="int"</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_count"</span><span style="color: #0000ff;">/&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_where"</span><span style="color: #0000ff;">/&gt;</span> 
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">select</span><span style="color: #0000ff;">&gt;</span> 
+        <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 返回没有下载的记录 </span><span style="color: #008000;">--&gt;</span> 
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">select </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="getUndownFiles"</span><span style="color: #ff0000;"> parameterClass</span><span style="color: #0000ff;">="map"</span><span style="color: #ff0000;"> resultClass</span><span style="color: #0000ff;">="java.util.HashMap"</span><span style="color: #0000ff;">&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_select"</span><span style="color: #0000ff;">/&gt;</span> 
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="sql_where"</span><span style="color: #0000ff;">/&gt;</span> 
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">select</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+</div>
+</div>
+</div>
+<div>原文:<a href="http://zhaohe162.blog.163.com/blog/static/3821679720115275181509/">http://zhaohe162.blog.163.com/blog/static/3821679720115275181509/</a></div>
+<div>--------------------------------------------------------------------------------------------------------</div>
+<div>
+<p>      直接使用JDBC一个非常普遍的问题就是动态SQL。使用参数值、参数本身和数据列都是动态SQL，通常是非常困难的。典型的解决办法就是用上一堆的IF-ELSE条件语句和一连串的字符串连接。对于这个问题，Ibatis提供了一套标准的相对比较清晰的方法来解决一个问题，这里有个简单的例子：</p>
+<p>    </p>
+<div class="cnblogs_code">
+<pre> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">select </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="getUserList"</span><span style="color: #ff0000;"> resultMap</span><span style="color: #0000ff;">="user"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+         select * from user
+
+            </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isGreaterThan </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="id"</span><span style="color: #ff0000;"> compareValue</span><span style="color: #0000ff;">="0"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+                   where user_id = #userId#
+
+            </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isGreaterThan</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+             order by createTime desc
+
+    </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">select</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+<p>     上面的例子中，根据参数bean“id”属性的不同情况，可创建两个可能的语句。如果参数“id”大于0，将创建下面的语句：</p>
+<p>      select * from user where user_id = ?  order by createTime desc</p>
+<p>     或者，如果“id”参数小于等于0，将创建下面的语句：<br/>      select * from user  order by createTime desc</p>
+<p> 以上的这个例子是否可以看出Ibatis里提供的简单的写法来实现了复杂拖沓的动态SQL呢？我们在做查询的时候，对于同一个表，甚至可以用来定义一个动态SQL，做到重用的地步，还是上面那个例子：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">sql </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="queryCondition"</span><span style="color: #0000ff;">&gt;</span>
+
+     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">dynamic </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="WHERE"</span><span style="color: #0000ff;">&gt;</span>
+
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">isGreaterThan </span><span style="color: #ff0000;">prepend</span><span style="color: #0000ff;">="and"</span><span style="color: #ff0000;"> property</span><span style="color: #0000ff;">="id"</span><span style="color: #ff0000;"> compareValue</span><span style="color: #0000ff;">="0"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+                   where user_id = #userId#
+
+            </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">isGreaterThan</span><span style="color: #0000ff;">&gt;</span>
+
+   <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">dynamic</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">sql</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">select </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="getUserList"</span><span style="color: #ff0000;"> resultMap</span><span style="color: #0000ff;">="user"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+         select * from user
+
+        </span><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 引入动态的查询条件 </span><span style="color: #008000;">--&gt;</span>
+
+         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">include </span><span style="color: #ff0000;">refid</span><span style="color: #0000ff;">="queryCondition"</span><span style="color: #0000ff;">/&gt;</span><span style="color: #000000;">
+
+          order by createTime desc
+
+    </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">select</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p> </p>
+<p>      这个使用的话是否更加的具有公用性能，这就是Ibatis带来的便利。</p>
+<p>      在Ibatis中，动态的条件元素包含一下几种：二元条件元素、一元条件元素和其他条件元素：</p>
+<p>      (1)、二元条件元素：将一个属性值和静态值或另一个属性值比较，如果条件为真，元素将被包容在查询SQL语句中。</p>
+<p>            二元条件元素的属性：</p>
+<p>             perpend——可被覆盖的SQL语句组成部分，添加在语句的前面(可选)</p>
+<p>             property——是比较的属性(必选)</p>
+<p>             compareProperty——另一个用于和前者比较的属性(必选或选择compareValue)</p>
+<p>             compareValue——用于比较的值(必选或选择compareProperty)</p>
+<table border="1" cellpadding="1" cellspacing="1">
+<tbody>
+<tr>
+<td> &lt;isEqual&gt;</td>
+<td> 比较属性值和静态值或另一个属性值是否相等。</td>
+</tr>
+<tr>
+<td> &lt;isNotEqual&gt;</td>
+<td> 比较属性值和静态值或另一个属性值是否不相等。</td>
+</tr>
+<tr>
+<td> &lt;isGreaterThan&gt;</td>
+<td> 比较属性值是否大于静态值或另一个属性值。</td>
+</tr>
+<tr>
+<td> &lt;isGreaterEqual&gt;</td>
+<td> 比较属性值是否大于等于静态值或另一个属性值。</td>
+</tr>
+<tr>
+<td> &lt;isLessThan&gt;</td>
+<td> 比较属性值是否小于静态值或另一个属性值。</td>
+</tr>
+<tr>
+<td> &lt;isLessEqual&gt;</td>
+<td>
+<p> 比较属性值是否小于等于静态值或另一个属性值。</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>举个小例子：</p>
+<p>     &lt;isLessEqual prepend=”AND” property=”age” compareValue=”18”&gt;<br/>          ADOLESCENT = ‘TRUE’<br/>      &lt;/isLessEqual&gt;</p>
+<p>    如果大于等18岁时，则为成年人</p>
+<p>   (2)、一元条件元素：一元条件元素检查属性的状态是否符合特定的条件。</p>
+<p>     一元条件元素的属性：</p>
+<p>      prepend——可被覆盖的SQL语句组成部分，添加在语句前面(可选)</p>
+<p>      property——被比较的属性(必选)</p>
+<table border="1" cellpadding="1" cellspacing="1">
+<tbody>
+<tr>
+<td> &lt;isPropertyAvailable&gt;</td>
+<td>检查是否存在该属性（存在parameter bean的属性） </td>
+</tr>
+<tr>
+<td> &lt;isNotPropertyAvailable&gt;</td>
+<td> 检查是否不存在该属性（不存在parameter bean的属性）</td>
+</tr>
+<tr>
+<td> &lt;isNull&gt;</td>
+<td> 检查属性是否为null</td>
+</tr>
+<tr>
+<td> &lt;isNotNull&gt;</td>
+<td> 检查属性是否不为null</td>
+</tr>
+<tr>
+<td> &lt;isEmpty&gt;</td>
+<td> 检查Collection.size()的值，属性的String或String.valueOf()值,是否为null或空（“”或size() &lt; 1）</td>
+</tr>
+<tr>
+<td> &lt;isNotEmpty&gt;</td>
+<td> 检查Collection.size()的值，属性的String或String.valueOf()值,是否不为null或不为空（“”或size() &gt; 0）</td>
+</tr>
+</tbody>
+</table>
+<p>小例子：</p>
+<p>    &lt;isNotEmpty prepend="AND" property="firstName" &gt;<br/>           FIRST_NAME=#firstName#<br/>   &lt;/isNotEmpty&gt;</p>
+<p>   (3)、其他元素条件</p>
+<p>         (a).Parameter Present：这些元素检查参数对象是否存在</p>
+<p>         Parameter Present条件的属性</p>
+<p>        prepend － 可被覆盖的SQL语句组成部分，添加在语句的前面（可选）</p>
+<table border="1" cellpadding="1" cellspacing="1">
+<tbody>
+<tr>
+<td> &lt;isParameterPresent&gt;</td>
+<td> 检查是否存在参数对象（不为null）</td>
+</tr>
+<tr>
+<td> &lt;isNotParameterPresent&gt;</td>
+<td> 例子：<br/>&lt;isNotParameterPresent prepend=”AND”&gt;<br/>EMPLOYEE_TYPE = ‘DEFAULT’<br/>&lt;/isNotParameterPresent&gt;</td>
+</tr>
+</tbody>
+</table>
+<p>    (b)、Iterate：这属性遍历整个集合，并为List集合中的元素重复元素体的内容。</p>
+<p>          Iterate的属性：</p>
+<p>          prepend － 可被覆盖的SQL语句组成部分，添加在语句的前面（可选）<br/>          property － 类型为java.util.List的用于遍历的元素（必选）<br/>          open － 整个遍历内容体开始的字符串，用于定义括号（可选）<br/>          close －整个遍历内容体结束的字符串，用于定义括号（可选）<br/>          conjunction － 每次遍历内容之间的字符串，用于定义AND或OR（可选）</p>
+<table border="1" cellpadding="1" cellspacing="1">
+<tbody>
+<tr>
+<td> &lt;iterate&gt;</td>
+<td>遍历类型为java.util.List的元素。<br/>例子：<br/>&lt;iterate prepend="AND"  property="userNameList"<br/>open="(" close=")" conjunction="OR"&gt;<br/>username=#userNameList[]#<br/>&lt;/iterate&gt;<br/>注意：使用&lt;iterate&gt;时，在List元素名后面包括方括号[]非常重要，方括号[]将对象标记为List，以防解析器简单地将List输出成String。 </td>
+</tr>
+</tbody>
+</table>
+<p>     以上讲述了关于Ibatis的动态SQL的功能，是否觉得非常强大，并且优雅呢？那还犹豫什么呢？行动起来。</p>
+<p>原文:<a href="http://www.cnblogs.com/phoebus0501/archive/2011/05/16/2048126.html">http://www.cnblogs.com/phoebus0501/archive/2011/05/16/2048126.html</a></p>
+</div>
+{% endraw %}

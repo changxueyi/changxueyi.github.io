@@ -1,0 +1,21 @@
+---
+title: "PHP中的=>,->是什么意思?"
+date: 2021-01-14 15:21:00 +0800
+tags: ["【PHP】-- PHP基础"]
+excerpt: "一、=>,->的意思： ->是对象bai执行方法或取得属性用的。=>是数组里键和值对应用的。二、用法 1、=> 的用法数组中用于数组的 key 和 value之间的关系例如： $a = array('0' => '1','2' => '4',);echo $a['0'];echo $a['2'];"
+read_minutes: 1
+cnblogs_id: 14277436
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14277436.html"
+---
+{% raw %}
+<p>一、=&gt;,-&gt;的意思：</p>
+<p>-&gt;是对象bai执行方法或取得属性用的。<br/>=&gt;是数组里键和值对应用的。<br/>二、用法</p>
+<p>1、=&gt; 的用法数组中用于数组的 key 和 value之间的关系例如：</p>
+<p>$a = array('0' =&gt; '1','2' =&gt; '4',);echo $a['0'];echo $a['2'];</p>
+<p>2、-&gt; 的用法类中用于引用类实例的方法和属性例如：</p>
+<p>class Test{function add(){return $this-&gt;var++;}var $var = 0;}$a = new Test; </p>
+<p>//实例化对象名称</p>
+<p>echo $a-&gt;add();echo $a-&gt;var;</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/681c148dd07d6669.png"/></p>
+<p> </p>
+{% endraw %}

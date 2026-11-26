@@ -1,0 +1,362 @@
+---
+title: "Go 深入多线程"
+date: 2021-03-30 10:34:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "Golang 介绍 线程是cpu调度的最小单位，只有不同的线程才能同时在多核cpu上同时运行。但线程太占资源，线程调度开销大。go中的goroutine是一个轻量级的线程，执行时只需要4-5k的内存，比线程更易用，更高效，更轻便，调度开销比线程小，可同时运行上千万个并发。 go语言中开启一个goro"
+read_minutes: 5
+cnblogs_id: 14595691
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14595691.html"
+---
+{% raw %}
+<div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="500" data-width="899"><img data-image-index="0" data-original-filesize="429038" data-original-format="image/png" data-original-height="500" data-original-src="//upload-images.jianshu.io/upload_images/4822713-b232668346562fe5.png" data-original-width="899" loading="lazy" src="/images/cnblogs/bf0d35670bf9ac74.webp"/></div>
+</div>
+<div class="image-caption">Golang</div>
+</div>
+<h1>介绍</h1>
+<p>线程是cpu调度的最小单位，只有不同的线程才能同时在多核cpu上同时运行。但线程太占资源，线程调度开销大。go中的goroutine是一个轻量级的线程，执行时只需要4-5k的内存，比线程更易用，更高效，更轻便，调度开销比线程小，可同时运行上千万个并发。<br/>
+go语言中开启一个goroutine非常简单，go函数名（），就开启了个线程。</p>
+<p>默认情况下，调度器仅使用单线程，要想发挥多核处理器的并行处理能力，必须调用runtine.GOMAXPROCS(n)来设置可并发的线程数，也可以通过设置环境变量GOMAXPROCS打到相同的目的。</p>
+<h1>goroutine</h1>
+<p>Runtime包中提供了几个与goroutine相关的函数。Gosched()让当前正在执行的goroutine放弃CPU执行权限。调度器安排其他正在等待的线程运行。<br/>
+请看以下例子：</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">package main
+
+<span class="token keyword">import <span class="token punctuation">(
+    <span class="token string">"runtime"
+    <span class="token string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword">func <span class="token function">main<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">go <span class="token function">sayHello<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">go <span class="token function">sayWorld<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">var str <span class="token builtin">string
+    fmt<span class="token punctuation">.<span class="token function">Scan<span class="token punctuation">(<span class="token operator">&amp;str<span class="token punctuation">)
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">sayHello<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">for i <span class="token operator">:= <span class="token number">0<span class="token punctuation">; i <span class="token operator">&lt; <span class="token number">10<span class="token punctuation">; i<span class="token operator">++<span class="token punctuation">{
+        fmt<span class="token punctuation">.<span class="token function">Print<span class="token punctuation">(<span class="token string">"hello "<span class="token punctuation">)
+        runtime<span class="token punctuation">.<span class="token function">Gosched<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token punctuation">}
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">sayWorld<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">for i <span class="token operator">:= <span class="token number">0<span class="token punctuation">; i <span class="token operator">&lt; <span class="token number">10<span class="token punctuation">; i<span class="token operator">++ <span class="token punctuation">{
+        fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string">"world"<span class="token punctuation">)
+        runtime<span class="token punctuation">.<span class="token function">Gosched<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token punctuation">}
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="285" data-width="753"><img data-image-index="1" data-original-filesize="15254" data-original-format="image/png" data-original-height="285" data-original-src="//upload-images.jianshu.io/upload_images/4822713-8cfdde9480a3907d.png" data-original-width="753" loading="lazy" src="/images/cnblogs/2c9a40d1c45613f6.webp"/></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<p>从上面输出结果可知，我们启动了两个线程，其中一个线程输出一句后调用Gosched函数，释放CPU权限；之后另一个线程获得CPU权限。这样两个线程交替获得cpu权限，才输出了以上结果。</p>
+<p>runtime.NumCPU()返回了cpu核数，runtime.NumGoroutine()返回当前进程的goroutine线程数。即便我们没有开启新的goroutine。</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">package main
+
+<span class="token keyword">import <span class="token punctuation">(
+    <span class="token string">"runtime"
+    <span class="token string">"fmt"
+<span class="token punctuation">)
+<span class="token keyword">func <span class="token function">main<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(runtime<span class="token punctuation">.<span class="token function">NumCPU<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">)
+    fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(runtime<span class="token punctuation">.<span class="token function">NumGoroutine<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">)
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="90" data-width="761"><img data-image-index="2" data-original-filesize="4847" data-original-format="image/png" data-original-height="90" data-original-src="//upload-images.jianshu.io/upload_images/4822713-295bde8426f0d27f.png" data-original-width="761" loading="lazy" src="/images/cnblogs/ce5e951bb2c003dd.webp"/></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<p>runtime.Goexit()函数用于终止当前的goroutine，单defer函数将会继续被调用。</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">package main
+
+<span class="token keyword">import <span class="token punctuation">(
+    <span class="token string">"runtime"
+    <span class="token string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword">func <span class="token function">test<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">defer <span class="token keyword">func<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+        fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(<span class="token string">" in defer"<span class="token punctuation">)
+    <span class="token punctuation">}<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">for i <span class="token operator">:= <span class="token number">0<span class="token punctuation">; i <span class="token operator">&lt; <span class="token number">10<span class="token punctuation">; i<span class="token operator">++<span class="token punctuation">{
+        fmt<span class="token punctuation">.<span class="token function">Print<span class="token punctuation">(i<span class="token punctuation">)
+        <span class="token keyword">if i <span class="token operator">&gt; <span class="token number">5<span class="token punctuation">{
+            runtime<span class="token punctuation">.<span class="token function">Goexit<span class="token punctuation">(<span class="token punctuation">)
+        <span class="token punctuation">}
+    <span class="token punctuation">}
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">main<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">go <span class="token function">test<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">var str <span class="token builtin">string
+    fmt<span class="token punctuation">.<span class="token function">Scan<span class="token punctuation">(<span class="token operator">&amp;str<span class="token punctuation">)
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="75" data-width="800"><img data-image-index="3" data-original-filesize="5627" data-original-format="image/png" data-original-height="75" data-original-src="//upload-images.jianshu.io/upload_images/4822713-eee73f9e685c5af8.png" data-original-width="800" loading="lazy" src="/images/cnblogs/35f28fd6bf738081.webp"/></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<p>在这里大家或许有个疑问，下面这两句代码干嘛的呢</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-csharp"><code class="language-csharp"><span class="token keyword">var str <span class="token keyword">string
+fmt<span class="token punctuation">.<span class="token function">Scan<span class="token punctuation">(<span class="token operator">&amp;str<span class="token punctuation">)
+</span></span></span></span></span></span></span></code></pre>
+</div>
+<p>这两句代码是等待输入的意思，在这里用来阻止主线程关闭的。如果没有这两句的话，会发现我们的程序瞬间就结束了，而且什么都没有输出。这是因为主线程关闭之后，所有开启的goroutine都会强制关闭，他还没有来得及输出，就结束了。<br/>
+但是这样感觉怪怪的。如果有一种机制，在子线程结束的时候通知一下主线程，然后主线程再关闭，岂不是更好，这样就不用无休止的等待了。于是就有了<code>channel</code>。</p>
+<h1>channel</h1>
+<p>goroutine之间通过channel来通讯，可以认为channel是一个管道或者先进先出的队列。你可以从一个goroutine中向channel发送数据，在另一个goroutine中取出这个值。<br/>
+使用<code>make</code>创建</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">var channel <span class="token keyword">chan <span class="token builtin">int <span class="token operator">= <span class="token function">make<span class="token punctuation">(<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)
+<span class="token comment">// 或
+channel <span class="token operator">:= <span class="token function">make<span class="token punctuation">(<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>生产者/消费者是最经典的使用示例。生产者goroutine负责将数据放入channel，消费者goroutine从channel中取出数据进行处理。</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">package main
+
+<span class="token keyword">import <span class="token punctuation">(
+    <span class="token string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword">func <span class="token function">main<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    buf<span class="token operator">:=<span class="token function">make<span class="token punctuation">(<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)
+    flg <span class="token operator">:= <span class="token function">make<span class="token punctuation">(<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)
+    <span class="token keyword">go <span class="token function">producer<span class="token punctuation">(buf<span class="token punctuation">)
+    <span class="token keyword">go <span class="token function">consumer<span class="token punctuation">(buf<span class="token punctuation">, flg<span class="token punctuation">)
+    <span class="token operator">&lt;-flg <span class="token comment">//等待接受完成
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">producer<span class="token punctuation">(c <span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">defer <span class="token function">close<span class="token punctuation">(c<span class="token punctuation">) <span class="token comment">// 关闭channel
+    <span class="token keyword">for i <span class="token operator">:= <span class="token number">0<span class="token punctuation">; i <span class="token operator">&lt; <span class="token number">10<span class="token punctuation">; i<span class="token operator">++<span class="token punctuation">{
+        c <span class="token operator">&lt;- i <span class="token comment">// 阻塞，直到数据被消费者取走后，才能发送下一条数据
+    <span class="token punctuation">}
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">consumer<span class="token punctuation">(c<span class="token punctuation">, f <span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">for<span class="token punctuation">{
+        <span class="token keyword">if v<span class="token punctuation">, ok <span class="token operator">:= <span class="token operator">&lt;-c<span class="token punctuation">; ok<span class="token punctuation">{
+            fmt<span class="token punctuation">.<span class="token function">Print<span class="token punctuation">(v<span class="token punctuation">) <span class="token comment">// 阻塞，直到生产者放入数据后继续读取数据
+        <span class="token punctuation">}<span class="token keyword">else<span class="token punctuation">{
+            <span class="token keyword">break
+        <span class="token punctuation">}
+    <span class="token punctuation">}
+    f<span class="token operator">&lt;-<span class="token number">1 <span class="token comment">//发送数据，通知main函数已接受完成
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p> </p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="60" data-width="816"><img data-image-index="4" data-original-filesize="5269" data-original-format="image/png" data-original-height="60" data-original-src="//upload-images.jianshu.io/upload_images/4822713-672b9046c25db9ae.png" data-original-width="816" loading="lazy" src="/images/cnblogs/56e46281f12614a8.webp"/></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<br/>
+可以将channel指定为单向通信。比如<code>&lt;-chan int</code>仅能接收，<code>chan&lt;-int</code>仅能发送。之前的生产者消费者可以改为一下方式：
+<p> </p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">func <span class="token function">producer<span class="token punctuation">(c <span class="token keyword">chan<span class="token operator">&lt;-<span class="token builtin">int<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">defer <span class="token function">close<span class="token punctuation">(c<span class="token punctuation">) <span class="token comment">// 关闭channel
+    <span class="token keyword">for i <span class="token operator">:= <span class="token number">0<span class="token punctuation">; i <span class="token operator">&lt; <span class="token number">10<span class="token punctuation">; i<span class="token operator">++<span class="token punctuation">{
+        c <span class="token operator">&lt;- i <span class="token comment">// 阻塞，直到数据被消费者取走后，才能发送下一条数据
+    <span class="token punctuation">}
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">consumer<span class="token punctuation">(c <span class="token operator">&lt;-<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">, f <span class="token keyword">chan<span class="token operator">&lt;-<span class="token builtin">int<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">for<span class="token punctuation">{
+        <span class="token keyword">if v<span class="token punctuation">, ok <span class="token operator">:= <span class="token operator">&lt;-c<span class="token punctuation">; ok<span class="token punctuation">{
+            fmt<span class="token punctuation">.<span class="token function">Print<span class="token punctuation">(v<span class="token punctuation">) <span class="token comment">// 阻塞，直到生产者放入数据后继续读取数据
+        <span class="token punctuation">}<span class="token keyword">else<span class="token punctuation">{
+            <span class="token keyword">break
+        <span class="token punctuation">}
+    <span class="token punctuation">}
+    f<span class="token operator">&lt;-<span class="token number">1 <span class="token comment">//发送数据，通知main函数已接受完成
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>channle可以是带缓冲的。make的第二个参数作为缓冲长度来初始化一个带缓冲的channel:</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go">c <span class="token operator">:= <span class="token function">make<span class="token punctuation">(<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">, <span class="token number">5<span class="token punctuation">)
+</span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>向带缓冲的channel发送数据时，只有缓冲区满时，发送操作才会被阻塞。当缓冲区空时，接收才会阻塞。<br/>
+可以通过以下程序调整发送和接收的顺序调试</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-css"><code class="language-css"><span class="token selector">package main
+
+import (
+    "fmt"
+)
+
+func main()<span class="token punctuation">{
+    <span class="token property">c <span class="token punctuation">:= <span class="token function">make<span class="token punctuation">(chan int<span class="token punctuation">, 2<span class="token punctuation">)
+    c &lt;- 1
+    c &lt;- 2
+    fmt.<span class="token function">Println<span class="token punctuation">(&lt;-c<span class="token punctuation">)
+    fmt.<span class="token function">Println<span class="token punctuation">(&lt;-c<span class="token punctuation">)
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<h2>select</h2>
+<p>如果有多个channel需要监听，可以考虑用select,随机处理一个可用的channel</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">package main
+
+<span class="token keyword">import <span class="token punctuation">(
+    <span class="token string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword">func <span class="token function">main<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    c <span class="token operator">:= <span class="token function">make<span class="token punctuation">(<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)
+    quit <span class="token operator">:= <span class="token function">make<span class="token punctuation">(<span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)
+    <span class="token keyword">go <span class="token keyword">func<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+        <span class="token keyword">for i <span class="token operator">:= <span class="token number">0<span class="token punctuation">; i <span class="token operator">&lt; <span class="token number">10<span class="token punctuation">; i<span class="token operator">++<span class="token punctuation">{
+            fmt<span class="token punctuation">.<span class="token function">Printf<span class="token punctuation">(<span class="token string">"%d "<span class="token punctuation">, <span class="token operator">&lt;-c<span class="token punctuation">)
+        <span class="token punctuation">}
+        quit <span class="token operator">&lt;- <span class="token number">1
+    <span class="token punctuation">}<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token function">testMuti<span class="token punctuation">(c<span class="token punctuation">, quit<span class="token punctuation">)
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">testMuti<span class="token punctuation">(c<span class="token punctuation">, quit <span class="token keyword">chan <span class="token builtin">int<span class="token punctuation">)<span class="token punctuation">{
+    x<span class="token punctuation">, y <span class="token operator">:= <span class="token number">0<span class="token punctuation">, <span class="token number">1
+    <span class="token keyword">for <span class="token punctuation">{
+        <span class="token keyword">select<span class="token punctuation">{
+        <span class="token keyword">case c<span class="token operator">&lt;-x<span class="token punctuation">:
+            x<span class="token punctuation">, y <span class="token operator">= y<span class="token punctuation">, x<span class="token operator">+y
+        <span class="token keyword">case <span class="token operator">&lt;-quit<span class="token punctuation">:
+            fmt<span class="token punctuation">.<span class="token function">Print<span class="token punctuation">(<span class="token string">"\nquit"<span class="token punctuation">)
+            <span class="token keyword">return
+        <span class="token punctuation">}
+    <span class="token punctuation">}
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="85" data-width="773"><img data-image-index="5" data-original-filesize="6644" data-original-format="image/png" data-original-height="85" data-original-src="//upload-images.jianshu.io/upload_images/4822713-b32120187fe6a3f0.png" data-original-width="773" loading="lazy" src="/images/cnblogs/b56e603c70ded0d2.webp"/></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<h2>channle超时机制</h2>
+<p>当一个channel被read/write阻塞时，会被一直阻塞下去，直到channel关闭。产生一个异常退出程序。channel内部没有超时的定时器。但我们可以用select来实现channel的超时机制</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-css"><code class="language-css"><span class="token selector">package main
+
+import (
+    "time"
+    "fmt"
+)
+
+func main()<span class="token punctuation">{
+    <span class="token selector">c := make(chan int)
+    select<span class="token punctuation">{
+    case &lt;- <span class="token property">c<span class="token punctuation">:
+        fmt.<span class="token function">Println<span class="token punctuation">(<span class="token string">"没有数据"<span class="token punctuation">)
+    case &lt;-time.<span class="token function">After<span class="token punctuation">(5* time.Second<span class="token punctuation">)<span class="token punctuation">:
+        fmt.<span class="token function">Println<span class="token punctuation">(<span class="token string">"超时退出"<span class="token punctuation">)
+    <span class="token punctuation">}
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="82" data-width="809"><img data-image-index="6" data-original-filesize="5468" data-original-format="image/png" data-original-height="82" data-original-src="//upload-images.jianshu.io/upload_images/4822713-50d87a4cdb3ebd59.png" data-original-width="809" loading="lazy" src="/images/cnblogs/687f63db088fd92f.webp"/></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<h1>线程同步</h1>
+<p>假设现在我们有两个线程，一个线程写文件，一个线程读文件。如果在读文件的同时，写文件的线程向文件中写数据，就会出现问题。为了保证能够正确的读写文件，在读文件的时候，不能进行写入文件的操作，在写入时，不能进行读的操作。这就需要互斥锁。互斥锁是线程间同步的一种机制，用了保证在同一时刻只用一个线程访问共享资源。go中的互斥锁在sync包中。下面是个线程安全的map:</p>
+<div class="_2Uzcx_"><button class="VJbwyy" type="button"></button>
+<pre class="line-numbers language-go"><code class="language-go"><span class="token keyword">package main
+
+<span class="token keyword">import <span class="token punctuation">(
+    <span class="token string">"errors"
+    <span class="token string">"sync"
+    <span class="token string">"fmt"
+<span class="token punctuation">)
+
+<span class="token keyword">func <span class="token function">main<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    m <span class="token operator">:= <span class="token operator">&amp;MyMap<span class="token punctuation">{mp<span class="token punctuation">:<span class="token function">make<span class="token punctuation">(<span class="token keyword">map<span class="token punctuation">[<span class="token builtin">string<span class="token punctuation">]<span class="token builtin">int<span class="token punctuation">)<span class="token punctuation">, mutex<span class="token punctuation">:<span class="token function">new<span class="token punctuation">(sync<span class="token punctuation">.Mutex<span class="token punctuation">)<span class="token punctuation">}
+    <span class="token keyword">go <span class="token function">SetValue<span class="token punctuation">(m<span class="token punctuation">)
+    <span class="token keyword">go m<span class="token punctuation">.<span class="token function">Display<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">var str <span class="token builtin">string
+    fmt<span class="token punctuation">.<span class="token function">Scan<span class="token punctuation">(<span class="token operator">&amp;str<span class="token punctuation">)
+<span class="token punctuation">}
+
+<span class="token keyword">type MyMap <span class="token keyword">struct<span class="token punctuation">{
+    mp <span class="token keyword">map<span class="token punctuation">[<span class="token builtin">string<span class="token punctuation">]<span class="token builtin">int
+    mutex <span class="token operator">*sync<span class="token punctuation">.Mutex
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token punctuation">(this <span class="token operator">*MyMap<span class="token punctuation">)<span class="token function">Get<span class="token punctuation">(key <span class="token builtin">string<span class="token punctuation">)<span class="token punctuation">(<span class="token builtin">int<span class="token punctuation">, <span class="token builtin">error<span class="token punctuation">)<span class="token punctuation">{
+    this<span class="token punctuation">.mutex<span class="token punctuation">.<span class="token function">Lock<span class="token punctuation">(<span class="token punctuation">)
+    i<span class="token punctuation">, ok <span class="token operator">:= this<span class="token punctuation">.mp<span class="token punctuation">[key<span class="token punctuation">]
+    this<span class="token punctuation">.mutex<span class="token punctuation">.<span class="token function">Unlock<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">if <span class="token operator">!ok<span class="token punctuation">{
+        <span class="token keyword">return i<span class="token punctuation">, errors<span class="token punctuation">.<span class="token function">New<span class="token punctuation">(<span class="token string">"不存在"<span class="token punctuation">)
+    <span class="token punctuation">}
+    <span class="token keyword">return i<span class="token punctuation">, <span class="token boolean">nil
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token punctuation">(this <span class="token operator">*MyMap<span class="token punctuation">)<span class="token function">Set<span class="token punctuation">(key <span class="token builtin">string<span class="token punctuation">, val <span class="token builtin">int<span class="token punctuation">)<span class="token punctuation">{
+    this<span class="token punctuation">.mutex<span class="token punctuation">.<span class="token function">Lock<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">defer this<span class="token punctuation">.mutex<span class="token punctuation">.<span class="token function">Unlock<span class="token punctuation">(<span class="token punctuation">)
+    this<span class="token punctuation">.mp<span class="token punctuation">[key<span class="token punctuation">] <span class="token operator">= val
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token punctuation">(this <span class="token operator">*MyMap<span class="token punctuation">)<span class="token function">Display<span class="token punctuation">(<span class="token punctuation">)<span class="token punctuation">{
+    this<span class="token punctuation">.mutex<span class="token punctuation">.<span class="token function">Lock<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">defer this<span class="token punctuation">.mutex<span class="token punctuation">.<span class="token function">Unlock<span class="token punctuation">(<span class="token punctuation">)
+    <span class="token keyword">for key<span class="token punctuation">, val <span class="token operator">:= <span class="token keyword">range this<span class="token punctuation">.mp<span class="token punctuation">{
+        fmt<span class="token punctuation">.<span class="token function">Println<span class="token punctuation">(key<span class="token punctuation">, <span class="token string">"="<span class="token punctuation">, val<span class="token punctuation">)
+    <span class="token punctuation">}
+<span class="token punctuation">}
+
+<span class="token keyword">func <span class="token function">SetValue<span class="token punctuation">(m <span class="token operator">*MyMap<span class="token punctuation">)<span class="token punctuation">{
+    <span class="token keyword">var a  <span class="token builtin">rune
+    a <span class="token operator">= <span class="token string">'a'
+    <span class="token keyword">for i <span class="token operator">:= <span class="token number">0<span class="token punctuation">; i<span class="token operator">&lt; <span class="token number">10<span class="token punctuation">; i<span class="token operator">++<span class="token punctuation">{
+        m<span class="token punctuation">.<span class="token function">Set<span class="token punctuation">(<span class="token function">string<span class="token punctuation">(a<span class="token operator">+<span class="token function">rune<span class="token punctuation">(i<span class="token punctuation">)<span class="token punctuation">)<span class="token punctuation">, i<span class="token punctuation">)
+    <span class="token punctuation">}
+<span class="token punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="284" data-width="906"><img data-image-index="7" data-original-filesize="9028" data-original-format="image/png" data-original-height="284" data-original-src="//upload-images.jianshu.io/upload_images/4822713-82811aa975db8d56.png" data-original-width="906" loading="lazy" src="/images/cnblogs/dedd5be8a0436733.webp"/></div>
+</div>
+<div class="image-caption">运行结果</div>
+</div>
+<h1>完</h1>
+</div>
+{% endraw %}

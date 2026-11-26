@@ -1,0 +1,539 @@
+---
+title: "【Maven jar】打包单个或多个文件，有依赖jar包的将包一起打包成一个jar包供别的项目引用"
+date: 2020-08-21 16:20:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "本次本篇使用的工具是Maven中的 maven-assembly-plugin 插件。 1.首先，需要新建一个maven项目，将单个或多个java文件拷贝到本项目中 例如，下面这个QR_Code.java文件 package com.sxd.util; import java.awt.Color;"
+read_minutes: 9
+cnblogs_id: 13541678
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13541678.html"
+tags_inferred: true
+---
+{% raw %}
+<p>本次本篇使用的工具是Maven中的</p>
+<h2 id="用maven-assembly-plugin打包">maven-assembly-plugin</h2>
+<p>插件。</p>
+<p>======================================================================================================</p>
+<p>1.首先，需要新建一个maven项目，将单个或多个java文件拷贝到本项目中</p>
+<p>例如，下面这个QR_Code.java文件</p>
+<div class="cnblogs_code">
+<div class="cnblogs_code_hide" id="cnblogs_code_open_312f7441-c0fe-4f17-a1a6-482ed280e83c">
+
+<pre>package com.sxd.util;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.imageio.ImageIO;
+
+import com.google.zxing.*;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.qrcode.QRCodeReader;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
+
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
+
+/**
+ * 二维码工具类
+ * @author SXD
+ * @Date 2018.2.1
+ *
+ */
+public class QR_Code {
+    private static int BLACK = 0x000000;
+    private static int WHITE = 0xFFFFFF;
+
+    /**
+     * 内部类，设置二维码相关参数
+     */
+    @Data(staticConstructor = "of")
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Accessors(chain = true)
+    public  class CodeModel {
+        /**
+         * 正文
+         */
+        private String contents;
+        /**
+         * 二维码宽度
+         */
+        private int width = 400;
+        /**
+         * 二维码高度
+         */
+        private int height = 400;
+        /**
+         * 图片格式
+         */
+        private String format = "png";
+        /**
+         * 编码方式
+         */
+        private String character_set = "utf-8";
+        /**
+         * 字体大小
+         */
+        private int fontSize = 12;
+        /**
+         * logo
+         */
+        private File logoFile;
+        /**
+         * logo所占二维码比例
+         */
+        private float logoRatio = 0.20f;
+        /**
+         * 二维码下文字
+         */
+        private String desc;
+        private int whiteWidth;//白边的宽度
+        private int[] bottomStart;//二维码最下边的开始坐标
+        private int[] bottomEnd;//二维码最下边的结束坐标
+    }
+
+
+    /**
+     * 1.创建最原始的二维码图片
+     * @param info
+     * @return
+     */
+    private BufferedImage createCodeImage(CodeModel info){
+
+        String contents = info.getContents() == null || "".equals(info.getContents())  ? "暂无内容" : info.getContents();//获取正文
+        int width = info.getWidth();//宽度
+        int height = info.getHeight();//高度
+        Map&lt;EncodeHintType, Object&gt; hint = new HashMap&lt;EncodeHintType, Object&gt;();
+        hint.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);//设置二维码的纠错级别【级别分别为M L H Q ，H纠错能力级别最高，约可纠错30%的数据码字】
+        hint.put(EncodeHintType.CHARACTER_SET, info.getCharacter_set());//设置二维码编码方式【UTF-8】
+        hint.put(EncodeHintType.MARGIN, 0);
+
+        MultiFormatWriter writer = new MultiFormatWriter();
+        BufferedImage img = null;
+        try {
+            //构建二维码图片
+            //QR_CODE 一种矩阵二维码
+            BitMatrix bm = writer.encode(contents, BarcodeFormat.QR_CODE, width, height, hint);
+            int[] locationTopLeft = bm.getTopLeftOnBit();
+            int[] locationBottomRight = bm.getBottomRightOnBit();
+            info.setBottomStart(new int[]{locationTopLeft[0], locationBottomRight[1]});
+            info.setBottomEnd(locationBottomRight);
+            int w = bm.getWidth();
+            int h = bm.getHeight();
+            img = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
+            for(int x=0;x&lt;w;x++){
+                for(int y=0;y&lt;h;y++){
+                    img.setRGB(x, y, bm.get(x, y) ? BLACK : WHITE);
+                }
+            }
+        } catch (WriterException e) {
+            e.printStackTrace();
+        }
+        return img;
+    }
+
+    /**
+     * 2.为二维码增加logo和二维码下文字
+     * logo--可以为null
+     * 文字--可以为null或者空字符串""
+     * @param info
+     * @param output
+     */
+    private void dealLogoAndDesc(CodeModel info, OutputStream output){
+        //获取原始二维码图片
+        BufferedImage bm = createCodeImage(info);
+        //获取Logo图片
+        File logoFile = info.getLogoFile();
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        Graphics g = bm.getGraphics();
+
+        //处理logo
+        if(logoFile!=null &amp;&amp; logoFile.exists()){
+            try{
+                BufferedImage logoImg = ImageIO.read(logoFile);
+                int logoWidth = logoImg.getWidth();
+                int logoHeight = logoImg.getHeight();
+                float ratio = info.getLogoRatio();//获取Logo所占二维码比例大小
+                if(ratio&gt;0){
+                    logoWidth = logoWidth&gt;width*ratio ? (int)(width*ratio) : logoWidth;
+                    logoHeight = logoHeight&gt;height*ratio ? (int)(height*ratio) : logoHeight;
+                }
+                int x = (width-logoWidth)/2;
+                int y = (height-logoHeight)/2;
+                //根据logo 起始位置 和 宽高 在二维码图片上画出logo
+                g.drawImage(logoImg, x, y, logoWidth, logoHeight, null);
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        //处理二维码下文字
+        String desc = info.getDesc();
+        if(!(desc == null || "".equals(desc))){
+            try{
+                //设置文字字体
+                int whiteWidth = info.getHeight()-info.getBottomEnd()[1];
+                Font font = new Font("黑体", Font.BOLD, info.getFontSize());
+                int fontHeight = g.getFontMetrics(font).getHeight();
+                //计算需要多少行
+                int lineNum = 1;
+                int currentLineLen = 0;
+                for(int i=0;i&lt;desc.length();i++){
+                    char c = desc.charAt(i);
+                    int charWidth = g.getFontMetrics(font).charWidth(c);
+                    if(currentLineLen+charWidth&gt;width){
+                        lineNum++;
+                        currentLineLen = 0;
+                        continue;
+                    }
+                    currentLineLen += charWidth;
+                }
+                int totalFontHeight = fontHeight*lineNum;
+                int wordTopMargin = 4;
+                BufferedImage bm1 = new BufferedImage(width, height+totalFontHeight+wordTopMargin-whiteWidth, BufferedImage.TYPE_INT_RGB);
+                Graphics g1 = bm1.getGraphics();
+                if(totalFontHeight+wordTopMargin-whiteWidth&gt;0){
+                    g1.setColor(Color.WHITE);
+                    g1.fillRect(0, height, width, totalFontHeight+wordTopMargin-whiteWidth);
+                }
+                g1.setColor(new Color(BLACK));
+                g1.setFont(font);
+                g1.drawImage(bm, 0, 0, null);
+                width = info.getBottomEnd()[0]-info.getBottomStart()[0];
+                height = info.getBottomEnd()[1]+1;
+                currentLineLen = 0;
+                int currentLineIndex = 0;
+                int baseLo = g1.getFontMetrics().getAscent();
+                for(int i=0;i&lt;desc.length();i++){
+                    String c = desc.substring(i, i+1);
+                    int charWidth = g.getFontMetrics(font).stringWidth(c);
+                    if(currentLineLen+charWidth&gt;width){
+                        currentLineIndex++;
+                        currentLineLen = 0;
+                        g1.drawString(c, currentLineLen + whiteWidth, height+baseLo+fontHeight*(currentLineIndex)+wordTopMargin);
+                        currentLineLen = charWidth;
+                        continue;
+                    }
+                    g1.drawString(c, currentLineLen+whiteWidth, height+baseLo+fontHeight*(currentLineIndex) + wordTopMargin);
+                    currentLineLen += charWidth;
+                }
+                g1.dispose();
+                bm = bm1;
+            }catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        try{
+            ImageIO.write(bm, (info.getFormat() == null || "".equals(info.getFormat())) ? info.getFormat() : info.getFormat(), output);
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 3.创建 带logo和文字的二维码
+     * @param info
+     * @param file
+     */
+    public void createCodeImage(CodeModel info, File file){
+        File parent = file.getParentFile();
+        if(!parent.exists())parent.mkdirs();
+        OutputStream output = null;
+        try{
+            output = new BufferedOutputStream(new FileOutputStream(file));
+            dealLogoAndDesc(info, output);
+            output.flush();
+        }catch(Exception e){
+            e.printStackTrace();
+        }finally{
+            try {
+                output.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 3.创建  带logo和文字的二维码
+     * @param info
+     * @param filePath
+     */
+    public void createCodeImage(CodeModel info, String filePath){
+        createCodeImage(info, new File(filePath));
+    }
+
+    /**
+     * 4.创建  带logo和文字的二维码
+     * @param filePath
+     */
+    public void createCodeImage(String contents,String filePath){
+        CodeModel codeModel = new CodeModel();
+        codeModel.setContents(contents);
+        createCodeImage(codeModel, new File(filePath));
+    }
+
+
+    /**
+     * 5.读取 二维码 获取二维码中正文
+     * @param input
+     * @return
+     */
+    public String decode(InputStream input){
+        Map&lt;DecodeHintType, Object&gt; hint = new HashMap&lt;DecodeHintType, Object&gt;();
+        hint.put(DecodeHintType.POSSIBLE_FORMATS, BarcodeFormat.QR_CODE);
+        String result = "";
+        try{
+            BufferedImage img = ImageIO.read(input);
+            int[] pixels = img.getRGB(0, 0, img.getWidth(), img.getHeight(), null, 0, img.getWidth());
+            LuminanceSource source = new RGBLuminanceSource(img.getWidth(), img.getHeight(), pixels);
+            BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+            QRCodeReader reader = new QRCodeReader();
+            Result r = reader.decode(bitmap, hint);
+            result = r.getText();
+        }catch(Exception e){
+            result="读取错误";
+        }
+        return result;
+    }
+
+
+
+}</pre>
+
+</div>
+</div>
+<p><img alt="" loading="lazy" src="/images/cnblogs/46dafcf0448181aa.png"/></p>
+<p> </p>
+<p>2.完善pom.xml文件，除了项目中依赖的jar的引用，还需要maven-assembly-plugin插件</p>
+<div class="cnblogs_code">
+<div class="cnblogs_code_hide" id="cnblogs_code_open_064191c4-5a79-43d6-a37e-ab402bd2e2ac">
+
+<pre>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.sxd.util&lt;/groupId&gt;
+    &lt;artifactId&gt;QR_Code&lt;/artifactId&gt;
+    &lt;version&gt;1.1-SNAPSHOT&lt;/version&gt;
+
+    &lt;dependencies&gt;
+        &lt;!--lombok--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+            &lt;artifactId&gt;lombok&lt;/artifactId&gt;
+            &lt;version&gt;1.16.20&lt;/version&gt;
+        &lt;/dependency&gt;
+        &lt;!-- google提供二维码生成和解析https://mvnrepository.com/artifact/com.google.zxing/core --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.google.zxing&lt;/groupId&gt;
+            &lt;artifactId&gt;core&lt;/artifactId&gt;
+            &lt;version&gt;3.3.2&lt;/version&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.7.0&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;source&gt;1.8&lt;/source&gt;
+                    &lt;target&gt;1.8&lt;/target&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+
+            &lt;plugin&gt;
+                &lt;artifactId&gt; maven-assembly-plugin &lt;/artifactId&gt;
+                &lt;configuration&gt;
+                    &lt;descriptorRefs&gt;
+                        &lt;descriptorRef&gt;jar-with-dependencies&lt;/descriptorRef&gt;
+                    &lt;/descriptorRefs&gt;
+                    &lt;archive&gt;
+                        &lt;manifest&gt;
+                            &lt;mainClass&gt;com.sxd.util.QR_Code&lt;/mainClass&gt;
+                        &lt;/manifest&gt;
+                    &lt;/archive&gt;
+                &lt;/configuration&gt;
+                &lt;executions&gt;
+                    &lt;execution&gt;
+                        &lt;id&gt;make-assembly&lt;/id&gt;
+                        &lt;phase&gt;package&lt;/phase&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;single&lt;/goal&gt;
+                        &lt;/goals&gt;
+                    &lt;/execution&gt;
+                &lt;/executions&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+&lt;/project&gt;</pre>
+
+</div>
+</div>
+<p> </p>
+<p> </p>
+<p>=============================================================================================================================================</p>
+<p>【解释一下，直接使用的可以跳过】：</p>
+<p>》》（1）打包出来的jar包，是以</p>
+<div class="cnblogs_code">
+<pre>    &lt;groupId&gt;com.sxd.util&lt;/groupId&gt;
+    &lt;artifactId&gt;QR_Code&lt;/artifactId&gt;
+    &lt;version&gt;1.1-SNAPSHOT&lt;/version&gt;</pre>
+</div>
+<p>｛artifactId｝-｛version｝.jar命名的</p>
+<p>》》（2）maven-assembly-plugin插件中</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/b2f06c563d982f12.png"/></p>
+<p>默认情况下，maven-assembly-plugin内置了几个可以用的assembly descriptor：</p>
+<ul>
+<li>bin ： 类似于默认打包，会将bin目录下的文件打到包中</li>
+<li>jar-with-dependencies ： 会将所有依赖都解压打包到生成物中【本次需求正好是将所有依赖也打包】</li>
+<li>src ：只将源码目录下的文件打包</li>
+<li>project ： 将整个project资源打包</li>
+</ul>
+<p>》》（3）针对于maven-assembly-plugin插件中的</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/bce7423587980b67.png"/></p>
+<p> ===================================================================================================================================================</p>
+<p>3.使用IDEA的同志们，双击插件 即可执行打包指令</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/fb979650dc700896.png"/></p>
+<p> </p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/babd3a6fabc66691.png"/></p>
+<p>执行完整的语句如下：</p>
+<div class="cnblogs_code">
+<div class="cnblogs_code_hide" id="cnblogs_code_open_0a0cbe16-03af-4a62-ad9f-fd7445451d03">
+
+<pre>"C:\Program Files\Java\jdk1.8.0_131\bin\java" -Dmaven.multiModuleProjectDirectory=G:\ideaProjects\B\sxdproject -Dmaven.home=C:\Users\SXD\AppData\Local\JetBrains\Toolbox\apps\IDEA-U\ch-0\173.3727.127\plugins\maven\lib\maven3 -Dclassworlds.conf=C:\Users\SXD\AppData\Local\JetBrains\Toolbox\apps\IDEA-U\ch-0\173.3727.127\plugins\maven\lib\maven3\bin\m2.conf -javaagent:C:\Users\SXD\AppData\Local\JetBrains\Toolbox\apps\IDEA-U\ch-0\173.3727.127\lib\idea_rt.jar=58262:C:\Users\SXD\AppData\Local\JetBrains\Toolbox\apps\IDEA-U\ch-0\173.3727.127\bin -Dfile.encoding=UTF-8 -classpath C:\Users\SXD\AppData\Local\JetBrains\Toolbox\apps\IDEA-U\ch-0\173.3727.127\plugins\maven\lib\maven3\boot\plexus-classworlds-2.5.2.jar org.codehaus.classworlds.Launcher -Didea.version=2017.3 org.apache.maven.plugins:maven-assembly-plugin:2.2-beta-5:assembly
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building QR_Code 1.1-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] &gt;&gt;&gt; maven-assembly-plugin:2.2-beta-5:assembly (default-cli) &gt; package @ QR_Code &gt;&gt;&gt;
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:resources (default-resources) @ QR_Code ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] Copying 0 resource
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.7.0:compile (default-compile) @ QR_Code ---
+[INFO] Changes detected - recompiling the module!
+[WARNING] File encoding has not been set, using platform encoding UTF-8, i.e. build is platform dependent!
+[INFO] Compiling 1 source file to G:\ideaProjects\B\sxdproject\target\classes
+[INFO] 
+[INFO] --- maven-resources-plugin:2.6:testResources (default-testResources) @ QR_Code ---
+[WARNING] Using platform encoding (UTF-8 actually) to copy filtered resources, i.e. build is platform dependent!
+[INFO] skip non existing resourceDirectory G:\ideaProjects\B\sxdproject\src\test\resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.7.0:testCompile (default-testCompile) @ QR_Code ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.12.4:test (default-test) @ QR_Code ---
+[INFO] No tests to run.
+[INFO] 
+[INFO] --- maven-jar-plugin:2.4:jar (default-jar) @ QR_Code ---
+[INFO] Building jar: G:\ideaProjects\B\sxdproject\target\QR_Code-1.1-SNAPSHOT.jar
+[INFO] 
+[INFO] --- maven-assembly-plugin:2.2-beta-5:single (make-assembly) @ QR_Code ---
+[INFO] META-INF/MANIFEST.MF already added, skipping
+[INFO] Building jar: G:\ideaProjects\B\sxdproject\target\QR_Code-1.1-SNAPSHOT-jar-with-dependencies.jar
+[INFO] META-INF/MANIFEST.MF already added, skipping
+[INFO] 
+[INFO] &lt;&lt;&lt; maven-assembly-plugin:2.2-beta-5:assembly (default-cli) &lt; package @ QR_Code &lt;&lt;&lt;
+[INFO] 
+[INFO] --- maven-assembly-plugin:2.2-beta-5:assembly (default-cli) @ QR_Code ---
+[INFO] META-INF/MANIFEST.MF already added, skipping
+[INFO] Building jar: G:\ideaProjects\B\sxdproject\target\QR_Code-1.1-SNAPSHOT-jar-with-dependencies.jar
+[INFO] META-INF/MANIFEST.MF already added, skipping
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 3.319 s
+[INFO] Finished at: 2018-02-01T16:30:47+08:00
+[INFO] Final Memory: 23M/258M
+[INFO] ------------------------------------------------------------------------
+
+Process finished with exit code 0</pre>
+
+</div>
+</div>
+<p> </p>
+<p> </p>
+<p>4.执行完成之后，项目结构会发生变化</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/b88b139b193daed3.png"/></p>
+<p> </p>
+<p>5.把jar包拷出来，放在一个位置，就可以上传到nexus上，放在maven私服里，给大家引用了【nexus私服搭建以及相关操作，查看<a href="http://www.cnblogs.com/sxdcgaq8080/p/7583767.html" target="_blank">http://www.cnblogs.com/sxdcgaq8080/p/7583767.html</a>】</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/c2366106af8118b2.png"/></p>
+<p>当然，想更改jar的名字，也可以直接修改完成之后再进行如下操作</p>
+<p>打开DOM窗口，执行如下命令</p>
+<div class="cnblogs_code">
+<pre>mvn deploy:deploy-file -DgroupId=sxd.jar -DartifactId=QR_Code -Dversion=1.1 -Dpackaging=jar -Dfile=G:\test\QR_Code-1.1-SNAPSHOT.jar -Durl=http://localhost:8081/repository/myself_hosted/ -DrepositoryId=myself_hosted</pre>
+</div>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4a02dee6a8bc750a.png"/></p>
+<p> </p>
+<p>在http://localhost:8081/ 访问nexus</p>
+<p>查询就可查看到</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/15d25fa1adebc578.png"/></p>
+<p> </p>
+<p>这样在项目中引用如下：</p>
+<div class="cnblogs_code">
+
+<pre>&lt;!--QR_Code二维码使用工具包--&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;sxd.jar&lt;/groupId&gt;
+            &lt;artifactId&gt;QR_Code&lt;/artifactId&gt;
+            &lt;version&gt;1.1&lt;/version&gt;
+        &lt;/dependency&gt;</pre>
+
+</div>
+<p> </p>
+<p> 6.最后，就可以把这个单独创建的项目 删除就好了</p>
+<p> </p>
+<p> </p>
+<p><strong><span style="color: #ff0000;">再来补充一篇是idea直接用来打包的</span></strong></p>
+<p> </p>
+<h1 class="title-article" id="articleContentId">IDEA环境配置——把类封装为jar工具包以供他人调用</h1>
+<p>记录一下</p>
+<p id="main-toc">目录</p>
+<p id="%E6%89%93%E5%8C%85-toc"><a href="https://blog.csdn.net/qq_36591505/article/details/106050376#%E6%89%93%E5%8C%85" rel="nofollow" target="_self">打包</a></p>
+<p id="%E8%B0%83%E7%94%A8-toc"><a href="https://blog.csdn.net/qq_36591505/article/details/106050376#%E8%B0%83%E7%94%A8" rel="nofollow" target="_self">调用</a></p>
+<hr id="hr-toc"/>
+<h1 id="%E6%89%93%E5%8C%85"><a name="t0"></a><a name="t0"></a>打包</h1>
+<p>File -&gt; Project Structure</p>
+<p><img alt="" height="318" loading="lazy" src="/images/cnblogs/04d0d28434b474d0.png" width="389"/></p>
+<p>然后点左边的Artifacts ，点旁边的绿色加号</p>
+<p><img alt="" height="719" loading="lazy" src="/images/cnblogs/48ba6d0a8d48e15e.png" width="1071"/></p>
+<p>新建一个空的jar</p>
+<p><img alt="" height="719" loading="lazy" src="/images/cnblogs/589975d65d556cf0.png" width="1073"/></p>
+<p>随便起个名字，点下图我圈出来的那个绿色的加号</p>
+<p><img alt="" height="709" loading="lazy" src="/images/cnblogs/c05622274fd30aa6.png" width="844"/></p>
+<p>然后选module output，点开把你要打包的module加进去</p>
+<p><img alt="" height="269" loading="lazy" src="/images/cnblogs/b720e9b6af879800.png" width="350"/></p>
+<p>然后点ok</p>
+<p>开始打包：Build-&gt;BuildArtifacts-&gt;你刚刚加的jar包名字--&gt;build</p>
+<p><img alt="" height="317" loading="lazy" src="/images/cnblogs/7414ff5b2ef5d542.png" width="578"/>        <img alt="" height="206" loading="lazy" src="/images/cnblogs/6f2e5b1afc2a63c5.png" width="250"/></p>
+<p>打包成功的文件在你的项目-&gt;classes-&gt;artifacts-&gt;你刚才起的jar包名 下</p>
+<p><img alt="" height="136" loading="lazy" src="/images/cnblogs/bd131d8381a7eb94.png" width="602"/></p>
+<h1 id="%E8%B0%83%E7%94%A8"><a name="t1"></a><a name="t1"></a>调用</h1>
+<p>还是找到File-&gt;Project Structure</p>
+<p> 在Modules模块：选中你要导入包的modules，然后在右边的Dependencies选项里面点右边的加号</p>
+<p><img alt="" height="828" loading="lazy" src="/images/cnblogs/389afe1602c65da2.png" width="1200"/></p>
+<p>选第一个jars，找到你刚才打的jar包，然后引入jar包</p>
+<p><img alt="" height="178" loading="lazy" src="/images/cnblogs/c23b13d28f8d3dc6.png" width="313"/></p>
+<p>点ok</p>
+<p>就ok了。</p>
+<p> </p>
+{% endraw %}

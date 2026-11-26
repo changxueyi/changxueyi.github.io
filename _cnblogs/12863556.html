@@ -1,0 +1,78 @@
+---
+title: "归并排序"
+date: 2020-05-10 15:53:00 +0800
+tags: ["【算法】-- 数据结构与算法"]
+excerpt: "基本思想 归并排序（MERGE-SORT）是利用归并的思想实现的排序方法，该算法采用经典的分治（divide-and-conquer）策略（分治法将问题分(divide)成一些小的问题然后递归求解，而治(conquer)的阶段则将分的阶段得到的各答案\"修补\"在一起，即分而治之)。 分而治之 可以看到"
+read_minutes: 2
+cnblogs_id: 12863556
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12863556.html"
+---
+{% raw %}
+<h1>基本思想</h1>
+<p>　　归并排序（MERGE-SORT）是利用<strong>归并</strong>的思想实现的排序方法，该算法采用经典的<strong>分治</strong>（divide-and-conquer）策略（分治法将问题<strong>分</strong>(divide)成一些小的问题然后递归求解，而<strong>治(conquer)</strong>的阶段则将分的阶段得到的各答案"修补"在一起，即分而治之)。<strong><br/></strong></p>
+<p><strong>分而治之</strong></p>
+<p><img alt="" height="751" loading="lazy" src="/images/cnblogs/6492cf1323c982be.png" width="1052"/></p>
+<p> 　　可以看到这种结构很像一棵完全二叉树，本文的归并排序我们采用递归去实现（也可采用迭代的方式去实现）。<strong>分</strong>阶段可以理解为就是递归拆分子序列的过程，递归深度为log<sub>2</sub>n。</p>
+<h1>合并相邻有序子序列</h1>
+<p>　　再来看看<strong>治</strong>阶段，我们需要将两个已经有序的子序列合并成一个有序序列，比如上图中的最后一次合并，要将[4,5,7,8]和[1,2,3,6]两个已经有序的子序列，合并为最终序列[1,2,3,4,5,6,7,8]，来看下实现步骤。</p>
+<p><img alt="" height="817" loading="lazy" src="/images/cnblogs/91ddd2a99bc014db.png" width="876"/></p>
+<p><img alt="" height="482" loading="lazy" src="/images/cnblogs/298b0eb7de4a70fa.png" width="873"/></p>
+<h1>代码实现</h1>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">package</span><span style="color: #000000;"> sortdemo;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Arrays;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * Created by chengxiao on 2016/12/8.
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> MergeSort {
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String []args){
+        </span><span style="color: #0000ff;">int</span> []arr = {9,8,7,6,5,4,3,2,1<span style="color: #000000;">};
+        sort(arr);
+        System.out.println(Arrays.toString(arr));
+    }
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> sort(<span style="color: #0000ff;">int</span><span style="color: #000000;"> []arr){
+        </span><span style="color: #0000ff;">int</span> []temp = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">int</span>[arr.length];<span style="color: #008000;">//</span><span style="color: #008000;">在排序前，先建好一个长度等于原数组长度的临时数组，避免递归中频繁开辟空间</span>
+        sort(arr,0,arr.length-1<span style="color: #000000;">,temp);
+    }
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> sort(<span style="color: #0000ff;">int</span>[] arr,<span style="color: #0000ff;">int</span> left,<span style="color: #0000ff;">int</span> right,<span style="color: #0000ff;">int</span><span style="color: #000000;"> []temp){
+        </span><span style="color: #0000ff;">if</span>(left&lt;<span style="color: #000000;">right){
+            </span><span style="color: #0000ff;">int</span> mid = (left+right)/2<span style="color: #000000;">;
+            sort(arr,left,mid,temp);</span><span style="color: #008000;">//</span><span style="color: #008000;">左边归并排序，使得左子序列有序</span>
+            sort(arr,mid+1,right,temp);<span style="color: #008000;">//</span><span style="color: #008000;">右边归并排序，使得右子序列有序</span>
+            merge(arr,left,mid,right,temp);<span style="color: #008000;">//</span><span style="color: #008000;">将两个有序子数组合并操作</span>
+<span style="color: #000000;">        }
+    }
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> merge(<span style="color: #0000ff;">int</span>[] arr,<span style="color: #0000ff;">int</span> left,<span style="color: #0000ff;">int</span> mid,<span style="color: #0000ff;">int</span> right,<span style="color: #0000ff;">int</span><span style="color: #000000;">[] temp){
+        </span><span style="color: #0000ff;">int</span> i = left;<span style="color: #008000;">//</span><span style="color: #008000;">左序列指针</span>
+        <span style="color: #0000ff;">int</span> j = mid+1;<span style="color: #008000;">//</span><span style="color: #008000;">右序列指针</span>
+        <span style="color: #0000ff;">int</span> t = 0;<span style="color: #008000;">//</span><span style="color: #008000;">临时数组指针</span>
+        <span style="color: #0000ff;">while</span> (i&lt;=mid &amp;&amp; j&lt;=<span style="color: #000000;">right){
+            </span><span style="color: #0000ff;">if</span>(arr[i]&lt;=<span style="color: #000000;">arr[j]){
+                temp[t</span>++] = arr[i++<span style="color: #000000;">];
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                temp[t</span>++] = arr[j++<span style="color: #000000;">];
+            }
+        }
+        </span><span style="color: #0000ff;">while</span>(i&lt;=mid){<span style="color: #008000;">//</span><span style="color: #008000;">将左边剩余元素填充进temp中</span>
+            temp[t++] = arr[i++<span style="color: #000000;">];
+        }
+        </span><span style="color: #0000ff;">while</span>(j&lt;=right){<span style="color: #008000;">//</span><span style="color: #008000;">将右序列剩余元素填充进temp中</span>
+            temp[t++] = arr[j++<span style="color: #000000;">];
+        }
+        t </span>= 0<span style="color: #000000;">;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">将temp中的元素全部拷贝到原数组中</span>
+        <span style="color: #0000ff;">while</span>(left &lt;=<span style="color: #000000;"> right){
+            arr[left</span>++] = temp[t++<span style="color: #000000;">];
+        }
+    }
+}</span></pre>
+</div>
+<p>执行结果</p>
+<pre><strong>[1, 2, 3, 4, 5, 6, 7, 8, 9]</strong></pre>
+<div class="cnblogs_code">
+<h1>最后</h1>
+<p>　　归并排序是稳定排序，它也是一种十分高效的排序，能利用完全二叉树特性的排序一般性能都不会太差。java中Arrays.sort()采用了一种名为TimSort的排序算法，就是归并排序的优化版本。从上文的图中可看出，每次合并操作的平均时间复杂度为O(n)，而完全二叉树的深度为|log2n|。总的平均时间复杂度为O(nlogn)。而且，归并排序的最好，最坏，平均时间复杂度均为O(nlogn)。</p>
+</div>
+{% endraw %}

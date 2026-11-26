@@ -1,0 +1,79 @@
+---
+title: "开发工具：IDEA类和方法注释模板设置（非常详细）"
+date: 2020-11-16 11:34:00 +0800
+tags: ["【开发工具】IDE"]
+excerpt: "一、首先我们来设置IDEA中类的模板：（IDEA中在创建类时会自动给添加注释） 1、File-->settings-->Editor-->File and Code Templates-->Files 我们选择Class文件（当然你要设置接口的还也可以选择Interface文件） （1）${NAME"
+read_minutes: 2
+cnblogs_id: 13984298
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13984298.html"
+---
+{% raw %}
+<h2>一、首先我们来设置IDEA中类的模板：（IDEA中在创建类时会自动给添加注释）</h2>
+<p>1、File--&gt;settings--&gt;Editor--&gt;File and Code Templates--&gt;Files</p>
+<p>我们选择Class文件（当然你要设置接口的还也可以选择Interface文件）</p>
+<p>（1）${NAME}：设置类名，与下面的${NAME}一样才能获取到创建的类名</p>
+<p>（2）TODO：代办事项的标记，一般生成类或方法都需要添加描述</p>
+<p>（3）${USER}、${DATE}、${TIME}：设置创建类的用户、创建的日期和时间，这些事IDEA内置的方法，还有一些其他的方法在绿色框标注的位置，比如你想添加项目名则可以使用${PROJECT_NAME}</p>
+<p>（4）1.0：设置版本号，一般新创建的类都是1.0版本，这里写死就可以了</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/5129fcf4d9c13956.png"/></p>
+<p> </p>
+<p>2、效果图展示</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/39f30a739a814016.png"/></p>
+<h2>二、设置方法注释模板</h2>
+<p>IDEA还没有智能到自动为我们创建方法注释，这就是要我们手动为方法添加注释，使用Eclipse时我们生成注释的习惯是</p>
+<p>/**+Enter，这里我们也按照这种习惯来设置IDEA的方法注释</p>
+<p>1、File--&gt;Settings--&gt;Editor--&gt;Live Templates</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/d1fe9059a744eba0.png"/></p>
+<p> </p>
+<p>（1）新建组：命名为userDefine</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/29ce249df1273831.png"/></p>
+<p>（2）新建模板：命名为*</p>
+<p>因为IDEA生成注释的默认方式是：/*+模板名+快捷键（比如若设置模板名为add快捷键用Tab，则生成方式为</p>
+<p>/*add+Tab），如果不采用这样的生成方式IDEA中没有内容的方法将不可用，例如获取方法参数的methodParameters(）、</p>
+<p>获取方法返回值的methodReturnType(）</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/494b13ec3ae3ec22.png"/></p>
+<p>（3）设置生成注释的快捷键</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/372da50dcce4c104.png"/></p>
+<p> </p>
+<p>（4）设置模板：模板内容如下</p>
+<p>注意第一行，只有一个*而不是/*</p>
+<p>在设置参数名时必须用${参数名}$的方式，否则第五步中读取不到你设置的参数名</p>
+<div class="cnblogs_code">
+
+
+<pre>*
+ * @Description:
+ * @Author: PYPUA 
+ * @Date: $date$ $time$
+ $param$
+ $return$
+ **/</pre>
+
+
+</div>
+<p>如果使用/*生成的模板注释将会是如下效果：所以我们要去掉最前面的/*</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/2ca6aff32ae8ce1c.png"/></p>
+<p>5）设置模板的应用场景</p>
+<p>点击模板页面最下方的警告，来设置将模板应用于那些场景，一般选择EveryWhere--&gt;Java即可</p>
+<p>（如果曾经修改过，则显示为change而不是define）</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/3b1dc3a60d652359.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d6dcdb881894a5a4.png"/></p>
+<p>（6）设置参数的获取方式</p>
+<p>选择右侧的Edit variables按钮</p>
+<p>PS:第五步和第六步顺序不可颠倒，否则第六步将获取不到方法</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/fcc73e3a4c95d536.png"/></p>
+<p>选择每个参数对应的获取方法（在下拉选择框中选择即可），网上有很多教程说获取param时使用脚本的方式，我试过使用脚本</p>
+<p>的方式不仅麻烦而且只能在方法内部使用注释时才能获取到参数</p>
+<p>其中params变量的内容一定要放在Default value中！！！内容为：</p>
+<div class="cnblogs_code">
+<pre>groovyScript("if(\"${_1}\".length() == 2) {return '';} else {def result=''; def params=\"${_1}\".replaceAll('[\\\\[|\\\\]|\\\\s]', '').split(',').toList();for(i = 0; i &lt; params.size(); i++) {if(i==0){result+='* @param ' + params[i] + ': '}else{result+='\\n' + ' * @param ' + params[i] + ': '}}; return result;}", methodParameters());</pre>
+</div>
+<p>其中return变量的内容也一定要放在Default value中！！！内容为：</p>
+<div class="cnblogs_code">
+<pre>groovyScript("def returnType = \"${_1}\"; def result = '* @return: ' + returnType; return result;", methodReturnType());</pre>
+</div>
+<p><img alt="" loading="lazy" src="/images/cnblogs/77288ace620d383d.png"/></p>
+<p> </p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/0ee748df49c4774b.png"/></p>
+<p> </p>
+{% endraw %}

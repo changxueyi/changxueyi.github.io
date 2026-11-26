@@ -1,0 +1,118 @@
+# 由迁移脚本生成：博客园标签及文章数（按数量排序）
+- name: "【Java】-- Java基础"
+  label: "【Java】Java基础"
+  count: 39
+- name: "【数据库】-- Mysql"
+  label: "【数据库】Mysql"
+  count: 37
+- name: "【Go】-- Go基础"
+  label: "【Go】Go基础"
+  count: 27
+- name: "【Java高级】-- java高级"
+  label: "【Java高级】java高级"
+  count: 26
+- name: "【微服务】-- 架构思想"
+  label: "【微服务】架构思想"
+  count: 21
+- name: "【缓存】-- Redis"
+  label: "【缓存】Redis"
+  count: 21
+- name: "【微服务】-- 解决方案"
+  label: "【微服务】解决方案"
+  count: 19
+- name: "【计算机网络】-- 网络"
+  label: "【计算机网络】网络"
+  count: 16
+- name: "【茶话心得】"
+  label: "【茶话心得】"
+  count: 14
+- name: "【PHP】-- PHP基础"
+  label: "【PHP】PHP基础"
+  count: 10
+- name: "【微服务框架】"
+  label: "【微服务框架】"
+  count: 10
+- name: "【框架】-- Spring"
+  label: "【框架】Spring"
+  count: 9
+- name: "【框架】-- SpringBoot"
+  label: "【框架】SpringBoot"
+  count: 9
+- name: "【中间件】-- MQ"
+  label: "【中间件】MQ"
+  count: 7
+- name: "【人生】-- 人生感悟"
+  label: "【人生】人生感悟"
+  count: 6
+- name: "【算法】-- 数据结构与算法"
+  label: "【算法】数据结构与算法"
+  count: 6
+- name: "【运维】-- Linux"
+  label: "【运维】Linux"
+  count: 6
+- name: "【Git】-- 工具"
+  label: "【Git】工具"
+  count: 5
+- name: "【微服务】-- ES"
+  label: "【微服务】ES"
+  count: 4
+- name: "【测试】--单元测试"
+  label: "【测试】单元测试"
+  count: 4
+- name: "【Go框架】-- BeeGo"
+  label: "【Go框架】BeeGo"
+  count: 3
+- name: "【Linux】Linux基础"
+  label: "【Linux】Linux基础"
+  count: 3
+- name: "【PHP框架】-- TP6"
+  label: "【PHP框架】TP6"
+  count: 3
+- name: "【Python】Python基础"
+  label: "【Python】Python基础"
+  count: 3
+- name: "【Web安全】-- web安全"
+  label: "【Web安全】web安全"
+  count: 3
+- name: "【开发规范】编码规范"
+  label: "【开发规范】编码规范"
+  count: 3
+- name: "【Mysql】-- 事务"
+  label: "【Mysql】事务"
+  count: 2
+- name: "【golang】高级"
+  label: "【golang】高级"
+  count: 2
+- name: "【人工智能】AI"
+  label: "【人工智能】AI"
+  count: 2
+- name: "【开发工具】IDE"
+  label: "【开发工具】IDE"
+  count: 2
+- name: "【微服务】-- 网关"
+  label: "【微服务】网关"
+  count: 2
+- name: "【投资理财】-- 基金"
+  label: "【投资理财】基金"
+  count: 2
+- name: "【设计模式】-- 基础"
+  label: "【设计模式】基础"
+  count: 2
+- name: "【面试】"
+  label: "【面试】"
+  count: 2
+- name: "【DDD】技术架构"
+  label: "【DDD】技术架构"
+  count: 1
+- name: "【商业】广告投放系统"
+  label: "【商业】广告投放系统"
+  count: 1
+- name: "【微服务】-- Docker"
+  label: "【微服务】Docker"
+  count: 1
+- name: "【框架】-- Shiro"
+  label: "【框架】Shiro"
+  count: 1
+- name: "未分类"
+  label: "未分类"
+  count: 2

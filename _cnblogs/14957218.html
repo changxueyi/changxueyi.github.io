@@ -1,0 +1,89 @@
+---
+title: "Go 通过结构体指定字段进行排序"
+date: 2021-07-01 08:30:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "对结构体指定字段进行排序： 对结构体指定字段进行排序： package main import ( \"fmt\" \"sort\" ) // 对结构体指定字段进行排序 type User struct { Name string `json:\"name\"` // `json:\"xxx\"`：在结构体和jso"
+read_minutes: 1
+cnblogs_id: 14957218
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14957218.html"
+tags_inferred: true
+---
+{% raw %}
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">对结构体指定字段进行排序：
+  对结构体指定字段进行排序： 
+
+package main
+ 
+import (
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">fmt</span><span style="color: #800000;">"</span>
+    <span style="color: #800000;">"</span><span style="color: #800000;">sort</span><span style="color: #800000;">"</span><span style="color: #000000;">
+)
+ 
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 对结构体指定字段进行排序</span>
+type User <span style="color: #0000ff;">struct</span><span style="color: #000000;"> {
+    Name </span><span style="color: #0000ff;">string</span> `json:<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>` <span style="color: #008000;">//</span><span style="color: #008000;"> `json:"xxx"`：在结构体和json字符串字段顺序不一致的情况下：unmarshal根据tag去寻找对应字段的内容</span>
+    Age  <span style="color: #0000ff;">int</span>    `json:<span style="color: #800000;">"</span><span style="color: #800000;">age</span><span style="color: #800000;">"</span><span style="color: #000000;">`
+}
+ 
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> type Users []User
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> func SortByAge(u Users) {</span>
+<span style="color: #000000;">func SortByAge(u []User) {
+    fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">源数据：%+v\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, u)
+ 
+    sort.Slice(u, func(i, j </span><span style="color: #0000ff;">int</span>) <span style="color: #0000ff;">bool</span> { <span style="color: #008000;">//</span><span style="color: #008000;"> desc</span>
+        <span style="color: #0000ff;">return</span> u[i].Age &gt;<span style="color: #000000;"> u[j].Age
+    })
+    fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">按Age降序：%+v\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, u)
+ 
+    sort.Slice(u, func(i, j </span><span style="color: #0000ff;">int</span>) <span style="color: #0000ff;">bool</span> { <span style="color: #008000;">//</span><span style="color: #008000;"> asc</span>
+        <span style="color: #0000ff;">return</span> u[i].Age &lt;<span style="color: #000000;"> u[j].Age
+    })
+    fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">按Age升序：%+v\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, u)
+}
+ 
+func main() {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 初始化结构体对象数组：
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 初始化方法1：
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> users := Users{
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">     {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">         Name: "test1",
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">         Age:  22,
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">     },
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">     {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">         Name: "test2",
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">         Age:  19,
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">     },
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">     {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">         Name: "test3",
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">         Age:  25,
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">     },
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> }
+ 
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 初始化方法2：</span>
+    <span style="color: #0000ff;">var</span><span style="color: #000000;"> users []User
+    </span><span style="color: #0000ff;">var</span><span style="color: #000000;"> u User
+    u.Name </span>= <span style="color: #800000;">"</span><span style="color: #800000;">test1</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    u.Age </span>= <span style="color: #800080;">22</span><span style="color: #000000;">
+    users </span>=<span style="color: #000000;"> append(users, u)
+    u.Name </span>= <span style="color: #800000;">"</span><span style="color: #800000;">test2</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    u.Age </span>= <span style="color: #800080;">20</span><span style="color: #000000;">
+    users </span>=<span style="color: #000000;"> append(users, u)
+    u.Name </span>= <span style="color: #800000;">"</span><span style="color: #800000;">test3</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    u.Age </span>= <span style="color: #800080;">26</span><span style="color: #000000;">
+    users </span>=<span style="color: #000000;"> append(users, u)
+ 
+    SortByAge(users)
+}
+ 
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 输出：</span>
+源数据：[{Name:test1 Age:<span style="color: #800080;">22</span>} {Name:test2 Age:<span style="color: #800080;">20</span>} {Name:test3 Age:<span style="color: #800080;">26</span><span style="color: #000000;">}]
+按Age降序：[{Name:test3 Age:</span><span style="color: #800080;">26</span>} {Name:test1 Age:<span style="color: #800080;">22</span>} {Name:test2 Age:<span style="color: #800080;">20</span><span style="color: #000000;">}]
+按Age升序：[{Name:test2 Age:</span><span style="color: #800080;">20</span>} {Name:test1 Age:<span style="color: #800080;">22</span>} {Name:test3 Age:<span style="color: #800080;">26</span><span style="color: #000000;">}]
+ 
+此外也可使用sort.Sort()方法，不过需要自己去实现 Len()、Swap()、Less()方法，参考：golang对自定义类型排序
+
+另外，通过借助“结构体指定字段进行排序”解了一道LeetCode 347题：传送门</span></pre>
+</div>
+<p> </p>
+{% endraw %}

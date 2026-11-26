@@ -1,0 +1,89 @@
+---
+title: "面试必备的：Redis和MongoDB的区别"
+date: 2020-11-23 14:56:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "项目中用的是MongoDB，但是为什么用其实当时选型的时候也没有太多考虑，只是认为数据量比较大，所以采用MongoDB。 最近又想起为什么用MongoDB，就查阅一下，汇总汇总： 之前也用过redis，当时是用来存储一些热数据，量也不大，但是操作很频繁。现在项目中用的是MongoDB，目前是百万级的"
+read_minutes: 2
+cnblogs_id: 14024470
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14024470.html"
+---
+{% raw %}
+<p>项目中用的是MongoDB，但是为什么用其实当时选型的时候也没有太多考虑，只是认为数据量比较大，所以采用MongoDB。</p>
+<p>最近又想起为什么用MongoDB，就查阅一下，汇总汇总：</p>
+<p>之前也用过redis，当时是用来存储一些热数据，量也不大，但是操作很频繁。现在项目中用的是MongoDB，目前是百万级的数据，将来会有千万级、亿级。</p>
+<p>就Redis和MongoDB来说，大家一般称之为<strong>Redis缓存、MongoDB数据库</strong>。这也是有道有理有根据的，</p>
+<p>Redis主要把数据存储在内存中，其“缓存”的性质远大于其“数据存储“的性质，其中数据的增删改查也只是像变量操作一样简单；</p>
+<p>MongoDB却是一个“存储数据”的系统，增删改查可以添加很多条件，就像SQL数据库一样灵活，这一点在面试的时候很受用。</p>
+<p class="postTitle">点击查看：<a class="postTitle2" href="https://www.cnblogs.com/java-spring/p/9488200.html" id="cb_post_title_url">MongoDB语法与现有关系型数据库SQL语法比较</a></p>
+<h2><strong>Mongodb与Redis应用指标对比</strong></h2>
+<p>MongoDB和Redis都是NoSQL，采用结构型数据存储。二者在使用场景中，存在一定的区别，这也主要由于<br/>二者在内存映射的处理过程，持久化的处理方法不同。MongoDB建议集群部署，更多的考虑到集群方案，Redis<br/>更偏重于进程顺序写入，虽然支持集群，也仅限于主-从模式。</p>
+<p> </p>
+<p> </p>
+<table>
+<tbody>
+<tr><th>指标 </th><th>MongoDB(v2.4.9) </th><th>Redis(v2.4.17) </th><th>比较说明</th></tr>
+</tbody>
+<tbody>
+<tr>
+<td>实现语言 </td>
+<td>C++</td>
+<td>C/C++</td>
+<td>-</td>
+</tr>
+<tr>
+<td>协议</td>
+<td>BSON、自定义二进制</td>
+<td>类Telnet</td>
+<td>-</td>
+</tr>
+<tr>
+<td>性能</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i6.7d635507TrfY7H">依赖内存，TPS较高</td>
+<td>依赖内存，TPS非常高</td>
+<td>Redis优于MongoDB</td>
+</tr>
+<tr>
+<td>可操作性</td>
+<td>丰富的数据表达、索引；最类似于关系数据库，支持丰富的查询语言</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i5.7d635507TrfY7H">数据丰富，较少的IO</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i4.7d635507TrfY7H">MongoDB优于Redis</td>
+</tr>
+<tr>
+<td>内存及存储</td>
+<td>适合大数据量存储，依赖系统虚拟内存管理，采用镜像文件存储；内存占有率比较高，官方建议独立部署在64位系统（32位有最大2.5G文件限制，64位没有改限制）</td>
+<td>Redis2.0后增加虚拟内存特性，突破物理内存限制；数据可以设置时效性，类似于memcache</td>
+<td>不同的应用角度看，各有优势</td>
+</tr>
+<tr>
+<td>可用性</td>
+<td>支持master-slave,replicaset（内部采用paxos选举算法，自动故障恢复）,auto sharding机制，对客户端屏蔽了故障转移和切分机制</td>
+<td>依赖客户端来实现分布式读写；主从复制时，每次从节点重新连接主节点都要依赖整个快照,无增量复制；不支持自动sharding,需要依赖程序设定一致hash机制</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i7.7d635507TrfY7H">MongoDB优于Redis；单点问题上，MongoDB应用简单，相对用户透明，Redis比较复杂，需要客户端主动解决。（MongoDB 一般会使用replica sets和sharding功能结合，replica sets侧重高可用性及高可靠性，而sharding侧重于性能、易扩展）</td>
+</tr>
+<tr>
+<td>可靠性</td>
+<td>从1.8版本后，采用binlog方式（MySQL同样采用该方式）支持持久化，增加可靠性</td>
+<td>依赖快照进行持久化；AOF增强可靠性；增强可靠性的同时，影响访问性能</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i8.7d635507TrfY7H">MongoDB优于Redis</td>
+</tr>
+<tr>
+<td>一致性</td>
+<td>不支持事务，靠客户端自身保证</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i9.7d635507TrfY7H">支持事务，比较弱，仅能保证事务中的操作按顺序执行</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i10.7d635507TrfY7H">Redis优于MongoDB</td>
+</tr>
+<tr>
+<td>数据分析</td>
+<td>内置数据分析功能（mapreduce）</td>
+<td>不支持</td>
+<td>MongoDB优于Redis</td>
+</tr>
+<tr>
+<td>应用场景</td>
+<td>海量数据的访问效率提升</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i11.7d635507TrfY7H">较小数据量的性能及运算</td>
+<td data-spm-anchor-id="a2c4e.11155472.blogcont.i12.7d635507TrfY7H">MongoDB优于Redis</td>
+</tr>
+</tbody>
+</table>
+{% endraw %}

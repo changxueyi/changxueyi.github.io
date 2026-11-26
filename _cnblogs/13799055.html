@@ -1,0 +1,19 @@
+---
+title: "count(1)、count(*)、count(字段)的区别"
+date: 2020-10-11 20:17:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "count(1)和count(*)： 都为统计所有记录数，包括null 执行效率上：当数据量1W+时count(*)用时较少，1w以内count(1)用时较少 count(字段)： 统计字段列的行数，不包括null 若字段为主键则count(主键)效率最高，否则少量数据时使用count(1) 总结："
+read_minutes: 1
+cnblogs_id: 13799055
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13799055.html"
+---
+{% raw %}
+<p>count(1)和count(*)：</p>
+<p>都为统计所有记录数，包括null</p>
+<p>执行效率上：当数据量1W+时count(*)用时较少，1w以内count(1)用时较少</p>
+<p>count(字段)：</p>
+<p>统计字段列的行数，不包括null</p>
+<p>若字段为主键则count(主键)效率最高，否则少量数据时使用count(1)</p>
+<p> </p>
+<p>总结：少量数据不忽略null选count(1),大量数据选count(*)，忽略null选count(字段)</p>
+{% endraw %}

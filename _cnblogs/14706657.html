@@ -1,0 +1,75 @@
+---
+title: "剑指Offer——链表的环以及环的入口"
+date: 2021-04-26 21:35:00 +0800
+tags: ["【算法】-- 数据结构与算法"]
+excerpt: "在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1->2->3->3->4->4->5 处理后为 1->2->5 解题思路 这个题包含两个子问题，一个是判断链表是否有环，另一个是如果有环，找到环的入口。 对于如何判断链表有环问题，较为基础："
+read_minutes: 2
+cnblogs_id: 14706657
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14706657.html"
+---
+{% raw %}
+<p>在一个排序的链表中，存在重复的结点，请删除该链表中重复的结点，重复的结点不保留，返回链表头指针。 例如，链表1-&gt;2-&gt;3-&gt;3-&gt;4-&gt;4-&gt;5 处理后为 1-&gt;2-&gt;5</p>
+<h3>解题思路</h3>
+<p>这个题包含两个子问题，一个是判断链表是否有环，另一个是如果有环，找到环的入口。</p>
+<ol>
+<li>
+<p>对于如何判断链表有环问题，较为基础：快慢指针。</p>
+</li>
+<li>
+<p>对于如何找到环的入口，这个地方需要推导一下：</p>
+<p>x表示头结点到入口结点的距离，表示入口结点到fast和slow相遇结点的距离，z是环中剩下的长度，即有z+y=L。L表示的是环的长度。那么当快慢指针相遇时候有：S = x+y 2*S = x+y+nL。即，慢指针走过x+y的结点，快指针比慢指针多走了n圈。这里慢指针在环中也可能多走了几圈才相遇的，但是可以不用表示出来。因为快指针的nL表示的就是比慢指针多走的圈数。举例：慢指针如果走 x+y+2L，快指针走 x+y+4L 那么就可以写成：慢x+y 快x+y+2L.是等价的。<br/>
+<img alt="\begin{cases} 2s = x+y+nL \\ s = x+y \end{cases}" class="math-block" loading="lazy" src="/images/cnblogs/495176ca9a3d0dca.svg"/><br/>
+消去s，可得<img alt="x+y = nL" class="math-inline" loading="lazy" src="/images/cnblogs/e8e2ad6316c6927b.svg"/>，同时：<img alt="z+y = L" class="math-inline" loading="lazy" src="/images/cnblogs/32d266f8d6d4e1c1.svg"/>，代入消去y，可得<img alt="x=(n-1)L+z" class="math-inline" loading="lazy" src="/images/cnblogs/bd321ceb4b2575e8.svg"/></p>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill"> </div>
+<div class="image-view" data-height="4032" data-width="3024"><img data-image-index="0" data-original-filesize="8844063" data-original-format="image/png" data-original-height="4032" data-original-src="//upload-images.jianshu.io/upload_images/16484271-323b330e6f5ba039.png" data-original-width="3024" loading="lazy" src="/images/cnblogs/9b774f06996ce1ee.webp"/></div>
+</div>
+<div class="image-caption">如图</div>
+</div>
+</li>
+</ol>
+<p>得到<img alt="x = (n-1)L+z" class="math-inline" loading="lazy" src="/images/cnblogs/f7c59d89460d9d30.svg"/> 能说明什么问题呢？</p>
+<p>走x步，等于走 n-1圈再走上z步。走x步，正好就是从头结点到环入口结点。而z步是从相遇地方，到入口结点，在加上多少圈，实际走的都是从相遇到入口结点。举个例子，如果n = 1，那么x=z。如果n=2，那么x=L+z.就是多走一圈到相遇结点，然后再走z步还是到环的入口结点。</p>
+<p>这个时候，我们只需要令一个结点从头结点出发，走x步，另一个结点从相遇结点出发，走n圈（n=0,1,2,...）再走z步，他们会同时到达环的入口地方。</p>
+<h3>题解</h3>
+<div class="cnblogs_code">
+<pre><span style="color: #0000ff;">public</span><span style="color: #000000;"> ListNode EntryNodeOfLoop(ListNode pHead)
+    {
+        </span><span style="color: #0000ff;">if</span>(pHead == <span style="color: #0000ff;">null</span>) <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (isLoop(pHead)){
+            ListNode slow </span>=<span style="color: #000000;"> pHead.next;
+            ListNode fast </span>=<span style="color: #000000;"> pHead.next.next;
+
+            </span><span style="color: #0000ff;">while</span>(slow !=<span style="color: #000000;"> fast){
+                slow </span>=<span style="color: #000000;"> slow.next;
+                fast </span>=<span style="color: #000000;"> fast.next.next;
+            }
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 循环结束时候  slow == fast</span>
+            slow =<span style="color: #000000;"> pHead;
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 一个从头开始走 ，一个从相遇地方开始走，走同样的步数
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 因为 x= z+(n-1)L</span>
+            <span style="color: #0000ff;">while</span>(slow !=<span style="color: #000000;"> fast){
+                slow </span>=<span style="color: #000000;"> slow.next;
+                fast </span>=<span style="color: #000000;"> fast.next;
+            }
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> slow;
+        }
+        </span><span style="color: #0000ff;">else</span>  <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    }
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> isLoop(ListNode pHead){
+        </span><span style="color: #0000ff;">if</span> (pHead.next == <span style="color: #0000ff;">null</span>) <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        ListNode slow </span>=<span style="color: #000000;"> pHead;
+        ListNode fast </span>=<span style="color: #000000;"> pHead;
+        </span><span style="color: #0000ff;">while</span> (fast != <span style="color: #0000ff;">null</span> &amp;&amp; fast.next !=<span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            slow </span>=<span style="color: #000000;"> slow.next;
+            fast </span>=<span style="color: #000000;"> fast.next.next;
+            </span><span style="color: #0000ff;">if</span> (slow ==<span style="color: #000000;"> fast){
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+            }
+        }
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<p> </p>
+{% endraw %}

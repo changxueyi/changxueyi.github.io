@@ -1,0 +1,205 @@
+---
+title: "高性能系统的读写分离怎么做？"
+date: 2021-01-15 17:40:00 +0800
+tags: ["【微服务】-- 架构思想"]
+excerpt: "读写分离是互联网应用系统中提升数据访问性能最常见的一种技术，现在开源社区等都有很多成熟的组件来实现这个功能，虽然是一种常见技术，但是你了解的有几种读写分离方案呢？我们这篇文章就来专门讲述一下读写分析的各种常见实现方案。 为什么要读写分离？ 我们先来看一个典型的读写分离架构图，如下： 这个架构图阐述了"
+read_minutes: 7
+cnblogs_id: 14283330
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14283330.html"
+---
+{% raw %}
+<p>读写分离是互联网应用系统中提升数据访问性能最常见的一种技术，现在开源社区等都有很多成熟的组件来实现这个功能，虽然是一种常见技术，但是你了解的有几种读写分离方案呢？我们这篇文章就来专门讲述一下读写分析的各种常见实现方案。</p>
+<h2>为什么要读写分离？</h2>
+<p>我们先来看一个典型的读写分离架构图，如下：</p>
+<p><img class="content_image lazy" data-actualsrc="https://pic1.zhimg.com/v2-97db838b37e7b90f85a91851ab846f5c_b.jpg" data-caption="" data-lazy-status="ok" data-rawheight="350" data-rawwidth="366" data-size="normal" loading="lazy" src="/images/cnblogs/71d94c0511039ef2.jpg" width="366"/></p>
+<p>这个架构图阐述了读写分离的标准常见，从主库写入，从库来读取，这种实现是在单机房场景下，我们再来演化一下，如果在多机房场景下又是怎样的呢？</p>
+<p><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic2.zhimg.com/v2-2f572e02eddb0aea6ecfb0be7e5cca19_b.jpg" data-caption="" data-lazy-status="ok" data-rawheight="339" data-rawwidth="635" data-size="normal" loading="lazy" src="/images/cnblogs/58a56463f1743b25.jpg" width="635"/></p>
+<p>多机房场景下还是一个主库，只是在另外一个机房多出了另外的一些从库，并且写入是直接跨机房连接到主库写入。</p>
+<p>从以上两种类型的架构图，我们可以分析出如下几个使用读写分离的原因：</p>
+<p>1、读写量很大，为了提升数据库读写性能，将读写进行分离；</p>
+<p>2、多机房下如果写少读多，同时基于数据一致性考虑，只有一个主库存入所有的数据写入，本地再做从库提供读取，减少多机房间直接读取带来的时延。</p>
+<h2>读写分离实现方案</h2>
+<p>如果要实现读写分离，我们首先就需要知道从业务层到数据库中间会有经过哪几层，了解了这几层，我们的思路就是分别从这些层去实现读写分离，这样就构成了我们不同的实现方案，对于语言我们选择Java来进行分析，其它的类似。</p>
+<p><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic1.zhimg.com/v2-365a54eaeee5ea6820feefb32b0bced0_b.jpg" data-caption="" data-lazy-status="ok" data-rawheight="387" data-rawwidth="739" data-size="normal" loading="lazy" src="/images/cnblogs/e611695532d24c05.jpg" width="739"/></p>
+<p>这个图是从开发者的视角来看的，我们可以看出，从Service层一直到数据库，它会经历Dao（数据访问层）、JDBC(Java的数据库连接层)、DataSource(数据源)，那我们就从这三个层次分别来介绍它的方案实现。</p>
+<h3>DAO层</h3>
+<p>在这一层做读写分离，很容易想到的方案就是初始化两个ORM操作，一个做读，另外一个做写，然后依据业务对数据库操作属性调用相应的ORM，我们举一个简单的例子来看下，例如一个Sample数据表，里面包含：id、名称、状态和创建时间几个字段，我们的例子主要包含：新增、获取、更新及获取操作，看看里面是怎么实现读写分离的（其中的JDBC采取了Spring的JdbcTemplate来实现，这里不做过多代码展示，如有疑问大家可以先查看JdbcTemplate相关技术介绍）</p>
+<div class="highlight">
+<pre><code class="language-java"><span class="nd">@Repository
+<span class="kd">public <span class="kd">class <span class="nc">DaoImpl <span class="kd">implements <span class="n">DaoInterFace <span class="o">{
+	
+	<span class="c1">//读数据库连接
+<span class="c1">	<span class="nd">@Autowired
+	<span class="kd">private <span class="n">Jdbc <span class="n">readJdbc<span class="o">;
+	
+	<span class="c1">//写数据库连接
+<span class="c1">	<span class="nd">@Autowired
+	<span class="kd">private <span class="n">Jdbc <span class="n">writeJdbc<span class="o">;
+
+	<span class="nd">@Override
+	<span class="kd">public <span class="kt">boolean <span class="nf">add<span class="o">(<span class="n">String <span class="n">appId<span class="o">, <span class="n">String <span class="n">name<span class="o">) <span class="o">{
+		<span class="n">StringBuilder <span class="n">sql <span class="o">= <span class="k">new <span class="n">StringBuilder<span class="o">();
+		<span class="n">sql<span class="o">.<span class="na">append<span class="o">(<span class="s">" insert into sample(app_id, name, status, create_time"<span class="o">);
+		<span class="n">sql<span class="o">.<span class="na">append<span class="o">(<span class="s">" values (?,?,?,?) "<span class="o">);
+		
+		<span class="n">StatementParameter <span class="n">param <span class="o">= <span class="k">new <span class="n">StatementParameter<span class="o">();
+		<span class="n">param<span class="o">.<span class="na">setString<span class="o">(<span class="n">appId<span class="o">);
+		<span class="n">param<span class="o">.<span class="na">setString<span class="o">(<span class="n">name<span class="o">);
+		<span class="n">param<span class="o">.<span class="na">setBool<span class="o">(<span class="kc">true<span class="o">);
+		<span class="n">param<span class="o">.<span class="na">setDate<span class="o">(<span class="k">new <span class="n">Date<span class="o">());
+		
+		<span class="k">return <span class="n">writeJdbc<span class="o">.<span class="na">insertForBoolean<span class="o">(<span class="n">sql<span class="o">.<span class="na">toString<span class="o">(), <span class="n">param<span class="o">);
+	<span class="o">}
+	
+	<span class="nd">@Override
+	<span class="kd">public <span class="n">Sample <span class="nf">get<span class="o">(<span class="kt">long <span class="n">appId<span class="o">) <span class="o">{
+		<span class="n">StringBuilder <span class="n">sql <span class="o">= <span class="k">new <span class="n">StringBuilder<span class="o">();
+		<span class="n">sql<span class="o">.<span class="na">append<span class="o">(<span class="s">" select * from sample where app_id = ? "<span class="o">);
+		
+		<span class="n">StatementParameter <span class="n">param <span class="o">= <span class="k">new <span class="n">StatementParameter<span class="o">();
+		<span class="n">param<span class="o">.<span class="na">setLong<span class="o">(<span class="n">appId<span class="o">);
+	
+		<span class="k">return <span class="n">readJdbc<span class="o">.<span class="na">query<span class="o">(<span class="n">sql<span class="o">.<span class="na">toString<span class="o">(), <span class="n">Sample<span class="o">.<span class="na">class<span class="o">, <span class="n">param<span class="o">);
+	<span class="o">}
+
+	<span class="nd">@Override
+	<span class="kd">public <span class="n">Sample <span class="nf">updateAndGet<span class="o">(<span class="n">String <span class="n">appId<span class="o">, <span class="kt">boolean <span class="n">status<span class="o">) <span class="o">{
+		<span class="n">StringBuilder <span class="n">writeSql <span class="o">= <span class="k">new <span class="n">StringBuilder<span class="o">();
+		<span class="n">sql<span class="o">.<span class="na">append<span class="o">(<span class="s">" update sample set status = ? where id = ? and app_id = ?"<span class="o">);
+		
+		<span class="n">StatementParameter <span class="n">readParam <span class="o">= <span class="k">new <span class="n">StatementParameter<span class="o">();
+		<span class="n">readParam<span class="o">.<span class="na">setBool<span class="o">(<span class="n">status<span class="o">);
+		<span class="n">readParam<span class="o">.<span class="na">setString<span class="o">(<span class="n">appId<span class="o">);
+		
+		<span class="n">writeJdbc<span class="o">.<span class="na">updateForBoolean<span class="o">(<span class="n">writeSql<span class="o">.<span class="na">toString<span class="o">(), <span class="n">readParam<span class="o">);
+		
+		<span class="n">StringBuilder <span class="n">readSql <span class="o">= <span class="k">new <span class="n">StringBuilder<span class="o">();
+		<span class="n">sql<span class="o">.<span class="na">append<span class="o">(<span class="s">" select * from sample where app_id = ? "<span class="o">);
+		
+		<span class="n">StatementParameter <span class="n">readParam <span class="o">= <span class="k">new <span class="n">StatementParameter<span class="o">();
+		<span class="n">readParam<span class="o">.<span class="na">setLong<span class="o">(<span class="n">appId<span class="o">);
+		<span class="c1">//读写窗口一致性，仍然需要采取写入Jdbc来进行读取，以防读库还没有同步到主库的数据
+<span class="c1">		<span class="k">return <span class="n">writeJdbc<span class="o">.<span class="na">query<span class="o">(<span class="n">readSql<span class="o">.<span class="na">toString<span class="o">(), <span class="n">Sample<span class="o">.<span class="na">class<span class="o">, <span class="n">readParam<span class="o">);
+	<span class="o">}
+<span class="o">} </span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>例子新建两个数据库连接JDBC，并且由业务实现人员来明确指定使用哪个JDBC来进行操作数据库，当写入后再读取的场景要保障都使用写入JDBC来实现。这个方案的优缺点我们总结如下：</p>
+<p>优点：易于实现</p>
+<p>缺点：1、侵入业务，每个数据操作层都需要额外考虑读写分离；</p>
+<p>2、对于读写窗口一致性要求操作者自行实现，考虑不周就会导致数据读取失败。</p>
+<h3>JDBC层</h3>
+<p>由于DAO层的做法对业务侵入很大，读写分离都需要业务方自行实现，对业务实现方有一定的要求，如果处理不当还有可能出现错误读取，那么我们考虑既然读写分离是一种公共的技术诉求，是否可以再到上面一层做一个封装，将这些内部实现全部封装起来，业务调用方仍然只需关注一个链接，具体里面什么时候读写分离，内部自行实现。这就是JDBC层实现读写分离的价值了，我们先看下它的架构图。</p>
+<p><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic1.zhimg.com/v2-6dbff5ab1ae7f17493837e9a74f6ac44_b.jpg" data-caption="" data-lazy-status="ok" data-rawheight="344" data-rawwidth="880" data-size="normal" loading="lazy" src="/images/cnblogs/97a7b9d12d76ea29.jpg" width="880"/></p>
+<p>从架构图可以看出，需要将JDBC层的接口函数进行重写，会有一个对业务层暴露的JDBCProxy，它通过读写决策器进行选择此时是使用读还是写连接，JDBCWriter以及JDBCReader都是对JDBC接口的一个实现。我们来看下这种方案的几个重要实现类和方法：</p>
+<div class="highlight">
+<pre><code class="language-java"><span class="kd">public <span class="kd">class <span class="nc">JdbcProxyImpl <span class="kd">implements <span class="n">Jdbc <span class="o">{
+	<span class="kd">private <span class="kd">final <span class="kd">static <span class="n">Logger <span class="n">logger <span class="o">= <span class="n">LoggerFactory
+			<span class="o">.<span class="na">getLogger<span class="o">(<span class="n">JdbcProxyImpl<span class="o">.<span class="na">class<span class="o">);
+	
+	<span class="c1">//读写JDBC实现
+<span class="c1">	<span class="kd">private <span class="n">JdbcReaderImpl <span class="n">jdbcReaderImpl<span class="o">;
+	<span class="kd">private <span class="n">JdbcWriterImpl <span class="n">jdbcWriterImpl<span class="o">;
+	
+	<span class="kd">public <span class="kt">void <span class="nf">setJdbcReaderImpl<span class="o">(<span class="n">JdbcReaderImpl <span class="n">jdbcReaderImpl<span class="o">) <span class="o">{
+		<span class="k">this<span class="o">.<span class="na">jdbcReaderImpl <span class="o">= <span class="n">jdbcReaderImpl<span class="o">;
+	<span class="o">}
+
+	<span class="kd">public <span class="kt">void <span class="nf">setJdbcWriterImpl<span class="o">(<span class="n">JdbcWriterImpl <span class="n">jdbcWriterImpl<span class="o">) <span class="o">{
+		<span class="k">this<span class="o">.<span class="na">jdbcWriterImpl <span class="o">= <span class="n">jdbcWriterImpl<span class="o">;
+	<span class="o">}
+	
+	<span class="c1">//更新的时候首先需要标记为写入，再调用写JDBC来实现更新
+<span class="c1">    <span class="nd">@Override
+	<span class="kd">public <span class="kt">int <span class="nf">update<span class="o">(<span class="n">String <span class="n">sql<span class="o">) <span class="o">{
+		<span class="n">ReadWriteDataSourceDecision<span class="o">.<span class="na">markWrite<span class="o">();
+		<span class="k">return <span class="n">jdbcWriterImpl<span class="o">.<span class="na">update<span class="o">(<span class="n">sql<span class="o">);
+	<span class="o">}
+
+    <span class="c1">//查询的时候首先是要判断在当前线程下是否有写入操作，如果有就直接使用写JDBC来读取，否则才使用读JDBC
+<span class="c1">	<span class="nd">@Override
+	<span class="kd">public <span class="o">&lt;<span class="n">T<span class="o">&gt; <span class="n">T <span class="nf">query<span class="o">(<span class="n">String <span class="n">sql<span class="o">, <span class="n">Class<span class="o">&lt;<span class="n">T<span class="o">&gt; <span class="n">elementType<span class="o">) <span class="o">{
+		<span class="k">if<span class="o">(<span class="n">ReadWriteDataSourceDecision<span class="o">.<span class="na">isChoiceWrite<span class="o">()){
+			<span class="k">return <span class="n">jdbcWriterImpl<span class="o">.<span class="na">query<span class="o">(<span class="n">sql<span class="o">, <span class="n">elementType<span class="o">);
+		<span class="o">}
+		<span class="k">return <span class="n">jdbcReaderImpl<span class="o">.<span class="na">query<span class="o">(<span class="n">sql<span class="o">, <span class="n">elementType<span class="o">);
+	<span class="o">}
+	
+	<span class="c1">//事务提交属于写入操作属性
+<span class="c1">	<span class="nd">@Override
+	<span class="kd">public <span class="kt">boolean <span class="nf">commit<span class="o">() <span class="o">{
+		<span class="k">return <span class="n">jdbcWriterImpl<span class="o">.<span class="na">commit<span class="o">();
+	<span class="o">}
+<span class="o">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>对于查询操作时会从ReadWriteDataSourceDecision（读写决策器中进行判断），那么读写决策器如何来保存当前线程下的读写操作呢？</p>
+<div class="highlight">
+<pre><code class="language-java"><span class="kd">public <span class="kd">class <span class="nc">ReadWriteDataSourceDecision <span class="o">{
+	<span class="kd">public <span class="kd">enum <span class="n">DataSourceType <span class="o">{
+        <span class="n">write<span class="o">, <span class="n">read<span class="o">;
+    <span class="o">}
+	
+	<span class="c1">//所有读写操作的标记会被记录在这里ThreadLocal，线程安全的
+<span class="c1">    <span class="kd">private <span class="kd">static <span class="kd">final <span class="n">ThreadLocal<span class="o">&lt;<span class="n">DataSourceType<span class="o">&gt; <span class="n">holder <span class="o">= <span class="k">new <span class="n">ThreadLocal<span class="o">&lt;<span class="n">DataSourceType<span class="o">&gt;();
+
+    <span class="kd">public <span class="kd">static <span class="kt">void <span class="nf">markWrite<span class="o">() <span class="o">{
+        <span class="n">holder<span class="o">.<span class="na">set<span class="o">(<span class="n">DataSourceType<span class="o">.<span class="na">write<span class="o">);
+    <span class="o">}
+    
+    <span class="kd">public <span class="kd">static <span class="kt">void <span class="nf">markRead<span class="o">() <span class="o">{
+        <span class="n">holder<span class="o">.<span class="na">set<span class="o">(<span class="n">DataSourceType<span class="o">.<span class="na">read<span class="o">);
+    <span class="o">}
+    
+    <span class="kd">public <span class="kd">static <span class="kt">void <span class="nf">reset<span class="o">() <span class="o">{
+        <span class="n">holder<span class="o">.<span class="na">set<span class="o">(<span class="kc">null<span class="o">);
+    <span class="o">}
+    
+    <span class="kd">public <span class="kd">static <span class="kt">boolean <span class="nf">isChoiceNone<span class="o">() <span class="o">{
+        <span class="k">return <span class="kc">null <span class="o">== <span class="n">holder<span class="o">.<span class="na">get<span class="o">(); 
+    <span class="o">}
+    
+    <span class="kd">public <span class="kd">static <span class="kt">boolean <span class="nf">isChoiceWrite<span class="o">() <span class="o">{
+        <span class="k">return <span class="n">DataSourceType<span class="o">.<span class="na">write <span class="o">== <span class="n">holder<span class="o">.<span class="na">get<span class="o">();
+    <span class="o">}
+    
+    <span class="kd">public <span class="kd">static <span class="kt">boolean <span class="nf">isChoiceRead<span class="o">() <span class="o">{
+        <span class="k">return <span class="n">DataSourceType<span class="o">.<span class="na">read <span class="o">== <span class="n">holder<span class="o">.<span class="na">get<span class="o">();
+    <span class="o">}
+<span class="o">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>从源码我们可以看出这里有一个比较巧妙的设计，那就是采取了ThreadLocal来存储当前线程下的读写属性，它可以识别出当前线程操作下是否有写入操作，如果有就直接使用写入JDBC来进行读取，保障了读写窗口的一致性。</p>
+<h3>DataSource层</h3>
+<p>JDBC层可以很好的解决侵入性以及窗口一致性问题，但是我们在配置的时候仍然是需要为proxy配置两个JDBC，相应的参数都需要完整的设置一遍，还是会比较麻烦，程序猿的使命就是追究极简，有没有我只需要告诉它读写分离的JDBCurl，剩下的一个组件内部全部搞定呢？另外如果主从复制时延较大，如果当前线程是纯读取，也要看是否时延超过了容忍阈值，如果超过了则仍然需要强制从主库读取，这就是我们现在要介绍的dataSource层的方案了。</p>
+<p><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic1.zhimg.com/v2-61e875b3d02cbc29cfd6addd6743ecd0_b.jpg" data-caption="" data-lazy-status="ok" data-rawheight="455" data-rawwidth="790" data-size="normal" loading="lazy" src="/images/cnblogs/b2d6f90db2e44eeb.jpg" width="790"/></p>
+<p>读写分离：通过实现dataSorce的connection以及statement，当jdbc请求执行sql时会首先获取connection，通过解析sql判断是查询还是更新来选择连接池的读写连接类型，同时需要结合主从复制检测的结果进行综合判断来实现读写连接分离。而读写的链接都是从读写的dataSorce中获取。</p>
+<p>读写窗口一致性：通过重写dataSource的connection，如果当前连接已经存在写连接请求就强制采用写连接。</p>
+<p>主从复制时延智能切换：通过启动单线程检测master与slave数据是否存在时延，来决策系统主从是否存在时延，如果存在时延强制系统本次执行主库查询。</p>
+<p>我们看下connection里面几个重要方法的实现：</p>
+<div class="highlight">
+<pre><code class="language-java"><span class="kd">public <span class="n">PreparedStatement <span class="nf">prepareStatement<span class="o">(<span class="n">String <span class="n">sql<span class="o">, <span class="kt">int <span class="n">resultSetType<span class="o">,
+			<span class="kt">int <span class="n">resultSetConcurrency<span class="o">) <span class="kd">throws <span class="n">SQLException <span class="o">{
+		<span class="c1">//通过sql解析是否是读请求，并且时延没有超过指定阈值，则请求读连接，否则取写连接
+<span class="c1">		<span class="k">if <span class="o">(<span class="n">SqlUtil<span class="o">.<span class="na">isReadRequest<span class="o">(<span class="n">sql<span class="o">) <span class="o">&amp;&amp; <span class="o">!<span class="n">datasource<span class="o">.<span class="na">getMdsm<span class="o">().<span class="na">isDelay<span class="o">()) <span class="o">{
+            <span class="k">return <span class="n">getReadConnection<span class="o">().<span class="na">prepareStatement<span class="o">(<span class="n">sql<span class="o">, <span class="n">resultSetType<span class="o">, <span class="n">resultSetConcurrency<span class="o">);
+        <span class="o">} <span class="k">else <span class="o">{
+            <span class="k">return <span class="n">getWriteConnection<span class="o">().<span class="na">prepareStatement<span class="o">(<span class="n">sql<span class="o">, <span class="n">resultSetType<span class="o">, <span class="n">resultSetConcurrency<span class="o">);
+        <span class="o">}
+	<span class="o">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>而getReadConnection的方法逻辑如下：</p>
+<div class="highlight">
+<pre><code class="language-java"><span class="n">Connection <span class="nf">getReadConnection<span class="o">() <span class="kd">throws <span class="n">SQLException <span class="o">{
+	        <span class="k">if <span class="o">(<span class="n">writeConn <span class="o">!= <span class="kc">null<span class="o">) <span class="o">{
+	         <span class="c1">// 如果是读数据，并且已有写连接，那么强制返回这个写链接。
+<span class="c1">	            <span class="k">return <span class="n">writeConn<span class="o">;
+	        <span class="o">}
+
+	        <span class="k">if <span class="o">(<span class="n">readConn <span class="o">!= <span class="kc">null<span class="o">) <span class="o">{
+	            <span class="k">return <span class="n">readConn<span class="o">;
+	        <span class="o">} <span class="k">else <span class="o">{
+	            <span class="n">readConn <span class="o">= <span class="n">datasource<span class="o">.<span class="na">getReadConnection<span class="o">(<span class="n">username<span class="o">, <span class="n">password<span class="o">);
+	        <span class="o">}
+	        <span class="k">return <span class="n">readConn<span class="o">;
+	    <span class="o">}</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+</div>
+<p>我们从开发者视角来阐述了基于DAO/JDBC以及dataSource的三个读写分离方案，各有优势，大家可以按需自行选择对应方案在业务中实现读写分离。</p>
+{% endraw %}

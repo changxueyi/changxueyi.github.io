@@ -1,0 +1,555 @@
+---
+title: "Nginx的使用讲解"
+date: 2022-11-21 19:55:00 +0800
+tags: ["【运维】-- Linux"]
+excerpt: "Author：Eric version：9.0.1 文章目录 一、引言 1.1 代理问题 1.2 负载均衡问题 1.3 资源优化 1.4 Nginx处理 二、Nginx概述 三、Nginx的安装 3.1 安装Nginx 3.2 Nginx的配置文件 3.3 修改docker-compose文件 四、"
+read_minutes: 8
+cnblogs_id: 16913005
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/16913005.html"
+---
+{% raw %}
+<p><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/4f7000d225fb431a.png"/></p>
+<blockquote>
+<p>Author：Eric</p>
+<p>version：9.0.1</p>
+</blockquote>
+<p> </p>
+<div class="toc">
+<h3>文章目录</h3>
+<ul>
+<li>
+<ul>
+<li>
+<ul>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#_9" rel="noopener">一、引言</a></li>
+<li>
+<ul>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#11__13" rel="noopener">1.1 代理问题</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#12__22" rel="noopener">1.2 负载均衡问题</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#13__32" rel="noopener">1.3 资源优化</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#14_Nginx_42" rel="noopener">1.4 Nginx处理</a></li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#Nginx_51" rel="noopener">二、Nginx概述</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#Nginx_72" rel="noopener">三、Nginx的安装</a></li>
+<li>
+<ul>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#31_Nginx_76" rel="noopener">3.1 安装Nginx</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#32_Nginx_91" rel="noopener">3.2 Nginx的配置文件</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#33_dockercompose_133" rel="noopener">3.3 修改docker-compose文件</a></li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#Nginx_161" rel="noopener">四、Nginx的反向代理【`重点`】</a></li>
+<li>
+<ul>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#41__165" rel="noopener">4.1 反向代理介绍</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#42_Nginx_176" rel="noopener">4.2 基于Nginx实现反向代理</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#43_Nginxlocation_197" rel="noopener">4.3 关于Nginx的location路径映射</a></li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#Nginx_236" rel="noopener">五、Nginx负载均衡【`重点`】</a></li>
+<li>
+<ul>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#51__251" rel="noopener">5.1 轮询</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#52__273" rel="noopener">5.2 权重</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#53_ip_hash_295" rel="noopener">5.3 ip_hash</a></li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#Nginx_318" rel="noopener">六、Nginx动静分离【`重点`】</a></li>
+<li>
+<ul>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#61__332" rel="noopener">6.1 动态资源代理</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#62__345" rel="noopener">6.2 静态资源代理</a></li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#Nginx_364" rel="noopener">七、Nginx集群</a></li>
+<li>
+<ul>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#71__368" rel="noopener">7.1 集群结构</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#72_Nginx_385" rel="noopener">7.2 搭建Nginx集群</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#ip_390" rel="noopener">八、阿里云给域名设置ip解析</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#nginx_397" rel="noopener">九、nginx的静态代理详细讲解</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#UrlRewrite_441" rel="noopener">十、UrlRewrite</a></li>
+<li><a href="https://www.cnblogs.com/cativen/p/16641234.html#Https_495" rel="noopener">十一、Https证书配置</a></li>
+</ul>
+</div>
+<p> </p>
+<h3><a id="_9" rel="noopener"></a>一、引言</h3>
+<hr/>
+<h4><a id="11__13" rel="noopener"></a>1.1 代理问题</h4>
+<blockquote>
+<p>客户端到底要将请求发送给哪台服务器。</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th align="center">发送给服务器1还是服务器2</th></tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/cabc2728780c638c.png"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4><a id="12__22" rel="noopener"></a>1.2 负载均衡问题</h4>
+<blockquote>
+<p>如果所有客户端的请求都发送给了服务器1，那么服务器2将没有任何意义</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th align="center">负载均衡问题</th></tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/2f0487f873b22fc3.png"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4><a id="13__32" rel="noopener"></a>1.3 资源优化</h4>
+<blockquote>
+<p>客户端发送的请求可能是申请动态资源的，也有申请静态资源，但是都是去Tomcat中获取的</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th align="center">静态资源访问</th></tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/46a206cfbdb5b20d.png"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4><a id="14_Nginx_42" rel="noopener"></a>1.4 Nginx处理</h4>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th align="center">在搭建集群后，使用Nginx</th></tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/125030be5679f221.png"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+<h3><a id="Nginx_51" rel="noopener"></a>二、Nginx概述</h3>
+<hr/>
+<blockquote>
+<p>Nginx是由俄罗斯人研发的，应对Rambler的网站，并且2004年发布的第一个版本。</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th align="center">Nginx之父</th></tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/8a1b7b627cf78a12.png"/></td>
+</tr>
+</tbody>
+</table>
+</div>
+<blockquote>
+<p>Nginx的特点：</p>
+<ul>
+<li>稳定性极强。 7*24小时不间断运行。</li>
+<li>Nginx提供了非常丰富的配置实例。</li>
+<li>占用内存小，并发能力强。</li>
+</ul>
+</blockquote>
+<h3><a id="Nginx_72" rel="noopener"></a>三、Nginx的安装</h3>
+<hr/>
+<h4><a id="31_Nginx_76" rel="noopener"></a>3.1 安装Nginx</h4>
+<blockquote>
+<p>使用Docker-Compose安装</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-yml highlighter-hljs hljs language-yaml"><span class="hljs-attr">version: <span class="hljs-string">'3.1'
+<span class="hljs-attr">services:
+  <span class="hljs-attr">nginx:
+    <span class="hljs-attr">restart: <span class="hljs-string">always
+    <span class="hljs-attr">image: <span class="hljs-string">daocloud.io/library/nginx:latest
+    <span class="hljs-attr">container_name: <span class="hljs-string">nginx
+    <span class="hljs-attr">ports:
+      <span class="hljs-bullet">- <span class="hljs-number">80<span class="hljs-string">:80
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4><a id="32_Nginx_91" rel="noopener"></a>3.2 Nginx的配置文件</h4>
+<blockquote>
+<p>关于Nginx的核心配置文件nginx.conf</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs">worker_processes  <span class="hljs-number">1;		
+error_log  /var/log/nginx/error.log warn;
+# 以上统称为全局块， 
+# worker_processes他的数值越大，Nginx的并发能力就越强
+# error_log 代表Nginx的错误日志存放的位置
+
+events <span class="hljs-punctuation">{
+    worker_connections  <span class="hljs-number">1024;
+<span class="hljs-punctuation">}
+# events块
+# worker_connections他的数值越大，Nignx并发能力越强
+
+http <span class="hljs-punctuation">{
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    server <span class="hljs-punctuation">{
+        listen       <span class="hljs-number">80;
+        server_name  localhost;
+
+        location / <span class="hljs-punctuation">{
+            root   /usr/share/nginx/html;
+            index  index.html index.htm;
+        <span class="hljs-punctuation">}
+		# location块
+		# root：将接收到的请求根据/usr/share/nginx/html去查找静态资源
+		# index： 默认去上述的路径中找到index.html或者index.htm
+    <span class="hljs-punctuation">}
+	# server块
+	# listen： 代表Nginx监听的端口号
+	# localhost：代表Nginx接收请求的ip
+<span class="hljs-punctuation">}
+# http块
+# include代表引入一个外部的文件 -&gt; /mime.types中放着大量的媒体类型
+# include /etc/nginx/conf.d<span class="hljs-comment">/*.conf; -&gt; 引入了conf.d目录下的以.conf为结尾的配置文件
+
+</span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4><a id="33_dockercompose_133" rel="noopener"></a>3.3 修改docker-compose文件</h4>
+<blockquote>
+<p>为了方便修改Nginx配置，修改yml文件</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-yml highlighter-hljs hljs language-yaml"><span class="hljs-attr">version: <span class="hljs-string">'3.1'
+<span class="hljs-attr">services:
+  <span class="hljs-attr">nginx:
+    <span class="hljs-attr">restart: <span class="hljs-string">always
+    <span class="hljs-attr">image: <span class="hljs-string">daocloud.io/library/nginx:latest
+    <span class="hljs-attr">container_name: <span class="hljs-string">nginx
+    <span class="hljs-attr">ports:
+      <span class="hljs-bullet">- <span class="hljs-number">80<span class="hljs-string">:80
+    <span class="hljs-attr">volumes:
+      <span class="hljs-bullet">- <span class="hljs-string">/opt/docker_nginx/conf.d/:/etc/nginx/conf.d
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<blockquote>
+<p>#通过指令重新构建<br/>docker-compose up -d build<br/>#访问本地的nginx时，启动不了</p>
+</blockquote>
+<blockquote>
+<p>创建文件夹/opt/docker_nginx/conf.d的default.conf文件<br/>将<strong>nginx.conf的server拷贝到default.conf下面</strong></p>
+<p>重启docker<br/>docker-compose restart<br/>访问本地nginx成功</p>
+</blockquote>
+<h3><a id="Nginx_161" rel="noopener"></a>四、Nginx的反向代理【<code>重点</code>】</h3>
+<hr/>
+<h4><a id="41__165" rel="noopener"></a>4.1 反向代理介绍</h4>
+<blockquote>
+<p>反向代理：</p>
+<ul>
+<li>反向代理服务器是配置在服务端的。</li>
+<li>客户端是不知道访问的到底是哪一台服务器。</li>
+<li>达到负载均衡，并且可以不知服务器真正的ip地址。</li>
+</ul>
+</blockquote>
+<p><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/bac68bede4a0f3ff.png"/></p>
+<h4><a id="42_Nginx_176" rel="noopener"></a>4.2 基于Nginx实现反向代理</h4>
+<blockquote>
+<p>准备一个目标服务器。</p>
+<p>启动了之前的tomcat服务器。</p>
+<p>编写nginx的配置文件，通过Nginx访问到tomcat服务器。</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs">server<span class="hljs-punctuation">{
+  listen <span class="hljs-number">80;
+  server_name localhost;
+    # 基于反向代理访问到Tomcat服务器
+  location / <span class="hljs-punctuation">{
+    proxy_pass http<span class="hljs-punctuation">:<span class="hljs-comment">//192.168.199.109:8080/;
+  <span class="hljs-punctuation">}
+<span class="hljs-punctuation">}
+</span></span></span></span></span></span></span></code></pre>
+<h4><a id="43_Nginxlocation_197" rel="noopener"></a>4.3 关于Nginx的location路径映射</h4>
+<blockquote>
+<p>优先级关系如下：</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs"># <span class="hljs-number">1. 直接匹配
+location = / <span class="hljs-punctuation">{
+  # 精准匹配，主机名后面不能带任何的字符串
+<span class="hljs-punctuation">}
+
+# <span class="hljs-number">2. 通用匹配
+location /xxx <span class="hljs-punctuation">{
+  # 匹配所有以/xxx开头的路径
+<span class="hljs-punctuation">}
+
+# <span class="hljs-number">3. 正则匹配
+location ~ /xxx <span class="hljs-punctuation">{
+  # 匹配所有以/xxx开头的路径
+<span class="hljs-punctuation">}
+
+# <span class="hljs-number">4. 匹配开头路径
+location ^~ /images/ <span class="hljs-punctuation">{
+  # 匹配所有以/images开头的路径
+<span class="hljs-punctuation">}
+
+# <span class="hljs-number">5. 匹配后缀
+location ~* \.(gif|jpg|png)$ <span class="hljs-punctuation">{
+  # 匹配以gif或者jpg或者png为结尾的路径
+<span class="hljs-punctuation">}
+
+# <span class="hljs-number">6. 全部通配
+location / <span class="hljs-punctuation">{
+  # 匹配全部路径  
+<span class="hljs-punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3><a id="Nginx_236" rel="noopener"></a>五、Nginx负载均衡【<code>重点</code>】</h3>
+<hr/>
+<blockquote>
+<p>Nginx为我们默认提供了三种负载均衡的策略：</p>
+<ul>
+<li>
+<p>轮询：将客户端发起的请求，平均的分配给每一台服务器。</p>
+<ul>
+<li>权重：会将客户端的请求，根据服务器的权重值不同，分配不同的数量。</li>
+</ul>
+</li>
+<li>
+<p>ip_hash：基于发起请求的客户端的ip地址不同，他始终会将请求发送到指定的服务器上。</p>
+</li>
+</ul>
+</blockquote>
+<h4><a id="51__251" rel="noopener"></a>5.1 轮询</h4>
+<blockquote>
+<p>想实现Nginx轮询负载均衡机制只需要在配置文件中添加以下内容</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs">upstream 名字 <span class="hljs-punctuation">{
+  server ip<span class="hljs-punctuation">:port;
+  server ip<span class="hljs-punctuation">:port;
+  ...
+<span class="hljs-punctuation">}
+server <span class="hljs-punctuation">{
+  listen <span class="hljs-number">80;
+  server_name localhost;
+  
+  location / <span class="hljs-punctuation">{
+    proxy_pass http<span class="hljs-punctuation">:<span class="hljs-comment">//upstream的名字/;
+  <span class="hljs-punctuation">}
+<span class="hljs-punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4><a id="52__273" rel="noopener"></a>5.2 权重</h4>
+<blockquote>
+<p>实现权重的方式</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs">upstream 名字 <span class="hljs-punctuation">{
+  server ip<span class="hljs-punctuation">:port weight=权重比例;
+  server ip<span class="hljs-punctuation">:port weight=权重比例;
+  ...
+<span class="hljs-punctuation">}
+server <span class="hljs-punctuation">{
+  listen <span class="hljs-number">80;
+  server_name localhost;
+  
+  location / <span class="hljs-punctuation">{
+    proxy_pass http<span class="hljs-punctuation">:<span class="hljs-comment">//upstream的名字/;
+  <span class="hljs-punctuation">}
+<span class="hljs-punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h4><a id="53_ip_hash_295" rel="noopener"></a>5.3 ip_hash</h4>
+<blockquote>
+<p>ip_hash实现</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs">upstream 名字 <span class="hljs-punctuation">{
+  ip_hash;
+  server ip<span class="hljs-punctuation">:port;
+  server ip<span class="hljs-punctuation">:port;
+  ...
+<span class="hljs-punctuation">}
+server <span class="hljs-punctuation">{
+  listen <span class="hljs-number">80;
+  server_name localhost;
+  
+  location / <span class="hljs-punctuation">{
+    proxy_pass http<span class="hljs-punctuation">:<span class="hljs-comment">//upstream的名字/;
+  <span class="hljs-punctuation">}
+<span class="hljs-punctuation">}
+</span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h3><a id="Nginx_318" rel="noopener"></a>六、Nginx动静分离【<code>重点</code>】</h3>
+<hr/>
+<blockquote>
+<p>Nginx的并发能力公式：</p>
+<p>​ worker_processes * worker_connections / 4 | 2 = Nginx最终的并发能力</p>
+<p>动态资源需要/4，静态资源需要/2.</p>
+<p>Nginx通过动静分离，来提升Nginx的并发能力，更快的给用户响应。</p>
+</blockquote>
+<h4><a id="61__332" rel="noopener"></a>6.1 动态资源代理</h4>
+<blockquote>
+<p>使用proxy_pass动态代理</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs"># 配置如下
+location / <span class="hljs-punctuation">{
+  proxy_pass 路径;
+<span class="hljs-punctuation">}
+</span></span></code></pre>
+<h4><a id="62__345" rel="noopener"></a>6.2 静态资源代理</h4>
+<blockquote>
+<p>使用root静态代理</p>
+</blockquote>
+<pre class="highlighter-hljs"><code class="prism language-json highlighter-hljs hljs"># 配置如下
+location / <span class="hljs-punctuation">{
+  root 静态资源路径;
+  index 默认访问路径下的什么资源;
+  autoindex on; # 代表展示静态资源全的全部内容，以列表的形式展开。
+<span class="hljs-punctuation">}
+
+# 先修改docker，添加一个数据卷，映射到Nginx服务器的一个目录
+# 添加了index.html和<span class="hljs-number">1.jpg静态资源
+# 修改配置文件
+</span></span></span></code></pre>
+<h3><a id="Nginx_364" rel="noopener"></a>七、Nginx集群</h3>
+<hr/>
+<h4><a id="71__368" rel="noopener"></a>7.1 集群结构</h4>
+<blockquote>
+<p>单点故障，避免nginx的宕机，导致整个程序的崩溃</p>
+<p>准备多台Nginx。</p>
+<p>准备keepalived，监听nginx的健康情况。</p>
+<p>准备haproxy，提供一个虚拟的路径，统一的去接收用户得请求。</p>
+</blockquote>
+<div class="table-wrapper">
+<table>
+<thead>
+<tr><th align="center">Nginx集群</th></tr>
+</thead>
+<tbody>
+<tr>
+<td align="center"><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/5a36115084b40543.png"/></td>
+</tr>
+<tr>
+<td align="center"> </td>
+</tr>
+</tbody>
+</table>
+</div>
+<h4><a id="72_Nginx_385" rel="noopener"></a>7.2 搭建Nginx集群</h4>
+<blockquote>
+<p>查看资料中的内容，直接通过运行docker-compose即可</p>
+</blockquote>
+<h1><a id="ip_390" rel="noopener"></a>八、阿里云给域名设置ip解析</h1>
+<p><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/123e701d21d73a0b.png"/><br/><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/c2649e65e9e52ec5.png"/></p>
+<p><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/ed537d6ffc2af370.png"/><br/><strong>点击添加解析，可以新增域名映射ip，可以映射内网和外网，注意外网是需要备案的</strong></p>
+<h1><a id="nginx_397" rel="noopener"></a>九、nginx的静态代理详细讲解</h1>
+<blockquote>
+<p>server {<br/>listen 88; #端口<br/>server_name lingzhu.upcoding.top; #域名或者localhost本机</p>
+<pre class="highlighter-hljs"><code class="highlighter-hljs hljs language-perl">    location / {
+        root   html;		<span class="hljs-comment">#静态文件夹路径
+        <span class="hljs-keyword">index  index.html index.htm;  		<span class="hljs-comment">#静态文件
+        }  
+   }
+</span></span></span></code></pre>
+</blockquote>
+<p>静态代理的寻找思路：请求-&gt;sever<strong>下面的端口和域名是否匹配</strong>，匹配的情况下找<strong>对应的静态资源在服务器所在的位置</strong></p>
+<p>注意：<br/>一个nginx.conf文件下可以<strong>写入多个server</strong>，用于匹配过来的请求<br/><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/7c48974fb425fc75.png"/><br/>按照<strong>从上至下</strong>的匹配规则，匹配到了就返回<br/><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/356e690af5f3b9ef.png"/><br/>server_name域名的匹配规则：</p>
+<p>servername匹配规则<br/>我们需要注意的是servername匹配分先后顺序，写在前面的匹配上就不会继续往下匹配了。</p>
+<p>我们可以在同一servernamet中匹配多个域名<br/>server_name<br/>完整匹配</p>
+<blockquote>
+<p>vod.mmban.com ww1.mmban.com</p>
+</blockquote>
+<p>通配符匹配</p>
+<blockquote>
+<p>*.mmban.com</p>
+</blockquote>
+<p>通配符结束匹配</p>
+<blockquote>
+<p>server_name vod.*;</p>
+</blockquote>
+<p>正则匹配</p>
+<blockquote>
+<p>server_name ~A[0-9]+.mmban.coms;</p>
+</blockquote>
+<h1><a id="UrlRewrite_441" rel="noopener"></a>十、UrlRewrite</h1>
+<p>rewrite语法格式及参数语法:</p>
+<blockquote>
+<p>rewrite是实现URL重写的关键指令，根据regex (正则表达式)部分内容， 重定向到replacement，结尾是flag标记。</p>
+<p>rewrite [flag];<br/>关键字 正则 替代内容 flag标记</p>
+<p>关键字：其中关键字error_log不能改变<br/>正则：perl兼容正则表达式语句进行规则匹配<br/>替代内容：将正则匹配的内容替换成replacement flag<br/>标记：rewrite支持的flag标记<br/>rewrite参数的标签段位置：<br/>server,location,if</p>
+<p>flag标记说明：<br/>last #本条规则匹配完成后，继续向下匹配新的location URI规则<br/>break #本条规则匹配完成即终止，不再匹配后面的任何规则<br/>redirect #返回302临时重定向，浏览器地址会显示跳转后的URL地址<br/>permanent #返回301永久重定向，浏览器地址栏会显示跳转后的URL地址</p>
+</blockquote>
+<p>举例</p>
+<blockquote>
+<p>rewrite ^/([0-9]+).html$ /index.jsp?pageNum=$1 break;</p>
+</blockquote>
+<blockquote>
+<p>server{</p>
+<pre class="highlighter-hljs"><code class="highlighter-hljs hljs language-javascript">    listen          <span class="hljs-number">9000;
+    server_name     localhost;
+
+    location / {
+      rewrite  ^<span class="hljs-regexp">/2.html$     /login  <span class="hljs-keyword">break;
+    }   }
+</span></span></span></code></pre>
+</blockquote>
+<p>网关配置</p>
+<p><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/a7a8d50cb61f2920.png"/></p>
+<pre class="highlighter-hljs"><code class="prism language-shell highlighter-hljs hljs">upstream httpds { 
+server 192.168.44.102 weight=8 down; 
+server 192.168.44.103:8080 weight=2; 
+server 192.168.44.104:8080 weight=1 backup; 
+}
+		location / { 
+		rewrite ^/([0-9]+).html$ /index.jsp?pageNum=$1 redirect; 
+		proxy_pass http://httpds ; 
+		}
+		
+</code></pre>
+<h1><a id="Https_495" rel="noopener"></a>十一、Https证书配置</h1>
+<p>不安全的http协议<br/><strong><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/086418a9321c4ad6.png"/><br/>1、对称加密</strong></p>
+<p><strong>在每次发送真实数据之前，服务器先生成一把密钥，然后先把密钥传输给客户端。之后服务器给客户端发送真实数据的时候，会用这把密钥对数据进行加密，客户端收到加密数据之后，用刚才收到的密钥进行解密</strong></p>
+<p><strong>2、非对称加密</strong></p>
+<p><strong>让客户端和服务器都拥有两把钥匙，一把钥匙是公开的(全世界知道都没关系)，我们称之为公钥；另一把钥匙则是保密的(只有自己本人才知道)，我们称之为私钥。这且，用公钥加密的数据，只有对应的私钥才能解密；用私钥加密的数据，只有对应的公钥才能解密。</strong></p>
+<p><strong>这样，服务器在给客户端传输数据的过程中，可以用客户端明文给他的公钥进行加密，然后客户端收到后，再用自己的私钥进行解密。客户端给服务器发送数据的时候也一样采取这样的方式。这样就能保持数据的安全传输了</strong></p>
+<p><strong>3、非对称加密不安全性</strong></p>
+<p><strong>服务器以明文的方式给客户端传输公钥的时候，中间人截取了这把属于服务器的公钥，并且把中间人自己的公钥冒充服务器的公钥传输给了客户端。</strong></p>
+<p><strong>之后客户端就会用中间人的公钥来加密自己生成的密钥。然后把被加密的密钥传输给服务器，这个时候中间人又把密钥给截取了，中间人用自己的私钥对这把被加密的密钥进行解密，解密后中间人就可以获得这把密钥了。</strong></p>
+<p><strong>最后中间人再对这把密钥用刚才服务器的公钥进行加密，再发给服务器</strong></p>
+<p><strong>4、数字证书登场</strong></p>
+<p><strong>当客户端拿到这份数字证书之后，就会用CA提供的公钥来对数字证书里面的数字签名进行解密来得到信息摘要，然后对数字证书里服务器的公钥以及个人信息进行Hash得到另外一份信息摘要。最后把两份信息摘要进行对比，如果一样，则证明这个人是服务器，否则就不是</strong></p>
+<p><strong>这样，就可以保证服务器的公钥安全着交给客户端了。</strong></p>
+<p><strong>阿里云新增SSL签证</strong><br/><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/183fd451450020e9.png"/></p>
+<p><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/5ab74328506af50a.png"/></p>
+<pre class="highlighter-hljs"><code class="prism language-shell highlighter-hljs hljs">	server {
+        listen       443 ssl;
+        server_name  localhost;
+
+        ssl_certificate      cert.pem;		#证书的位置
+        ssl_certificate_key  cert.key;		#证书的位置
+
+   
+
+        location / {
+           root   html;
+           index  index.html index.htm;
+        }
+    }
+
+</code></pre>
+<p><strong>举例</strong><br/><img alt="在这里插入图片描述" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/e13877b68e7ae7e3.png"/></p>
+<pre class="highlighter-hljs"><code class="prism language-shell highlighter-hljs hljs">  server {
+        listen       443 ssl;
+        server_name  localhost;
+
+       ssl_certificate      7868188_cativen.icu.pem;
+        ssl_certificate_key  7868188_cativen.icu.key;
+
+
+
+       location / {
+            root   html;
+            index  index.html index.htm;
+        }
+    }
+</code></pre>
+<div> </div>
+{% endraw %}

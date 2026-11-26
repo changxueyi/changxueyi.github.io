@@ -1,0 +1,237 @@
+---
+title: "周末复习一波Linux，Linux常用命令总结，还有语法+案例"
+date: 2021-09-18 23:04:00 +0800
+tags: ["【Linux】Linux基础"]
+excerpt: "目录 vi和vim开机、重启、防火墙相关操作用户管理帮助指令文件目录类时间日期类搜索查找类压缩和解压类组管理和权限管理crond任务调度RPM和YUM vi和vim 快捷键使用案例： 1)拷贝当前行yy ,拷贝当前行向下的5行5yy，并粘贴（p)。 2)删除当前行 dd ,删除当前行向下的5行5dd"
+read_minutes: 8
+cnblogs_id: 15310472
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15310472.html"
+---
+{% raw %}
+<div class="markdown_views prism-atom-one-light" id="content_views">
+<svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+<path d="M5,0 0,2.5 5,5z" id="raphael-marker-block" stroke-linecap="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+</svg>
+<h1><a name="t0"></a><a id="_0"></a>目录</h1>
+<ul><li><a href="#a" target="_self">vi和vim</a></li><li><a href="#b" target="_self">开机、重启、防火墙相关操作</a></li><li><a href="#c" target="_self">用户管理</a></li><li><a href="#e" target="_self">帮助指令</a></li><li><a href="#f" target="_self">文件目录类</a></li><li><a href="#g" target="_self">时间日期类</a></li><li><a href="#h" target="_self">搜索查找类</a></li><li><a href="#i" target="_self">压缩和解压类</a></li><li><a href="#j" target="_self">组管理和权限管理</a></li><li><a href="#k" target="_self">crond任务调度</a></li><li><a href="#l" target="_self">RPM和YUM</a></li></ul>
+<blockquote>
+<h1><a name="t1"></a><a id="vivim_20"></a>vi和vim</h1>
+</blockquote>
+<p><span id="a"></span></p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b53767ce465fc821.png"/><br/> 快捷键使用案例：<br/> 1)拷贝当前行yy ,拷贝当前行向下的5行5yy，并粘贴（p)。<br/> 2)删除当前行 dd ,删除当前行向下的5行5dd<br/> 3)在文件中查找某个单词[命令行下/关键字，回车查找,输入 n就是查找下一个],<br/> 4)设置文件的行号，取消文件的行号.[命令行下: set nu和:set nonu]<br/> 5)文档的最末行[G]和最首行[gg],注意这些都是在正常模式下执行的。<br/> 6)撤销上一个动作，正常模式下输入u<br/> 7)编辑/etc/profile文件，并将光标移动到第20行shift+g<br/> 第一步:显示行号:set nu<br/> 第二步:输入20这个数<br/> 第三步:输入shift+g</p>
+<blockquote>
+<h1><a name="t2"></a><a id="_37"></a>开机、重启、防火墙相关操作</h1>
+</blockquote>
+<p><span id="b"></span></p>
+<ul><li>shutdown<br/> shutdown -h now:表示立即关机<br/> shutdown -h 1:表示1分钟后关机<br/> shutdown -r now:立即重启</li><li>halt<br/> 就是直接使用，效果等价于关机</li><li>reboot<br/> 就是重启系统。<br/> sync :把内存的数据同步到磁盘</li></ul>
+<p><strong>注意：</strong> 当我们关机或者重启时，都应该先执行以下sync指令，把内存的数据写入磁盘,防止数据丢失。</p>
+<h3><a name="t3"></a><a id="_53"></a>防火墙：</h3>
+<p>查看防火墙状态<br/> systemctl status firewalld<br/> 关闭防火墙<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/c92f370a44354cb1.png"/></p>
+<blockquote>
+<h1><a name="t4"></a><a id="_61"></a>用户管理</h1>
+</blockquote>
+<p><span id="c"></span></p>
+<h3><a name="t5"></a><a id="_64"></a><strong>增添用户</strong>：</h3>
+<p>useradd [选项] 用户名<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/3d323058063b2af6.png"/></p>
+<p>当创建用户成功后，会自动的创建和用户同名的家目录<br/> 也可以通过useradd -d 指定目录新的用户名，给新创建的用户指定家目录<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/5b2e21a26e059af2.png"/></p>
+<h3><a name="t6"></a><a id="_72"></a><strong>给用户指定或者修改密码</strong>：</h3>
+<p>基本语法<br/> passwd 用户名</p>
+<h3><a name="t7"></a><a id="_76"></a>删除用户</h3>
+<p>基本语法<br/> userdel 用户名</p>
+<p><strong>应用案例：</strong><br/> 1)删除用户xm，但是要保留家目录<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/3452aa57e18368a5.png"/></p>
+<p>2)删除用户xh 以及用户主目录<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/ae87f024af13b483.png"/></p>
+<h3><a name="t8"></a><a id="_86"></a>查询用户信息</h3>
+<p>基本语法<br/> id 用户名<br/> <strong>应用案例：</strong><br/> 查询root信息<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4ff62a0eba095bbc.png"/></p>
+<h3><a name="t9"></a><a id="_92"></a>切换用户</h3>
+<p>基本语法<br/> su - 切换用户名<br/> <strong>细节说明：</strong><br/> 1)从权限高的用户切换到权限低的用户，不需要输入密码，反之需要。<br/> 2)当需要返回到原来用户时，使用exit 指令</p>
+<h2><a name="t10"></a><a id="_99"></a>用户组</h2>
+<h3><a name="t11"></a><a id="_100"></a>增加组</h3>
+<p>groupadd 组名</p>
+<h3><a name="t12"></a><a id="_102"></a>删除组</h3>
+<p>groupdel 组名</p>
+<h3><a name="t13"></a><a id="_104"></a>增加用户时直接指定组</h3>
+<p>useradd -g 用户组 用户名</p>
+<h3><a name="t14"></a><a id="_106"></a>修改用户的组</h3>
+<p>usermod -g 用户组 用户名</p>
+<blockquote>
+<h1><a name="t15"></a><a id="_109"></a>帮助指令</h1>
+</blockquote>
+<p><span id="e"></span></p>
+<h3><a name="t16"></a><a id="man_112"></a>man获得帮助信息</h3>
+<p>基本语法</p>
+<p>man[命令或配置文件] (功能描述:获得帮助信息)</p>
+<p><strong>应用示例</strong><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/a663ef4e0bb14894.png"/></p>
+<h3><a name="t17"></a><a id="help__119"></a>help 指令</h3>
+<p>help 命令(功能描述:获得shell内置命令的帮助信息)</p>
+<p><strong>应用实例：</strong><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/1e52cf0ef153ac72.png"/></p>
+<blockquote>
+<h1><a name="t18"></a><a id="_125"></a>文件目录类</h1>
+</blockquote>
+<p><span id="f"></span></p>
+<h3><a name="t19"></a><a id="pwd__128"></a>pwd 指令</h3>
+<p>pwd (功能描述:显示当前工作目录的绝对路径)</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/20766f727e7965c5.png"/></p>
+<h3><a name="t20"></a><a id="ls_132"></a>ls指令</h3>
+<p>ls [选项] [目录或是文件]<br/> 常用选项<br/> -a :显示当前目录所有的文件和目录，包括隐藏的。<br/> -l :以列表的方式显示信息<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b97247cc917da1f0.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/3c1939ed3ce7ee7c.png"/></p>
+<h3><a name="t21"></a><a id="cd_139"></a>cd指令</h3>
+<p>cd [参数] (功能描述:切换到指定目录)</p>
+<p>cd~或者cd :回到自己的家目录<br/> cd …回到当前目录的上一级目录<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/887761f0b90953f8.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/3d55ad545d03a806.png"/></p>
+<h3><a name="t22"></a><a id="mkdir_146"></a>mkdir指令</h3>
+<p>mkdir 「选项] 要创建的目录<br/> 常用选项<br/> -p :创建多级目录</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/0fca8f90e7408d41.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/2d453b9ab0556e3e.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/1ae6b13711833327.png"/></p>
+<h3><a name="t23"></a><a id="rmdir_154"></a>rmdir指令（删除<code>空</code>目录）</h3>
+<p>rmdir [选项] 要删除的空目录<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4d70dab76248fab6.png"/></p>
+<h3><a name="t24"></a><a id="touch_157"></a>touch指令（创建空文件）</h3>
+<p>touch 文件名称<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/fc788b846270b9bc.png"/></p>
+<h3><a name="t25"></a><a id="cp_161"></a>cp指令（拷贝文件到指定目录）</h3>
+<p>cp [选项] source dest<br/> 常用选项<br/> -r ：递归复制整个文件夹<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4196e7630ebc9ce9.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/a64f81753c674e0c.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/722b89ee3a3f1ff9.png"/><br/> 使用细节：<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b07ea61c12aa2eee.png"/></p>
+<h3><a name="t26"></a><a id="rm_170"></a>rm指令（移除【删除】文件或目录）</h3>
+<p>rm [选项] 要册除的文件或目录<br/> 常用选项：<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/10fc7ef7c28019f7.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/7fed283195643745.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/0830082f561e9f80.png"/></p>
+<h3><a name="t27"></a><a id="mv_176"></a>mv指令（移动文件与目录或重命名）</h3>
+<p>基本语法：</p>
+<p>mv oldNameFile newNameFile (功能描述:重命名)<br/> mv /temp/movefile /targetFolder (功能描述:移动文件)</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/a1559181721c1045.png"/><br/> 案例2:将/home/pig.txt文件移动到/root目录下<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/5a73a1221a0e28e7.png"/></p>
+<h3><a name="t28"></a><a id="cat_185"></a>cat指令（查看文件内容，是以只读的方式打开）</h3>
+<p>cat [选项] 要查看的文件</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4ffb3b27fbceea0c.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b56f046d72cf4e09.png"/></p>
+<h3><a name="t29"></a><a id="more_190"></a>more指令</h3>
+<p>more指令是一个基于VI编辑器的文本过滤器,它以全屏幕的方式按页显示文本文件的内容。more指令中内置了若干快捷键，详见操作说明</p>
+<p>基本语法：<br/> more要查看的文件</p>
+<p>应用实例：<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/5502bb716c2abbf5.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/7da8903bc28f2489.png"/></p>
+<h3><a name="t30"></a><a id="less_199"></a>less指令</h3>
+<p>less指令用来分屏查看文件内容，它的功能与more指令类似，但是比more指令更加强大，支持各种显示终端。less 指令在显示文件内容时，并不是一次将整个文件加载之后才显示，而是根据显示需要加载内容，<strong>对于显示大型文件具有较高的效率</strong>。</p>
+<p>基本语法：<br/> less 要查看的文件<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/ee99a69a5a361808.png"/><br/> 快捷键<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/57dd99ab753d8d64.png"/></p>
+<blockquote>
+<h1><a name="t31"></a><a id="_208"></a>时间日期类</h1>
+</blockquote>
+<p><span id="g"></span></p>
+<h3><a name="t32"></a><a id="date_212"></a>date指令-显示当前日期</h3>
+<p>基本语法<br/> 1 ) date (功能描述:显示当前时间)<br/> 2) date +%Y (功能描述:显示当前年份)<br/> 3) date +%m (功能描述:显示当前月份)<br/> 4) date +%d (功能描述:显示当前是哪一天)<br/> 5) date “+%Y-%m-%d %H:%M:%S”(功能描述:显示年月日时分秒)</p>
+<h3><a name="t33"></a><a id="date_220"></a>date指令-设置日期</h3>
+<p>date -s 字符串时间</p>
+<p>案例：<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/692b2c8906bd9a17.png"/></p>
+<h3><a name="t34"></a><a id="cal_225"></a>cal指令（查看日历指令）</h3>
+<p>cal [选项] (功能描述:不加选项，显示本月日历)<img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b3e481d82e3c529c.png"/></p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/f96e500c9fb53851.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4665268e10062066.png"/></p>
+<blockquote>
+<h1><a name="t35"></a><a id="_231"></a>搜索查找类</h1>
+</blockquote>
+<p><span id="h"></span></p>
+<h3><a name="t36"></a><a id="find__234"></a>find 指令</h3>
+<p>find指令将从指定目录向下递归地遍历其各个子目录，将满足条件的文件或者目录显示在终端。<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/06fa47e4c235f424.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/f92bc4608eb3d4a1.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/f16daf4b7f5e62be.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/2d6cad41067abc26.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/1a36883153304827.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4495272fc68c60de.png"/></p>
+<h3><a name="t37"></a><a id="grep___242"></a>grep指令和 管道符号 │</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/450152f976492ce3.png"/><br/> 案例1:请在 hello.txt文件中，查找"yes"所在行，并且显示行号<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/735bac9d1eaf8ee9.png"/></p>
+<blockquote>
+<h1><a name="t38"></a><a id="_247"></a>压缩和解压类</h1>
+</blockquote>
+<p><span id="i"></span></p>
+<h3><a name="t39"></a><a id="gzipgunzip_250"></a>gzip/gunzip指令</h3>
+<p>基本语法<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/eaa432e923077cdd.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/9cc2b841217fe032.png"/><br/> 案例2: gunzip压缩，将 /home下的 hello.txt.gz文件进行解压缩<img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/cdb836e086ce9073.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/a83f25fc7d682881.png"/></p>
+<h3><a name="t40"></a><a id="zipunzip_256"></a>zip/unzip指令</h3>
+<p>zip 用于压缩文件，unzip用于解压的，这个在项目打包发布中很有用的<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/04d8eab7d0050487.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/da61600494a5efb7.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/effcbdd174fb0afb.png"/></p>
+<h3><a name="t41"></a><a id="tar_261"></a>tar指令</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/118be1efa3968127.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/a3d749610df1131e.png"/><br/> 案例2:将/home的文件夹压缩成myhome.tar.gz<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/d5919a94c8bca26a.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/319249fb6e9e0d68.png"/><br/> 指定解压到的那个目录，事先要存在才能成功，否则会报错。</p>
+<blockquote>
+<h1><a name="t42"></a><a id="_269"></a>组管理和权限管理</h1>
+</blockquote>
+<p><span id="j"></span></p>
+<h2><a name="t43"></a><a id="Linux__273"></a>Linux 组基本介绍</h2>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/66a0b410116396cc.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/7cb1d1de145e2427.png"/></p>
+<h3><a name="t44"></a><a id="_277"></a>文件/目录所有者</h3>
+<p>一般为文件的创建者,谁创建了该文件，就自然的成为该文件的所有者。</p>
+<h3><a name="t45"></a><a id="_279"></a>查看文件的所有者</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/3ddeddd944ef1f7d.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/e135d2a50ae8ed84.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/8498538f7053f347.png"/></p>
+<h3><a name="t46"></a><a id="_283"></a>修改文件所有者</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/3e2dc95283e8c680.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/144d8ce08c5e1992.png"/></p>
+<h3><a name="t47"></a><a id="_286"></a>组的创建</h3>
+<p>groupadd 组名</p>
+<p><strong>应用案例</strong></p>
+<p>创建一个组, ,monster<br/> 创建一个用户fox ，并放入到monster组中<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/2265806671ded53f.png"/></p>
+<h3><a name="t48"></a><a id="_295"></a>改变用户所在组</h3>
+<p>在添加用户时，可以指定将该用户添加到哪个组中，同样的用root 的管理权限可以改变某个用户所在的组。</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/5caca1ad334d7cdb.png"/><br/> 应用案例<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/934ce1e67f8f92f7.png"/></p>
+<blockquote>
+<h2><a name="t49"></a><a id="_302"></a>权限的基本介绍</h2>
+</blockquote>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/7e22e7fae4c4d7d0.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/d95e130966cdaecc.png"/></p>
+<h2><a name="t50"></a><a id="rwx_306"></a>rwx权限详解</h2>
+<h3><a name="t51"></a><a id="rwx_307"></a>rwx作用到文件</h3>
+<p>1)[ r ]代表可读(read):可以读取,查看<br/> 2) [ w]代表可写(write):可以修改,但是不代表可以删除该文件,删除一个文件的前提条件是对该文件所在的目录有写权限，才能删除该文件.<br/> 3)[x ]代表可执行(execute):可以被执行</p>
+<h3><a name="t52"></a><a id="rwx_313"></a>rwx作用到目录</h3>
+<p>1)[ r]代表可读(read):可以读取，ls查看目录内容<br/> 2)[ w]代表可写(write):可以修改,目录内创建+删除+重命名目录<br/> 3)[ x ]代表可执行(execute):可以进入该目录</p>
+<h2><a name="t53"></a><a id="_318"></a>文件及目录权限实际案例</h2>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4b1eec646dbbb3f1.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b49a12fe83509847.png"/><br/> 可用数字表示为: r=4,w=2,x=1因此rwx=4+2+1=7<br/> l 文件:硬连接数或目录:子目录数<br/> root 用户<br/> root 组<br/> 1213 文件大小(字节)，如果是文件夹，显示 4096字节<br/> Feb 2 09:39 最后修改日期<br/> abc 文件名</p>
+<h3><a name="t54"></a><a id="chmod_328"></a>修改权限-chmod</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/c98139fa394d743f.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/c8b308e74a3e5c44.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/018e99d0445dba44.png"/><br/> 3)给abc文件的所有用户添加读的权限<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/2ff8e8767caf4871.png"/></p>
+<h2><a name="t55"></a><a id="_334"></a>第二种方式:通过数字变更权限</h2>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/7c4ca5e3116d4a91.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/d5e1e232dad96029.png"/></p>
+<h3><a name="t56"></a><a id="chown_337"></a>修改文件所有者-chown</h3>
+<p>chown newowner file改变文件的所有者</p>
+<p>chown newowner: newgroupfile改变用户的所有者和所有组</p>
+<p>-R如果是目录则使其下所有子文件或目录递归生效</p>
+<p><strong>案例演示</strong>：<br/> 1)请将 /home/abc .txt文件的所有者修改成tom</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/970aa9ae92f19043.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/15806079a7030c90.png"/></p>
+<h3><a name="t57"></a><a id="chgrp_349"></a>修改文件所在组-chgrp</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/d7ce52d098257e44.png"/><br/> <strong>案例演示：</strong><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/0e9f1655a5e7dbac.png"/></p>
+<blockquote>
+<h1><a name="t58"></a><a id="crond_354"></a>crond任务调度</h1>
+</blockquote>
+<p><span id="k"></span></p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/e0c80b4eacd41fe4.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/e934eda06aa22c4a.png"/><br/> crontab 进行定时任务的设置</p>
+<p>任务调度:是指系统在某个时间执行的特定的命令或程序。</p>
+<p>任务调度分类:</p>
+<p>1.系统工作:有些重要的工作必须周而复始地执行。如病毒扫描等</p>
+<p>2.个别用户工作:个别用户可能希望执行某些程序，比如对mysql数据库的备份。</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/7bf9493e6d2ad875.png"/></p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/08c4652b27191cc0.png"/></p>
+<h3><a name="t59"></a><a id="_374"></a>快速入门</h3>
+<p><strong>任务的要求：</strong></p>
+<p>设置任务调度文件:/etc/crontab</p>
+<p>设置个人任务调度。执行crontab -e命令。</p>
+<p>接着输入任务到调度文件</p>
+<p>如:<em>/1</em>***ls -l/etc/ &gt;/tmp/to.txt<br/> 意思说每小时的每分钟执行ls - l /etc/ &gt; /tmp/to.txt命令</p>
+<p><strong>步骤如下：</strong></p>
+<p>1 ) crontab -e<br/> 2) <em>/1</em>***ls -l/etc &gt;&gt;/tmp/to.txt<br/> 3)当保存退出后就程序。<br/> 4)在每一分钟都会自动的调用ls -l /etc &gt;&gt;/tmp/to.txt</p>
+<h3><a name="t60"></a><a id="_393"></a>参数细节说明</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/cf82ec1488692cdf.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b5cd382281f962e6.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/33ba392bfc5e4307.png"/></p>
+<h3><a name="t61"></a><a id="_397"></a>任务调度的几个应用实例</h3>
+<p><strong>案例1:每隔Ⅰ分钟，就将当前的日期信息，追加到/tmp/mydate文件中</strong></p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/234b816e19620f7f.png"/></p>
+<p><strong>案例2：每隔1分钟，将当前日期和日历都追加到/home/mycal文件中</strong></p>
+<p>1)先编写一个文件/home/mytask2.sh<br/> date &gt;&gt;/tmp/mycal<br/> cal &gt;&gt;/tmp/mycal<br/> 2)给mytask1.sh 一个可以执行权限<br/> chmod 744 /home/mytask2.sh<br/> 3 ) crontab -e<br/> 4)<em>/1</em>***/home/mytask2.sh<br/> 5)成功</p>
+<p><strong>案例3:每天凌晨2:00将mysql数据库testdb ，备份到文件中mydb.bak</strong><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/b80faf87c8852279.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/ac3e3a00fc363f6f.png"/></p>
+<blockquote>
+<h1><a name="t62"></a><a id="RPMYUM_418"></a>RPM和YUM</h1>
+</blockquote>
+<p><span id="l"></span></p>
+<h2><a name="t63"></a><a id="rpm_420"></a>rpm包的管理</h2>
+<p>一种用于互联网下载包的打包及安装工具，它包含在某些Linux分发版中。它生成具有.RPM扩展名的文件。RPM是 RedHat Package Manager(RedHat 软件包管理工具)的缩写,类似 windows的setup.exe，这一文件格式名称虽然打上了RedHat 的标志，但理念是通用的.</p>
+<p>Linux的分发版本都有采用(suse,redhat, centos等等），可以算是公认的行业标准了。</p>
+<h3><a name="t64"></a><a id="rpm_424"></a>rpm包的简单查询指令</h3>
+<p>查询已安装的rpm列表rpm-qalgrep xx<br/> 请查询看一下，当前的Linux有没有安装firefox<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/11356a935ba85d33.png"/></p>
+<h3><a name="t65"></a><a id="rpm_428"></a>rpm包名基本格式</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/486dde7c8c49a0ea.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/042d21235deeed3b.png"/></p>
+<h3><a name="t66"></a><a id="rpm_431"></a>rpm包的其它查询指令</h3>
+<p>rpm -qa :查询所安装的所有rpm软件包</p>
+<p>rpm -qa | more[分页显示]</p>
+<p>rpm -qa l grep X [rpm -qa | grep firefox ]<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/af7ed4781bcce0ca.png"/><br/> rpm -q软件包名:查询软件包是否安装<br/> rpm -q firefox</p>
+<p>rpm -qi软件包名:查询软件包信息<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/7ae5aa36b1aab4c6.png"/><br/> rpm -qi file</p>
+<p>rpm -ql 软件包名:查询软件包中的文件<br/> rpm -ql firefox</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/545abf0ff806f4c1.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/80ecfe688202ca12.png"/></p>
+<h3><a name="t67"></a><a id="rpmhttpsimgblogcsdnimgcn8d846dacff934258a9b1d39ee06a9c7apngxossprocessimagewatermarktype_ZHJvaWRzYW5zZmFsbGJhY2sshadow_50text_Q1NETiBA5rWq6YeM5bCP55m96b6ZbmJ3size_18color_FFFFFFt_70g_sex_16_451"></a>卸载rpm包<img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/72cfef6fedcb9b09.png"/></h3>
+<p>细节问题</p>
+<p>1)如果其它软件包依赖于您要卸载的软件包，卸载时则会产生错误信息。<br/> 如: $ rpm -e foo</p>
+<p>removing these packages would break dependencies:foo is needed by bar-1.0-1</p>
+<p>2)如果我们就是要删除 foo这个rpm包，可以增加参数 --nodeps ,就可以强制删除，但是一般不推荐这样做，因为依赖于该软件包的程序可能无法运行</p>
+<p>如: $ rpm -e --nodeps foo<br/> 带上 --nodeps就是强制删除。</p>
+<h3><a name="t68"></a><a id="rpm_465"></a>安装rpm包</h3>
+<p>rpm -ivh RPM包全路径名称</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/349c4e6494565228.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/74468992cbdf9e13.png"/></p>
+<h2><a name="t69"></a><a id="yum_470"></a>yum</h2>
+<p>Yum是一个Shell<code>前端软件包管理器</code>。基于RPM包管理，能够从指定的服务器自动下载RPM包并且安装，可以<code>自动处理依赖性关系</code>，并且一次安装所有依赖的软件包。使用yum的前提是可以联网。<br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/d3b897d0b2b0c91c.png"/></p>
+<h2><a name="t70"></a><a id="yum_473"></a>yum的基本指令</h2>
+<ul><li>查询yum服务器是否有需要安装的软件<br/> yum listlgrep xx软件列表</li><li>安装指定的yum包<br/> yum install xxx下载安装</li></ul>
+<h3><a name="t71"></a><a id="_479"></a>应用案例</h3>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/4bdf161ba0fc687a.png"/><br/> <img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/1d777d47e7e09758.png"/></p>
+</div>
+{% endraw %}

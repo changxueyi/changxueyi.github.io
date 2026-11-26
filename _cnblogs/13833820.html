@@ -1,0 +1,24 @@
+---
+title: "如何理解持续集成、持续交付、持续部署？"
+date: 2020-10-18 09:42:00 +0800
+tags: ["【微服务】-- 架构思想"]
+excerpt: "最近看了一篇文章 The Product Managers' Guide to Continuous Delivery and DevOps 文中对「持续集成（Continuous Integration）」、「持续交付（Continuous Delivery）」和「持续部署（Continuous"
+read_minutes: 1
+cnblogs_id: 13833820
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13833820.html"
+---
+{% raw %}
+<div>
+<div>最近看了一篇文章 <a class="wrap external" data-za-detail-view-id="1043" href="https://link.zhihu.com/?target=http%3A//www.mindtheproduct.com/2016/02/what-the-hell-are-ci-cd-and-devops-a-cheatsheet-for-the-rest-of-us/" rel="nofollow noreferrer" target="_blank">The Product Managers' Guide to Continuous Delivery and DevOps</a> 文中对「持续集成（Continuous Integration）」、「持续交付（Continuous Delivery）」和「持续部署（Continuous Deployment）」这三个概念有很详细的解释。这里借用文中的插图，说一下我对这三个概念的理解。</div>
+<div>
+<div>
+<p><strong>持续集成</strong></p>
+<noscript><img class="origin_image zh-lightbox-thumb" data-rawheight="440" data-rawwidth="1000" loading="lazy" src="/images/cnblogs/eab696d091cfe9a2.png" width="1000"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic1.zhimg.com/50/c5c8e6f40c7c133e22402c00bb7e1a25_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="440" data-rawwidth="1000" loading="lazy" src="/images/cnblogs/0cfc636e5377726d.png" width="1000"/></div>
+<div>持续集成强调开发人员提交了新代码之后，立刻进行构建、（单元）测试。根据测试结果，我们可以确定新代码和原有代码能否正确地集成在一起。<br/><strong>持续交付</strong><br/><noscript><img class="origin_image zh-lightbox-thumb" data-rawheight="740" data-rawwidth="1000" loading="lazy" src="/images/cnblogs/b7e8a39df004032b.png" width="1000"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic4.zhimg.com/50/db7198e3c39e4656e18efcb4bd1b20b1_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="740" data-rawwidth="1000" loading="lazy" src="/images/cnblogs/4331d6a82b9e58eb.png" width="1000"/><br/>持续交付在持续集成的基础上，将集成后的代码部署到更贴近真实运行环境的「类生产环境」（<em>production-like environments</em>）中。比如，我们完成单元测试后，可以把代码部署到连接数据库的 Staging 环境中更多的测试。如果代码没有问题，可以继续<span style="text-decoration: underline;">手动部署</span>到生产环境中。<br/><strong>持续部署</strong><br/><noscript><img class="origin_image zh-lightbox-thumb" data-rawheight="740" data-rawwidth="1000" loading="lazy" src="/images/cnblogs/a68003b91cc1566c.png" width="1000"/></noscript><img class="origin_image zh-lightbox-thumb lazy" data-actualsrc="https://pic2.zhimg.com/50/f96f19e4d567aad5006d841963a86e41_hd.jpg?source=1940ef5c" data-lazy-status="ok" data-rawheight="740" data-rawwidth="1000" loading="lazy" src="/images/cnblogs/857533b7d6fcb8b9.png" width="1000"/></div>
+<div><strong>持续部署则是在持续交付的基础上，把部署到生产环境的过程自动化。</strong>
+<p> </p>
+
+我个人觉得持续集成、持续交付、持续部署非常值得推广。开发过程中最怕集成时遇到问题导致返工，而持续集成、持续交付、持续部署恰恰可以早发现早解决，从而可以避免这个问题。</div>
+</div>
+<br/>作者：yumminhuang<br/>链接：https://www.zhihu.com/question/23444990/answer/89426003<br/>来源：知乎<br/>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</div>
+{% endraw %}

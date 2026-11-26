@@ -1,0 +1,192 @@
+---
+title: "java中常用的一些类型强制转换"
+date: 2020-11-07 22:50:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "一. String ->其他 在Java项目的实际开发和应用中，常常需要用到将对象转为String这一基本功能。本文将对常用的转换方法进行一个总结。常用的方法有Object.toString()，（String）要转换的对象，String.valueOf(Object)等。下面对这些方法一一进行分析"
+read_minutes: 7
+cnblogs_id: 13942794
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13942794.html"
+---
+{% raw %}
+<h1>一. String -&gt;其他</h1>
+<p>在<a class="replace_word" href="http://lib.csdn.net/base/javase" target="_blank" title="Java SE知识库">Java</a>项目的实际开发和应用中，常常需要用到将对象转为String这一基本功能。本文将对常用的转换方法进行一个总结。常用的方法有Object.toString()，（String）要转换的对象，String.valueOf(Object)等。下面对这些方法一一进行分析。<br/>方法1：采用 Object.toString()方法<br/>请看下面的例子：</p>
+<div class="cnblogs_code">
+<pre>1 Object object = getObject();<br/>2 System.out.println(object.toString()); </pre>
+</div>
+<p>注1</p>
+<p><br/>在这种使用方法中，因为java.lang.Object类里已有public方法.toString()，所以对任何严格意义上的java对象都可以调 用此方法。但在使用时要注意，必须保证object不是null值，否则将抛出NullPointerException异常。采用这种方法时，通常派生类会覆盖Object里的toString（）方法。<br/>方法2：采用类型转换（String）object方法<br/>这是标准的类型转换，将object转成String类型的值。使用这种方法时，需要注意的是类型必须能转成String类型。因此最好用instanceof做个类型检查，以判断是否可以转换。否则容易抛出CalssCastException异常。此外，需特别小心的是因定义为Object 类型的对象在转成String时语法检查并不会报错，这将可能导致潜在的错误存在。这时要格外小心。如：</p>
+<div class="cnblogs_code">
+<pre>Object obj = new Integer(100);<br/>String strVal = (String)obj;</pre>
+</div>
+<p><br/>在运行时将会出错，因为将Integer类型强制转换为String类型，无法通过。但是，</p>
+<div class="cnblogs_code">
+<pre>Integer obj = new Integer(100);<br/>String strVal = (String)obj;</pre>
+</div>
+<p><br/>如上格式代码，将会报语法错误。<br/>此外，因null值可以强制转换为任何java类类型，(String)null也是合法的。<br/>方法3：采用String.valueOf(Object)<br/>String.valueOf(Object)的基础是Object.toString()。但它与Objec.toString()又有所不同。在前面方法1的分析中提到，使用后者时需保证不为null。但采用第三种方法时，将不用担心object是否为null值这一问题。为了便于说明问题，我们来分析一下相关的源代码。Jdk里String. valueOf(Object)源码如下：<br/>   </p>
+<div class="cnblogs_code">
+<pre>public static String valueOf(Object obj) {<br/>       return (obj == null) ? "null" : obj.toString();<br/>}</pre>
+</div>
+<p><br/>从上面的源码可以很清晰的看出null值不用担心的理由。但是，这也恰恰给了我们隐患。我们应当注意到，当object为null时，String.valueOf（object）的值是字符串”null”，而不是<br/>null！！！在使用过程中切记要注意。试想一下，如果我们用 if(String.valueOf（object）==null){System.out.println(“传入的值是null！”);}这样的语句将可能会发生什么问题。再想一下，向控制台输出时，在视觉上如下语句在执行的结果上有什么不同：</p>
+<div class="cnblogs_code">
+<pre>System.out.println(String.valueOf((Object)null)); 注2<br/>System.out.println(null);</pre>
+</div>
+<p><br/>我们看到的输出将是一模一样的东西：null，但它们意义相同吗？<br/>注1：光就System.out.println的使用来说，语句System.out.println(object.toString()); 换为System.out.println(object); 更好。此处如是用法主要是为了说明Object#toString()的用法。<br/>注2：推荐使用System.out.println(String.valueOf((Object)null)); 不推荐使用System.out.println(String.valueOf(null));在使用重载方法时，这样做是一个好的习惯。<br/>以上是对object对象转换为String的一些总结。<br/>new Integer.valueof()返回的是Integer的对象。<br/>Integer.parseInt() 返回的是一个int的值。</p>
+<p>new Integer.valueof().intValue();返回的也是一个int的值。<br/>Integer.valueof(String s)是将一个包装类是将一个实际值为数字的变量先转成string型再将它转成Integer型的包装类对象(相当于转成了int的对象)这样转完的对象就具有方法和属性了。<br/>而Integer.parseInt(String s)只是将是数字的字符串转成数字，注意他返回的是int型变量不具备方法和属性。<br/>1 字符串转换成数据<br/>字符串转换成整数：</p>
+<div class="cnblogs_code">
+<pre>String MyNumber ="1234";<br/>int MyInt = Integer.parseInt(MyNumber);</pre>
+</div>
+<p><br/>字符串转换成byte, short, int, float, double, long等数据类型，可以分别参考Byte, Short, Integer, Float, Double, Long类的parseXXX方法。<br/>2 数据转换成字符串<br/>整数转换成字符串：</p>
+<div class="cnblogs_code">
+<pre>int MyInt = 1234;<br/>String MyString = "" + MyInt;</pre>
+</div>
+<p><br/>其它数据类型可以利用同样的方法转换成字符串。<br/>3 十进制到其他进制的转换<br/>十进制整数转换成二进制整数，返回结果是一个字符串：<br/>Integer.toBinaryString(int i);<br/>Integer和Long提供了toBinaryString, toHexString和toOctalString方法，可以方便的将数据转换成二进制、十六进制和八进制字符串。功能更加强大的是其toString(int/long i, int radix)方法，可以将一个十进制数转换成任意进制的字符串形式。<br/>byte, short, float和double等数据类型，可以利用Integer或者是Long的toBinaryString, toHexString, to OctalString和toString方法转换成其他进制的字符串形式。<br/>4 其它进制到十进制的转换<br/>五进制字符串14414转换成十进制整数，结果是1234：</p>
+<div class="cnblogs_code">
+<pre>System.out.println(Integer.valueOf("14414", 5);</pre>
+</div>
+<p><br/>Integer和Long提供的valueOf(String source, int radix)方法，可以将任意进制的字符串转换成十进制数据。<br/>5 整数到字节数组的转换</p>
+<div class="cnblogs_Highlighter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_945951">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+<div class="line number7 index6 alt2">7</div>
+<div class="line number8 index7 alt1">8</div>
+<div class="line number9 index8 alt2">9</div>
+<div class="line number10 index9 alt1">10</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">static</code> <code class="java keyword">byte</code><code class="java plain">[]
+ toByteArray(</code><code class="java keyword">int</code> <code class="java plain">number){</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">   </code><code class="java keyword">int</code> <code class="java plain">temp
+ = number;</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">   </code><code class="java keyword">byte</code><code class="java plain">[]
+ b=</code><code class="java keyword">new</code> <code class="java keyword">byte</code><code class="java plain">[</code><code class="java value">4</code><code class="java plain">];</code></div>
+<div class="line number4 index3 alt1"><code class="java spaces">   </code><code class="java keyword">for</code> <code class="java plain">(</code><code class="java keyword">int</code> <code class="java plain">i
+ = b.length - </code><code class="java value">1</code><code class="java plain">;
+ i &gt; -</code><code class="java value">1</code><code class="java plain">;
+ i--)</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">   </code><code class="java plain">{</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">      </code><code class="java plain">b[i]
+ = </code><code class="java keyword">new</code> <code class="java plain">Integer(temp
+ &amp; </code><code class="java value">0xff</code><code class="java plain">).byteValue();</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">      </code><code class="java plain">temp
+ = temp &gt;&gt; </code><code class="java value">8</code><code class="java plain">;</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">   </code><code class="java plain">}</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">   </code><code class="java keyword">return</code> <code class="java plain">b;</code></div>
+<div class="line number10 index9 alt1"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>6 字节数组到整数的转换</p>
+<div class="cnblogs_code">
+
+
+
+<pre> 1 public static int toInteger(byte[] b){<br/> 2    int s = 0;<br/> 3    for (int i = 0; i &lt; 3; i++)<br/> 4    {<br/> 5       if (b[i] &gt; 0)<br/> 6       s = s + b[i];<br/> 7    } else {<br/> 8       s = s + 256 + b[i];<br/> 9       s = s * 256;<br/>10    }<br/>11    if (b[3] &gt; 0)<br/>12    s = s + b[3];<br/>13    else<br/>14    s = s + 256 + b[3];<br/>15    return s;<br/>16 }</pre>
+
+
+
+</div>
+<p><br/>7 短整数与字节数组之间的相互转换<br/>short与int之间的区别在于short是两个字节的，而int是四个字节的。因此，只需要将5 与6 中的范例程序小做改动，即可实现短整数与字节数组之间的相互转换。<br/>8 字节数组转换成双精度浮点数</p>
+<div class="cnblogs_code">
+
+
+
+<pre> 1 public double toDouble(byte[] b){<br/> 2    long l = 0;<br/> 3    Double D = new Double(0.0);<br/> 4    l = b[0];<br/> 5    l |= ((long)b[1]&lt;&lt;8);<br/> 6    l |= ((long)b[2]&lt;&lt;16);<br/> 7    l |= ((long)b[3]&lt;&lt;24);<br/> 8    l |= ((long)b[4]&lt;&lt;32);<br/> 9    l |= ((long)b[5]&lt;&lt;40);<br/>10    l |= ((long)b[6]&lt;&lt;48);<br/>11    l |= ((long)b[7]&lt;&lt;56);<br/>12    return D.longBitsToDouble(l);<br/>13 }</pre>
+
+
+
+</div>
+<p><br/>9 布尔类型转换成字符串<br/>第一种方法是：</p>
+<div class="cnblogs_code">
+<pre>1 boolean bool = true;<br/>2 String s = new Boolean(bool).toString();//将bool利用对象封装器转化为对象<br/>3 s.equals("true");</pre>
+</div>
+<p><br/>第二种方法是：</p>
+<div class="cnblogs_code">
+<pre>1 boolean bool = true;<br/>2 String s = String.valueOf( bool );</pre>
+</div>
+<p>首先，从代码长度上讲第二种方法明显要比第一种方法简洁；其次，第一种方法在转化过程中多引入了一个完全没有必要的对象，因此，相对第二种方法来说这就造成了内存空间的浪费，大大减慢了运行速度。所以，推荐使用第二种方法。<br/>10 数字类型与数字类对象之间的转换</p>
+<div class="cnblogs_code">
+
+
+
+<pre> 1 byte b = 169;<br/> 2 Byte bo = new Byte( b );<br/> 3 b = bo.byteValue();<br/> 4 short t = 169;<br/> 5 Short to = new Short( t );<br/> 6 t = to.shortValue();<br/> 7 int i = 169;<br/> 8 Integer io = new Integer( i );<br/> 9 i = io.intValue();<br/>10 long l = 169;<br/>11 Long lo = new Long( l );<br/>12 l = lo.longValue();<br/>13 float f = 169f;<br/>14 Float fo = new Float( f );<br/>15 f = fo.floatValue();<br/>16 double d = 169f;<br/>17 Double dObj = new Double( d );<br/>18 d = dObj.doubleValue();<br/>19 5.0 String 转 Integer<br/>20 Integer in=new Integer(String s);<br/>21 Integer in=new Integer(Integer.parseInt(String s));</pre>
+
+
+
+</div>
+<p>5.1 String 转 int</p>
+<div class="cnblogs_code">
+<pre>1 int i = Integer.parseInt([String]); 或 i = Integer.parseInt([String],[int radix]);<br/>2  int i = Integer.valueOf(my_str).intValue();</pre>
+</div>
+<p>5.2 如何将整数 int 转换成字串 String ?</p>
+<p>A. 有叁种方法:</p>
+<div class="cnblogs_code">
+<pre>1 String s = String.valueOf(i);<br/>2 String s = Integer.toString(i);<br/>3 String s = "" + i;</pre>
+</div>
+<p>注: Double, Float, Long 转成字串的方法大同小异.</p>
+<p> </p>
+<h2>二：Date 与 String long的转换</h2>
+<h3 id="1string转为date">1.String转为Date</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">  public static Date stringToDate(String time) {
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd");//日期格式
+        Date date = null;
+        try {
+            date = format.parse(time);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return date;
+    }
+
+    System.out.println(stringToDate("2017-3-16")); //打印测试
+</pre>
+</div>
+<p>　　</p>
+<h3 id="2date转为string">2.Date转为String</h3>
+<div class="cnblogs_code">
+<pre> <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span><span style="color: #000000;"> String dateToString(Date date) {
+        SimpleDateFormat sformat </span>= <span style="color: #0000ff;">new</span> SimpleDateFormat("yyyy-MM-dd");<span style="color: #008000;">//</span><span style="color: #008000;">日期格式</span>
+        String tiem =<span style="color: #000000;"> sformat.format(date);
+
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> tiem;
+    }
+   System.out.println(dateToString(</span><span style="color: #0000ff;">new</span> Date()));<span style="color: #008000;">//</span><span style="color: #008000;">打印测试</span></pre>
+</div>
+<h3>3.Date转long型</h3>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">Date date = new Date();
+long dateTime = date.getTime();
+</pre>
+</div>
+<p>　　</p>
+<h4>4.long型转Date</h4>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">long dateTime = 14830682769461;
+Date date = new Date(dateTime);
+System.out.println(date.toString());
+</pre>
+</div>
+<p>　</p>
+<h4>5. String 类型转为Byte </h4>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">Byte result  = new Byte("7")
+</pre>
+</div>
+<p> </p>
+{% endraw %}

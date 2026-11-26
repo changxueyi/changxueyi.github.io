@@ -1,0 +1,119 @@
+---
+title: "SpringBoot启动流程解析"
+date: 2020-05-12 11:01:00 +0800
+tags: ["【框架】-- Spring"]
+excerpt: "写在前面： 由于该系统是底层系统，以微服务形式对外暴露dubbo服务，所以本流程中SpringBoot不基于jetty或者tomcat等容器启动方式发布服务，而是以执行程序方式启动来发布(参考下图keepRunning方法)。 本文以调试一个实际的SpringBoot启动程序为例，参考流程中主要类类"
+read_minutes: 6
+cnblogs_id: 12874847
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12874847.html"
+---
+{% raw %}
+<p><strong>写在前面：</strong></p>
+<p>       由于该系统是底层系统，以微服务形式对外暴露dubbo服务，所以本流程中SpringBoot不基于jetty或者tomcat等容器启动方式发布服务，而是以执行程序方式启动来发布(参考下图keepRunning方法)。</p>
+<p>       本文以调试一个实际的SpringBoot启动程序为例，参考流程中主要类类图，来分析其启动逻辑和自动化配置原理。</p>
+<hr/>
+<div class="image-package"><img alt="" data-height="1093" data-image-slug="51aa162747fcdc3d" data-original-src="//upload-images.jianshu.io/upload_images/6912735-51aa162747fcdc3d.png?imageMogr2/auto-orient/strip" data-width="2572" loading="lazy" src="/images/cnblogs/def8d14857fa8652.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p><strong>总览：</strong></p>
+<p>       上图为<a href="https://www.processon.com/view/link/59812124e4b0de2518b32b6e" target="_blank">springboot启动图</a>，我们发现启动流程主要分为三个部分，第一部分进行SpringApplication的初始化模块，配置一些基本的环境变量、资源、构造器、监听器，第二部分实现了应用具体的启动方案，包括启动流程的监听模块、加载配置环境模块、及核心的创建上下文环境模块，第三部分是自动化配置模块，该模块作为springboot自动配置核心，在后面的分析中会详细讨论。在下面的启动程序中我们会串联起结构中的主要功能。</p>
+<p><strong>启动：</strong></p>
+<p>      每个SpringBoot程序都有一个主入口，也就是main方法，main里面调用SpringApplication.run()启动整个spring-boot程序，该方法所在类需要使用@SpringBootApplication注解，以及@ImportResource注解(if need)，@SpringBootApplication包括三个注解，功能如下：@EnableAutoConfiguration：SpringBoot根据应用所声明的依赖来对Spring框架进行自动配置</p>
+<p>@SpringBootConfiguration(内部为@Configuration)：被标注的类等于在spring的XML配置文件中(applicationContext.xml)，装配所有bean事务，提供了一个spring的上下文环境</p>
+<p>@ComponentScan：组件扫描，可自动发现和装配Bean，默认扫描SpringApplication的run方法里的Booter.class所在的包路径下文件，所以最好将该启动类放到根包路径下</p>
+<div class="image-package"><img alt="" data-height="407" data-image-slug="562d54f82e0ac2f4" data-original-src="//upload-images.jianshu.io/upload_images/6912735-562d54f82e0ac2f4.png?imageMogr2/auto-orient/strip" data-width="806" loading="lazy" src="/images/cnblogs/d430cb47b8b451be.webp"/><br/>
+<div class="image-caption">SpringBoot启动类</div>
+</div>
+<p>首先进入run方法</p>
+<div class="image-package"><img alt="" data-height="218" data-image-slug="4eb0133161fa8425" data-original-src="//upload-images.jianshu.io/upload_images/6912735-4eb0133161fa8425.png?imageMogr2/auto-orient/strip" data-width="802" loading="lazy" src="/images/cnblogs/f634398397bbdbf7.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>run方法中去创建了一个SpringApplication实例，在该构造方法内，我们可以发现其调用了一个初始化的initialize方法</p>
+<div class="image-package"><img alt="" data-height="254" data-image-slug="fdf3c64061ff1579" data-original-src="//upload-images.jianshu.io/upload_images/6912735-fdf3c64061ff1579.png?imageMogr2/auto-orient/strip" data-width="860" loading="lazy" src="/images/cnblogs/e48d2a36e1ac5d93.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<div class="image-package"><img alt="" data-height="233" data-image-slug="df6b3e65677fbb37" data-original-src="//upload-images.jianshu.io/upload_images/6912735-df6b3e65677fbb37.png?imageMogr2/auto-orient/strip" data-width="888" loading="lazy" src="/images/cnblogs/0ffb49a72906bb92.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>这里主要是为SpringApplication对象赋一些初值。构造函数执行完毕后，我们回到run方法</p>
+<div class="image-package"><img alt="" data-height="627" data-image-slug="b1512831c3402b11" data-original-src="//upload-images.jianshu.io/upload_images/6912735-b1512831c3402b11.png?imageMogr2/auto-orient/strip" data-width="983" loading="lazy" src="/images/cnblogs/4bbdbcd25885f1e4.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>该方法中实现了如下几个关键步骤：</p>
+<p>1.创建了应用的监听器SpringApplicationRunListeners并开始监听</p>
+<p>2.加载SpringBoot配置环境(ConfigurableEnvironment)，如果是通过web容器发布，会加载StandardEnvironment，其最终也是继承了ConfigurableEnvironment，类图如下</p>
+<div class="image-package"><img alt="" data-height="424" data-image-slug="27b75b10640f652e" data-original-src="//upload-images.jianshu.io/upload_images/6912735-27b75b10640f652e.png?imageMogr2/auto-orient/strip" data-width="450" loading="lazy" src="/images/cnblogs/0f80b03674e78462.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>可以看出，*Environment最终都实现了PropertyResolver接口，我们平时通过environment对象获取配置文件中指定Key对应的value方法时，就是调用了propertyResolver接口的getProperty方法</p>
+<p>3.配置环境(Environment)加入到监听器对象中(SpringApplicationRunListeners)</p>
+<p>4.创建run方法的返回对象：ConfigurableApplicationContext(应用配置上下文)，我们可以看一下创建方法：</p>
+<div class="image-package"><img alt="" data-height="458" data-image-slug="663a530bd3ebd142" data-original-src="//upload-images.jianshu.io/upload_images/6912735-663a530bd3ebd142.png?imageMogr2/auto-orient/strip" data-width="887" loading="lazy" src="/images/cnblogs/f1a6a35925b2f5b8.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>方法会先获取显式设置的应用上下文(applicationContextClass)，如果不存在，再加载默认的环境配置（通过是否是web environment判断），默认选择AnnotationConfigApplicationContext注解上下文（通过扫描所有注解类来加载bean），最后通过BeanUtils实例化上下文对象，并返回，ConfigurableApplicationContext类图如下：</p>
+<div class="image-package"><img alt="" data-height="310" data-image-slug="797f3d2c57b625bc" data-original-src="//upload-images.jianshu.io/upload_images/6912735-797f3d2c57b625bc.png?imageMogr2/auto-orient/strip" data-width="1423" loading="lazy" src="/images/cnblogs/1306677b538b358e.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>主要看其继承的两个方向：</p>
+<p>LifeCycle：生命周期类，定义了start启动、stop结束、isRunning是否运行中等生命周期空值方法</p>
+<p>ApplicationContext：应用上下文类，其主要继承了beanFactory(bean的工厂类)</p>
+<p>5.回到run方法内，prepareContext方法将listeners、environment、applicationArguments、banner等重要组件与上下文对象关联</p>
+<p>6.接下来的refreshContext(context)方法(初始化方法如下)将是实现spring-boot-starter-*(mybatis、redis等)自动化配置的关键，包括spring.factories的加载，bean的实例化等核心工作。</p>
+<div class="image-package"><img alt="" data-height="583" data-image-slug="32afb038ad587cb2" data-original-src="//upload-images.jianshu.io/upload_images/6912735-32afb038ad587cb2.png?imageMogr2/auto-orient/strip" data-width="788" loading="lazy" src="/images/cnblogs/e9f811a7c957a306.webp"/><br/>
+<div class="image-caption">refresh方法</div>
+</div>
+<p>配置结束后，Springboot做了一些基本的收尾工作，返回了应用环境上下文。回顾整体流程，Springboot的启动，主要创建了配置环境(environment)、事件监听(listeners)、应用上下文(applicationContext)，并基于以上条件，在容器中开始实例化我们需要的Bean，至此，通过SpringBoot启动的程序已经构造完成，接下来我们来探讨自动化配置是如何实现。</p>
+<hr/>
+<p><strong>自动化配置：</strong></p>
+<p>       之前的启动结构图中，我们注意到无论是应用初始化还是具体的执行过程，都调用了SpringBoot自动配置模块</p>
+<div class="image-package"><img alt="" data-height="320" data-image-slug="8f2374a500b07c6d" data-original-src="//upload-images.jianshu.io/upload_images/6912735-8f2374a500b07c6d.png?imageMogr2/auto-orient/strip" data-width="801" loading="lazy" src="/images/cnblogs/4fbaef9c7059d49d.webp"/><br/>
+<div class="image-caption">SpringBoot自动配置模块</div>
+</div>
+<p>       该配置模块的主要使用到了SpringFactoriesLoader，即Spring工厂加载器，该对象提供了loadFactoryNames方法，入参为factoryClass和classLoader，即需要传入上图中的工厂类名称和对应的类加载器，方法会根据指定的classLoader，加载该类加器搜索路径下的指定文件，即spring.factories文件，传入的工厂类为接口，而文件中对应的类则是接口的实现类，或最终作为实现类，所以文件中一般为如下图这种一对多的类名集合，获取到这些实现类的类名后，loadFactoryNames方法返回类名集合，方法调用方得到这些集合后，再通过反射获取这些类的类对象、构造方法，最终生成实例</p>
+<div class="image-package"><img alt="" data-height="438" data-image-slug="71e4d0e8cda64ee7" data-original-src="//upload-images.jianshu.io/upload_images/6912735-71e4d0e8cda64ee7.png?imageMogr2/auto-orient/strip" data-width="988" loading="lazy" src="/images/cnblogs/01bea7267cac7565.webp"/><br/>
+<div class="image-caption">工厂接口与其若干实现类接口名称</div>
+</div>
+<p>下图有助于我们形象理解自动配置流程</p>
+<div class="image-package"><img alt="" data-height="960" data-image-slug="95d1af756cee57ad" data-original-src="//upload-images.jianshu.io/upload_images/6912735-95d1af756cee57ad.png?imageMogr2/auto-orient/strip" data-width="1067" loading="lazy" src="/images/cnblogs/83ac68c0ca83a446.webp"/><br/>
+<div class="image-caption">SpringBoot自动化配置关键组件关系图 </div>
+</div>
+<p>      mybatis-spring-boot-starter、spring-boot-starter-web等组件的META-INF文件下均含有spring.factories文件，自动配置模块中，SpringFactoriesLoader收集到文件中的类全名并返回一个类全名的数组，返回的类全名通过反射被实例化，就形成了具体的工厂实例，工厂实例来生成组件具体需要的bean。</p>
+<p>之前我们提到了EnableAutoConfiguration注解，其类图如下</p>
+<div class="image-package"><img alt="" data-height="306" data-image-slug="577bc78a48cea9ef" data-original-src="//upload-images.jianshu.io/upload_images/6912735-577bc78a48cea9ef.png?imageMogr2/auto-orient/strip" data-width="1081" loading="lazy" src="/images/cnblogs/13857b34bb782529.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>可以发现其最终实现了ImportSelector(选择器)和BeanClassLoaderAware(bean类加载器中间件)，重点关注一下AutoConfigurationImportSelector的selectImports方法</p>
+<div class="image-package"><img alt="" data-height="457" data-image-slug="05843dc2de08fefe" data-original-src="//upload-images.jianshu.io/upload_images/6912735-05843dc2de08fefe.png?imageMogr2/auto-orient/strip" data-width="855" loading="lazy" src="/images/cnblogs/fd39d27502c8355a.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>该方法在springboot启动流程——bean实例化前被执行，返回要实例化的类信息列表。我们知道，如果获取到类信息，spring自然可以通过类加载器将类加载到jvm中，现在我们已经通过spring-boot的starter依赖方式依赖了我们需要的组件，那么这些组建的类信息在select方法中也是可以被获取到的，不要急我们继续向下分析</p>
+<div class="image-package"><img alt="" data-height="356" data-image-slug="1acb163dede80c03" data-original-src="//upload-images.jianshu.io/upload_images/6912735-1acb163dede80c03.png?imageMogr2/auto-orient/strip" data-width="884" loading="lazy" src="/images/cnblogs/8304d782a8ef56ad.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>该方法中的getCandidateConfigurations方法，通过方法注释了解到，其返回一个自动配置类的类名列表，方法调用了loadFactoryNames方法，查看该方法</p>
+<div class="image-package"><img alt="" data-height="724" data-image-slug="0398d3354e6b91d1" data-original-src="//upload-images.jianshu.io/upload_images/6912735-0398d3354e6b91d1.png?imageMogr2/auto-orient/strip" data-width="1585" loading="lazy" src="/images/cnblogs/835ca8b32d5f3aa6.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>在上面的代码可以看到自动配置器会跟根据传入的factoryClass.getName()到项目系统路径下所有的spring.factories文件中找到相应的key，从而加载里面的类。我们就选取这个mybatis-spring-boot-autoconfigure下的spring.factories文件</p>
+<div class="image-package"><img alt="" data-height="433" data-image-slug="84f04d5605c8a185" data-original-src="//upload-images.jianshu.io/upload_images/6912735-84f04d5605c8a185.png?imageMogr2/auto-orient/strip" data-width="1243" loading="lazy" src="/images/cnblogs/d2fb88637b3141d1.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>进入org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration中，主要看一下类头</p>
+<div class="image-package"><img alt="" data-height="644" data-image-slug="d836df5a3ae71c08" data-original-src="//upload-images.jianshu.io/upload_images/6912735-d836df5a3ae71c08.png?imageMogr2/auto-orient/strip" data-width="985" loading="lazy" src="/images/cnblogs/cd0520b077561c78.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>发现@Spring的Configuration，俨然是一个通过注解标注的springBean，继续向下看，</p>
+<p>@ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class})这个注解的意思是：当存在SqlSessionFactory.class, SqlSessionFactoryBean.class这两个类时才解析MybatisAutoConfiguration配置类,否则不解析这一个配置类，make sence，我们需要mybatis为我们返回会话对象，就必须有会话工厂相关类</p>
+<p>@CondtionalOnBean(DataSource.class):只有处理已经被声明为bean的dataSource</p>
+<p>@ConditionalOnMissingBean(MapperFactoryBean.class)这个注解的意思是如果容器中不存在name指定的bean则创建bean注入，否则不执行（该类源码较长，篇幅限制不全粘贴）</p>
+<p>       以上配置可以保证sqlSessionFactory、sqlSessionTemplate、dataSource等mybatis所需的组件均可被自动配置，@Configuration注解已经提供了Spring的上下文环境，所以以上组件的配置方式与Spring启动时通过mybatis.xml文件进行配置起到一个效果。通过分析我们可以发现，只要一个基于SpringBoot项目的类路径下存在SqlSessionFactory.class, SqlSessionFactoryBean.class，并且容器中已经注册了dataSourceBean，就可以触发自动化配置，意思说我们只要在maven的项目中加入了mybatis所需要的若干依赖，就可以触发自动配置，但引入mybatis原生依赖的话，每集成一个功能都要去修改其自动化配置类，那就得不到开箱即用的效果了。所以Spring-boot为我们提供了统一的starter可以直接配置好相关的类，触发自动配置所需的依赖(mybatis)如下：</p>
+<div class="image-package"><img alt="" data-height="124" data-image-slug="b616bb63af52b5dd" data-original-src="//upload-images.jianshu.io/upload_images/6912735-b616bb63af52b5dd.png?imageMogr2/auto-orient/strip" data-width="638" loading="lazy" src="/images/cnblogs/1c380ead4b070137.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>这里是截取的mybatis-spring-boot-starter的源码中pom.xml文件中所有依赖:</p>
+<div class="image-package"><img alt="" data-height="421" data-image-slug="eeed64900a5e35c5" data-original-src="//upload-images.jianshu.io/upload_images/6912735-eeed64900a5e35c5.png?imageMogr2/auto-orient/strip" data-width="582" loading="lazy" src="/images/cnblogs/3764186f9432aa5b.webp"/><br/>
+<div class="image-caption"> </div>
+</div>
+<p>因为maven依赖的传递性，我们只要依赖starter就可以依赖到所有需要自动配置的类，实现开箱即用的功能。也体现出Springboot简化了Spring框架带来的大量XML配置以及复杂的依赖管理，让开发人员可以更加关注业务逻辑的开发。</p>
+{% endraw %}

@@ -1,0 +1,15 @@
+---
+title: "future.get方法阻塞问题的解决，实现按照任务完成的先后顺序获取任务的结果"
+date: 2020-09-28 11:23:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "1、Future Future模式是多线程设计常用的一种设计模式。Future模式可以理解成：我有一个任务，提交给了Future，Future替我完成这个任务。期间我自己可以去做任何想做的事情。一段时间之后，我就便可以从Future那儿取出结果。Future提供了三种功能：判断任务是否完成能够中断任"
+read_minutes: 1
+cnblogs_id: 13743824
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13743824.html"
+---
+{% raw %}
+<p>1、Future</p>
+<p>Future模式是多线程设计常用的一种设计模式。Future模式可以理解成：我有一个任务，提交给了Future，Future替我完成这个任务。期间我自己可以去做任何想做的事情。一段时间之后，我就便可以从Future那儿取出结果。<br/>Future提供了三种功能：<br/>判断任务是否完成<br/>能够中断任务<br/>能够获取任务执行的结果<br/>向线程池中提交任务的submit方法不是阻塞方法，而Future.get方法是一个阻塞方法，当submit提交多个任务时，只有所有任务都完成后，才能使用get按照任务的提交顺序得到返回结果，所以一般需要使用future.isDone先判断任务是否全部执行完成，完成后再使用future.get得到结果。（也可以用get (long timeout, TimeUnit unit)方法可以设置超时时间，防止无限时间的等待）<br/>三段式的编程：1.启动多线程任务2.处理其他事3.收集多线程任务结果，Future虽然可以实现获取异步执行结果的需求，但是它没有提供通知的机制，要么使用阻塞，在future.get()的地方等待future返回的结果，这时又变成同步操作；要么使用isDone()轮询地判断Future是否完成，这样会耗费CPU的资源。<br/>解决方法：CompletionService和CompletableFuture（按照任务完成的先后顺序获取任务的结果）</p>
+<p><strong>阻塞调用是指调用结果返回之前，当前线程会被挂起。调用线程只有在得到结果之后才会返回。</strong><br/><strong>非阻塞调用指在不能立刻得到结果之前，该调用不会阻塞当前线程</strong></p>
+<p> </p>
+{% endraw %}

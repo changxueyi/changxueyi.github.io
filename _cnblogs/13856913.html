@@ -1,0 +1,44 @@
+---
+title: "关于项目中注入的一些理解"
+date: 2020-10-22 10:54:00 +0800
+tags: ["【茶话心得】"]
+excerpt: "1. @Value注解 在业务层中，要使用这个source@Value(\"${unifiedXXXXSource}\") private String source; 则需要在baseConfig.properties中配置 unifiedXXXXSource = changxueyi 2.@Reso"
+read_minutes: 1
+cnblogs_id: 13856913
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13856913.html"
+---
+{% raw %}
+<h2>1. @Value注解</h2>
+<div class="cnblogs_code">
+<pre>在业务层中，要使用这个source<br/>@Value("${unifiedXXXXSource}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span> String source;</pre>
+</div>
+<p>则需要在baseConfig.properties中配置</p>
+<div class="cnblogs_code">
+<pre>unifiedXXXXSource = changxueyi</pre>
+</div>
+<h2> 2.@Resource 注解</h2>
+<div class="cnblogs_code">
+<pre>@Resource(name = "<span style="color: #ff0000;">mqThreadExecutor</span>"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span> ThreadPoolTaskExecutor threadPoolTaskExecutor;</pre>
+</div>
+<p>name 后面的名字对应xml配置中的id</p>
+<div class="cnblogs_code">
+<pre>&lt;!-- 发送MQ消息的异步线程池 --&gt;
+    &lt;bean id="<span style="color: #ff0000;">mqThreadExecutor</span>" <span style="color: #0000ff;">class</span>="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor"&gt;
+        &lt;!-- 核心线程数  --&gt;
+        &lt;property name="corePoolSize" value="xxx"/&gt;
+        &lt;!-- 最大线程数 --&gt;
+        &lt;property name="maxPoolSize" value="XXX"/&gt;
+        &lt;!-- 队列最大长度 --&gt;
+        &lt;property name="queueCapacity" value="XXX"/&gt;
+        &lt;!-- 线程池维护线程所允许的空闲时间 --&gt;
+        &lt;property name="keepAliveSeconds" value="XXX"/&gt;
+        &lt;!-- 线程池对拒绝任务(无线程可用)的处理策略 --&gt;
+        &lt;property name="rejectedExecutionHandler"&gt;
+            &lt;bean <span style="color: #0000ff;">class</span>="java.util.concurrent.ThreadPoolExecutor$DiscardPolicy"/&gt;
+        &lt;/property&gt;
+    &lt;/bean&gt;</pre>
+</div>
+<p> </p>
+{% endraw %}

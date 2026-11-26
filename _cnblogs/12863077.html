@@ -1,0 +1,83 @@
+---
+title: "Java Exception 和Error有什么区别？"
+date: 2020-05-10 13:58:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "① Exception 和Error 都是继承了Throwable类，在Java中只有Throwable类型的实例才可以被抛出或者捕获，它是异常处理机制的基本类型。 ② Exception和Error体现了Java平台设计者对不同异常情况的分类。 ⑴Exception是程序正常运行中，可以预料的意外"
+read_minutes: 3
+cnblogs_id: 12863077
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/12863077.html"
+---
+{% raw %}
+<p>① Exception 和Error 都是继承了Throwable类，在Java中只有Throwable类型的实例才可以被抛出或者捕获，它是异常处理机制的基本类型。</p>
+<p> </p>
+<p>② Exception和Error体现了Java平台设计者对不同异常情况的分类。</p>
+<p>⑴Exception是程序正常运行中，可以预料的意外情况，可能并且应该被捕获，进行相应处理。</p>
+<p>⑵Exception又分为可检查(checked)异常和不可检查(unchecked)异常。可检查异常在源代码里必须显式的进行捕获处理，这是编译期检查的一部分。不可检查时异常是指运行时异常，像NullPointerException、ArrayIndexOutOfBoundsException之类，通常是可以编码避免的逻辑错误，具体根据需要来判断是否需要捕获，并不会在编译期强制要求。</p>
+<p>⑶Error是指正常情况下，不大可能出现的情况，绝大部分的Error都会导致程序处于非正常的、不可恢复的状态。既然是非正常情况，不便于也不需要捕获。常见的比如OutOfMemoryError之类都是Error的子类。</p>
+<p> </p>
+<p>③ 简单的类图，列典型例子如下                            </p>
+<p>                      <img alt="" loading="lazy" src="/images/cnblogs/0ebc630cd26348b6.jpg"/>                                                     </p>
+<p> </p>
+<p>④ 理解Java语言中操作Throwable的元素和实践，掌握最基本的语法是必须的，如try-catch-finally块，throw throws关键字等。</p>
+<p>⑤ 实例</p>
+<p>⑴下面的代码反应了异常处理中哪些不当之处？</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div class="syntaxhighlighter python" id="highlighter_375556">
+<div class="line number1 index0 alt2"><code class="python keyword">try</code><code class="python plain">{</code></div>
+<div class="line number2 index1 alt1"><code class="python spaces">    </code><code class="python keyword">/</code><code class="python keyword">/</code><code class="python plain">........</code></div>
+<div class="line number3 index2 alt2"><code class="python spaces">    </code><code class="python keyword">/</code><code class="python keyword">/</code><code class="python plain">.......</code></div>
+<div class="line number4 index3 alt1"><code class="python spaces">    </code><code class="python plain">Thread.sleep(</code><code class="python value">1000L</code><code class="python plain">);   </code></div>
+<div class="line number5 index4 alt2"><code class="python plain">}catch (Exception e){</code></div>
+<div class="line number6 index5 alt1"><code class="python spaces">    </code><code class="python keyword">/</code><code class="python keyword">/</code><code class="python plain">.... </code></div>
+<div class="line number7 index6 alt2"><code class="python plain">}</code></div>
+</div>
+</div>
+<p>以上代码违反了两个基本原则</p>
+<p>| 尽量不要捕获Exception这样的通用异常，而应该捕获特定异常，这里面的Thread.sleep()抛出的是InterruptedException。原因是让代码能够直观的体现出尽量多的信息，不要太泛，不好定位。</p>
+<p>|| 不要生吞异常，否则会导致难以诊断。如果不把异常抛出来，也没有输出到日志，程序可能会以不可控的方式结束，没人能够轻易判断是哪里出了异常以及是什么原因导致了异常。</p>
+<p> </p>
+<p>⑵ </p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div class="syntaxhighlighter python" id="highlighter_902016">
+<div class="line number1 index0 alt2"><code class="python keyword">try</code><code class="python plain">{</code></div>
+<div class="line number2 index1 alt1"><code class="python spaces">    </code><code class="python keyword">/</code><code class="python keyword">/</code><code class="python plain">........</code></div>
+<div class="line number3 index2 alt2"><code class="python spaces">    </code><code class="python keyword">/</code><code class="python keyword">/</code><code class="python plain">.......</code></div>
+<div class="line number4 index3 alt1"><code class="python plain">}catch (IOException e){</code></div>
+<div class="line number5 index4 alt2"><code class="python spaces">    </code><code class="python plain">e.printStackTrace();</code></div>
+<div class="line number6 index5 alt1"><code class="python plain">}</code></div>
+<span style="background-color: #ffffff; font-size: 14px;"><br/>这段代码没什么问题，但在产品代码中一般不允许这样处理，原因是标准出错不是个合适的输出选项，因为很难判断到底输出到哪里了。尤其是对分布式系统，无法找到堆栈痕迹，所以最好详细的输出到日志里。</span></div>
+</div>
+<p> </p>
+<p>⑶ Throw early,catch late</p>
+<div class="cnblogs_Highlighter">
+<div class="cnblogs_Highlighter sh-gutter">
+<div class="syntaxhighlighter python" id="highlighter_284019">
+<div class="line number1 index0 alt2"><code class="python plain">public void readPreferences(String fielName){</code></div>
+<div class="line number2 index1 alt1"><code class="python spaces">       </code><code class="python keyword">/</code><code class="python keyword">/</code><code class="python plain">...........</code></div>
+<div class="line number3 index2 alt2"><code class="python spaces">       </code><code class="python plain">InputStream </code><code class="python keyword">in</code> <code class="python keyword">=</code><code class="python plain">new FileInputStream(fileName);</code></div>
+<div class="line number4 index3 alt1"><code class="python spaces">       </code><code class="python keyword">/</code><code class="python keyword">/</code> <code class="python plain">read the </code><code class="python functions">file</code><code class="python plain">....</code></div>
+<div class="line number5 index4 alt2"><code class="python plain">}</code></div>
+</div>
+</div>
+</div>
+<p>如果filename是空，程序会抛出NullPointerException异常，但是没第一个时间暴露问题，堆栈信息会令人非常费解，往往需要更复杂的定位修改如下:</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div class="syntaxhighlighter python" id="highlighter_478497">
+<div class="line number1 index0 alt2"><code class="python plain">public void readPreferences(String fielName){</code></div>
+<div class="line number2 index1 alt1"><code class="python spaces">       </code><code class="python plain">Objects.requireNonNull(fileName);</code></div>
+<div class="line number3 index2 alt2"><code class="python spaces">       </code><code class="python keyword">/</code><code class="python keyword">/</code><code class="python plain">...........</code></div>
+<div class="line number4 index3 alt1"><code class="python spaces">       </code><code class="python plain">InputStream </code><code class="python keyword">in</code> <code class="python keyword">=</code><code class="python plain">new FileInputStream(fileName);</code></div>
+<div class="line number5 index4 alt2"><code class="python spaces">       </code><code class="python keyword">/</code><code class="python keyword">/</code> <code class="python plain">read the </code><code class="python functions">file</code><code class="python plain">....</code></div>
+<div class="line number6 index5 alt1"><code class="python plain">}</code></div>
+</div>
+</div>
+<p>至于catch late，最差的处理方式就是生吞异常了，本质上就是掩盖问题。如果实在不知道如何处理，可以保留原有的case信息，直接再抛出或者构建新的异常出去。在更高层面，因为有了清晰的逻辑，会更青春合适的处理方式是什么。</p>
+<p> </p>
+<p>⑥自定义异常</p>
+<p>⑴是否需要定义成Checked Exception，因为这种类型设计的初衷更是为了从异常情况恢复，作为异常设计者，我们往往有充足信息进行分类</p>
+<p>⑵在诊断信息的同时要考虑避免包含敏感信息，否则会导致潜在的安全问题。Java的标准类库出错信息不包含具体的机器名，端口，IP等，一个重要考量就是信息安全问题，还有用户数据一般不包含在日志里的</p>
+<p> </p>
+<p>⑦ 从性能角度审视Java的异常处理机制</p>
+<p>⑴try-catch代码段会产生额外的性能开销，它会影响JVM对代码进行优化，所以建议仅捕获有必要的代码段，尽量不要一个大的try包住整段的代码；与此同时，利用异常控制代码流程也不是一个好注意，这样非常低效。</p>
+<p>⑵Java每实例化一个Exception，都会对当时的栈进行快照，这是一个相对较重的操作，如果发生的非常频繁，这个开销就不能被忽略了。</p>
+{% endraw %}

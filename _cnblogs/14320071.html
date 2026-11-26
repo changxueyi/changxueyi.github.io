@@ -1,0 +1,180 @@
+---
+title: "带你走进memcache，老牌内存缓存技术"
+date: 2021-01-24 09:16:00 +0800
+tags: ["【缓存】-- Redis"]
+excerpt: "一．核心优化概述 什么是优化：以更小的资源支持更大负载网站的运行，以小博大。 思路：尽量减少用户等待时间，节省系统资源开销，节省带宽使用。 优化什么地方？有三方面：Memcache内存缓存技术、静态化技术、mysql优化 二．Memcache 内存缓存技术：memcache是实现php语言 对内存"
+read_minutes: 6
+cnblogs_id: 14320071
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14320071.html"
+---
+{% raw %}
+<h1>一．核心优化概述</h1>
+<p>什么是优化：以更小的资源支持更大负载网站的运行，以小博大。</p>
+<p>思路：尽量减少用户等待时间，节省系统资源开销，节省带宽使用。</p>
+<p>优化什么地方？有三方面：Memcache内存缓存技术、静态化技术、mysql优化</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567c00056acd27aa2290"/></p>
+<h1><a name="t1"></a><a name="t1"></a>二．Memcache</h1>
+<p>内存缓存技术：memcache是实现php语言 对内存 进行操作的中间介质。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005e34c3c37b67d"/></p>
+<h1><a name="t2"></a><a name="t2"></a>memcache与redis的区别和联系</h1>
+<p>redis:支持比较多的数据类型(String/list/set/sortset/hash)，redis支持集合计算的(set类型支持)，每个key最大数据存储量为1G，redis是新兴的内存缓存技术，对各方面支持不完善，支持持久化操作。</p>
+<p>memcache：老牌的内存缓存技术，对相关领域支持比较丰富，window和linux都可以使用，各种框架(tp/yii等等)都支持使用，session的信息可以非常方便的保存到该memcache中，每个key保存的数据量最大为1M，支持的数据类型比较单一，就是String类型，不支持持久化。</p>
+<p>两者的相同之处在于把数据保存在内存中。</p>
+<p>注意：以上的区别必须要知道哦，在进行选择第三方优化的时候，就可以根据实际情况来定了！</p>
+<h1><a name="t3"></a><a name="t3"></a>安装memcache</h1>
+<p>1， 复制服务器端文件到运行目录</p>
+<p>复制memcached.exe文件到运行目录(如：H:/memcached.exe)：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567c00056c9db2b9d32d"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567c00056ccfb214339d"/></p>
+<p>启动memcache服务</p>
+<p>前台方式memcache启动服务</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567e000414a1ac9b6d47"/></p>
+<p>默认是前台启动，Ctrl+C可以结束该前台进程。</p>
+<p>此时，进程里边已经有memcache服务：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567d00044e99635fe9e2"/></p>
+<p>memcache相关参数设置：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567e0004151aeaecfd90"/></p>
+<p>通过具体参数设置启动memcache的格式：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567d00044f13fa3ac688"/></p>
+<p>给memcache设置开机启动项服务</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005e653875bb8bf"/></p>
+<p>设置开机启动项服务：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567f0000d857f3782763"/></p>
+<p>生成开机启动项服务：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005e6c986d65cbb"/></p>
+<p>通过命名方式启动服务：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/567b0005e70035f5b9f0"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567b0005e7462c717a51"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005e780a44018de"/></p>
+<h1><a name="t4"></a><a name="t4"></a>php中安装memcache扩展</h1>
+<p>复制如图文件到php扩展目录：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567c00056f9dd9ee1c6a"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567c00056fc72f1a0727"/></p>
+<p>修改php.ini，使其开启memcache扩展：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567a0005f464c3aa5ef8"/></p>
+<p>之后重启apache即可。php开启memcache扩展成功</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567f0000db2f637a4d7b"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/567d0004526eed0d7f70"/></p>
+<p>php对memcache的使用</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567a0005f58ea9cbaf60"/></p>
+<p>memcache在php中就是一个操作类，具体使用：实例化对象、对象调用成员的过程。</p>
+<p>php中连接memcache服务器：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567e000419cb125dc4b6"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567a0005f679589a43e3"/></p>
+<p>php中memcache的使用，其数据模型与redis一致，为 key - value。</p>
+<p>在php中给memcache设置一个key，名称为“weather”</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005eb30f32721b0"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567a0005f679589a43e3"/></p>
+<p>对weather 的key再进行查询操作：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/567d0004548159627da7"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567d000454ac56d7cbeb"/></p>
+<p>key的名字：该key的名字的组成部分与redis比较相似，基本键盘可以输入的信息都可以作为key的名字部分，key的长度最大是250字节。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/5680000067195c6639e7"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005ec91390b1ced"/></p>
+<p>有效期事宜：$me -&gt; set(key, value, 是否压缩, 有效期 秒);</p>
+<p>有效期设置有两种方式：</p>
+<p>A. 时间差设置：从当前的时间点项后顺延指定秒的时间就到期(过期)</p>
+<p>$me -&gt; set(key, value, 是否压缩, 120); //向后120秒到期，该方式有限制：最多的时间差就是30天(2592000秒)</p>
+<p>B. 时间戳设置：从1970-1-1 0:0:0 到现在经过的秒数，$me -&gt; set(key, value, 是否压缩, time()+120); //向后120秒到期</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567f0000df1cf495215d"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567f0000df8ec4608ff5"/></p>
+<p>时间差方式的有效期最大为30天：</p>
+<p>(如果需要设置key的有效期时间大于30天的，就必须使用“时间戳”方式设置)</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567d000457062f36a5a1"/></p>
+<p>各种数据类型的存储：php的数据类型：标量类型：int string boolean float 复合类型：array object resource null</p>
+<p>memcache存储标量类型数据，把他们都转化为”String字符串”类型存储。</p>
+<p>存储复合类型数据，直接“原型”存储。</p>
+<p>标量类型的存储：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567c0005764e48a754b2"/></p>
+<p>标量类型信息在memcache中都变为“String字符串”类型信息</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005ef73e408137c"/></p>
+<p>复合类型信息存储：在memcache中直接是“原型”存储。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567f0000e1cae29497f0"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567d0004590132f8f2b2"/></p>
+<p>原型存储对资源的消耗比较大，为了节省资源，可以把复合类型信息都变为字符串形式进行存储，这样就需要对复合信息进行 序列化 操作： serialize() unserialize()</p>
+<h1><a name="t5"></a><a name="t5"></a>压缩选项</h1>
+<p>$me -&gt; set(key, value, 是否压缩0/1, 有效期 秒);</p>
+<p>是否压缩的特点：压缩：内存空间节省、运行速度稍慢。未压缩：内存空间占据少多、运行速度快。</p>
+<p>压缩原理是zlib技术：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/568000006b3d1f0ff92b"/></p>
+<p>zlib----&gt;php-----&gt;memcache</p>
+<p>其他相关操作方法可以参考对应的文档，这里就不加以赘述了！直接进入重点</p>
+<h1><a name="t6"></a><a name="t6"></a>总结：</h1>
+<p>1. memcache安装和开启服务使用：开启服务：① 前台开启 ② 设置开机启动项服务</p>
+<p>2. 给php开放memcache扩展：① 复制扩展文件php_memcache.dll、② php.ini 打开扩展参数</p>
+<p>3. php里边操作memcache：① 实例化对象、② 对象连接服务器、③ 对象调用相关方法实现具体操作</p>
+<p>set(key,value,压缩，有效期) ，get() delete() connect()</p>
+<h1><a name="t7"></a><a name="t7"></a>终端操作memcache</h1>
+<p>连接memcache：利用协议 telnet(远程连接协议)，实现对memcache的操作。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567d00045a58f4ef4031"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/568000006cacbc7c71b0"/></p>
+<p>利用终端操作memcache</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005f2e6611dddd6"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567c00057aca306aa5e7"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567a0005ff640b464a6b"/></p>
+<p>查看memcache的状态：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567e000423c437783841"/></p>
+<h1><a name="t8"></a><a name="t8"></a>分布式部署memcache</h1>
+<p>分布式：把原先有一台memcache服务器做的工作，现在分摊到多台memcache执行。这样会降低memcache的工作负载。</p>
+<p>例如：一台memcache需要存储100w的key，如果有5个服务器，则每个服务器存储20w的可以。</p>
+<p>该分布式与redis的主从模式比较相似，但是他们不一样</p>
+<p>redis:其为主从模式，一个redis负责数据写入，其他多个redis负责数据读取</p>
+<p>memcache:其不是主从模式，该分布式是平均分摊工作，每个子服务器之间都是平级的，每个服务器都要执行数据的写入、读取操作。</p>
+<p>下图为memcache中分布式的示意图：</p>
+<p>从图中可以看到，memcache本身有算法，可以保证数据“平均”地存储在不同的服务器里边，php语言和各个服务器之间也通过该算法衔接，进一步讲，php内部的实现与之前的代码风格保持一致即可。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567d00045dcaea71e00a"/></p>
+<p>memcache分布式具体实现类型：</p>
+<p>① 在一个服务器里边，开启多个memcache服务</p>
+<p>② 买多个服务器，每个服务器里边安装一个memcache服务</p>
+<p>使用分布式：开启多个memcache服务：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567c00057cbef6f6c72e"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567c00057cfad4644a1f"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567d00045e98690e8812"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567e0004259d0df25b2e"/></p>
+<p>注意：memcache集群使用的时候，key的设置和获取，他们的服务器顺序必须严格一致，否则数据的使用有错误。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567c00057dd8bc599119"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567c00057e385a98dd47"/></p>
+<p>数据读取失败：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/56800000719f3148fdcf"/></p>
+<h1><a name="t9"></a><a name="t9"></a>缓存失效</h1>
+<p>超过有效期：具体是通过“懒惰”机制删除该过期数据，与过期session的删除类似。</p>
+<p>过期session删除机制：session是以文件形式保存的硬盘中，如果有的session文件已经过期了，则该session文件不会立即被删除，而是后期其他用户访问网站使用session的同时会有一定的几率触发删除过期的session文件。</p>
+<p>memcache的过期数据删除也是懒惰机制实现，如果有一个key过期了，其本身不会马上被删除，而是我们调用get方法获取数据的同时会删除该过期的数据。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567d00046057020dd0ab"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567f0000e996252b9d33"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/567d000460b6b6551e36"/></p>
+<p>缓存空间耗尽</p>
+<p>如果存储的数据超过memcache最大的存储限制(默认是64M)，此时还继续存入数据，则会把最近不常使用的key就删除了。该机制名称为LRU(least recently use)优先删除最近很好使用的key。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567b0005f811a59324b1"/></p>
+<p>该LRU机制可以根据实际情况禁用，如果继续使用满载的memcache则系统要报错。</p>
+<p>(开启服务的同时可以设置-M参数，禁用LRU机制)</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p9.pstatp.com/large/567c00057ffb021b2102"/></p>
+<h1><a name="t10"></a><a name="t10"></a>session存入memcache</h1>
+<p>session可以存入mysql数据库中。</p>
+<p>需求：一个大型的网站开发完毕，内部涉及的服务器一般是有多个组成的，多台服务器彼此之间需要共享session信息，这样就要求session势必要存入mysql或memcache中。</p>
+<p>session的信息以文件形式存储在服务器内部，不能实现多个服务器共享，只有存入的mysql或memcache中才可以实现数据共享。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567e00042887a9fd8111"/></p>
+<p>mysql或memcache可以实现多个服务器彼此之间共享session信息。</p>
+<p>具体使用：php.ini里边有session存储的方式和保存位置设置参数：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567a000604db1773878a"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/5680000074520a87b36c"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/567d000463042b62196a"/></p>
+<p>session信息存储到memcache的key的名称为session_id():</p>
+<p>在终端里边把session信息给获得出来：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567d0004635f3f5503c4"/></p>
+<p>分布式集群设置：</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p1.pstatp.com/large/56800000755d30332550"/></p>
+<p>memcache案例</p>
+<p>网站有一个页面，内部需要获得许多数据信息，该数据信息在短时间内不发生变化，为了降低mysql的负载，就把这些数据获得出来存入到memacache中过去，供后续访问。</p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567e00042ac4f25c2b83"/></p>
+<p><img alt="十分钟学会memcache，比你想象的要简单" loading="lazy" referrerpolicy="no-referrer" src="http://p3.pstatp.com/large/567c0005832d8d6f24d2"/></p>
+<p>第一次使用，缓存没有数据，就从mysql数据库获得数据，提供给用户，同时把数据存储给缓存供后续使用</p>
+<p>第二次(后续)使用，缓存有数据，就直接提供使用即可。</p>
+<h1><a name="t11"></a><a name="t11"></a>最后再谈与redis的区别：</h1>
+<p>redis分布式：主从模式</p>
+<p>memcache分布式：把key平均分配到各个服务器，addServer(主机名，端口);</p>
+<p>注意：key的设置和读取的多个memcache的加载顺序要保持一致</p>
+<p>分布式类型：① 一台服务器多个服务、② 多台服务器多个服务</p>
+<p>redis: 可以存储稍微复杂的数据(list、set、sortset、hash)用于集合计算</p>
+<p>memcache: 支持领域比较多(win系统和linux系统都可以使用、各种框架支持使用、允许把session信息存入memcache中)一般存储的信息比较简单，例如字符串型信息，就可以使用memcache</p>
+{% endraw %}

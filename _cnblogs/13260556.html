@@ -1,0 +1,203 @@
+---
+title: "logback的简单分析"
+date: 2020-07-07 14:16:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "目录 1、根节点包含的属性 2、根节点的子节点 2.1、设置上下文名称： 2.2、设置loger、root 正文 OFF、FATAL、ERROR、WARN、INFO、DEBUG、TRACE、 ALL log4j定义了8个级别的log（除去OFF和ALL，可以说分为6个级别），优先级从高到低依次为：O"
+read_minutes: 7
+cnblogs_id: 13260556
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13260556.html"
+tags_inferred: true
+---
+{% raw %}
+<div>
+<p>目录</p>
+<ul>
+<li><a href="https://www.cnblogs.com/cb0327/p/5759441.html#_label0" rel="nofollow">1、根节点包含的属性</a></li>
+<li><a href="https://www.cnblogs.com/cb0327/p/5759441.html#_label1" rel="nofollow">2、根节点的子节点</a>
+<ul>
+<li><a href="https://www.cnblogs.com/cb0327/p/5759441.html#_label1_0" rel="nofollow">　2.1、设置上下文名称：</a></li>
+<li><a href="https://www.cnblogs.com/cb0327/p/5759441.html#_label1_1" rel="nofollow">　2.2、设置loger、root</a> </li>
+</ul>
+</li>
+</ul>
+</div>
+<p>正文</p>
+<h1 class="title-article">OFF、FATAL、ERROR、WARN、INFO、DEBUG、TRACE、 ALL</h1>
+<p>log4j定义了8个级别的log（除去OFF和ALL，可以说分为6个级别），优先级从高到低依次为：OFF、FATAL、ERROR、WARN、INFO、DEBUG、TRACE、 ALL。</p>
+<p>ALL 最低等级的，用于打开所有日志记录。</p>
+<p>TRACE designates finer-grained informational events than the DEBUG.Since:1.2.12，很低的日志级别，一般不会使用。</p>
+<p>DEBUG 指出细粒度信息事件对调试应用程序是非常有帮助的，主要用于开发过程中打印一些运行信息。</p>
+<p>INFO 消息在粗粒度级别上突出强调应用程序的运行过程。打印一些你感兴趣的或者重要的信息，这个可以用于生产环境中输出程序运行的一些重要信息，但是不能滥用，避免打印过多的日志。</p>
+<p>WARN 表明会出现潜在错误的情形，有些信息不是错误信息，但是也要给程序员的一些提示。</p>
+<p>ERROR 指出虽然发生错误事件，但仍然不影响系统的继续运行。打印错误和异常信息，如果不想输出太多的日志，可以使用这个级别。</p>
+<p>FATAL 指出每个严重的错误事件将会导致应用程序的退出。这个级别比较高了。重大错误，这种级别你可以直接停止程序了。</p>
+<p>OFF 最高等级的，用于关闭所有日志记录。</p>
+<p>如果将log level设置在某一个级别上，那么比此级别优先级高的log都能打印出来。例如，如果设置优先级为WARN，那么OFF、FATAL、ERROR、WARN 4个级别的log能正常输出，而INFO、DEBUG、TRACE、 ALL级别的log则会被忽略。Log4j建议只使用四个级别，优先级从高到低分别是ERROR、WARN、INFO、DEBUG。</p>
+<p>从我们实验的结果可以看出，log4j默认的优先级为ERROR或者WARN（实际上是ERROR）。</p>
+<h2><a name="t1"></a><a name="t1"></a>1、根节点&lt;configuration&gt;包含的属性</h2>
+<p>scan:</p>
+<p>当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。</p>
+<p>scanPeriod:</p>
+<p>设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒。当scan为true时，此属性生效。默认的时间间隔为1分钟。</p>
+<p>debug:</p>
+<p>当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。</p>
+<p>例如：</p>
+<div class="cnblogs_code">
+<pre> &lt;configuration scan="true" scanPeriod="60 seconds" debug="false"&gt;  
+      &lt;!-- 其他配置省略--&gt;  
+&lt;/configuration&gt;</pre>
+</div>
+<div><a href="https://www.cnblogs.com/cb0327/p/5759441.html#_labelTop" rel="nofollow">回到顶部</a></div>
+<h2><a name="t2"></a><a name="t2"></a>2、根节点&lt;configuration&gt;的子节点</h2>
+<p>　　<img alt="" loading="lazy" src="/images/cnblogs/97285497174dad72.png"/></p>
+<h3><a name="t3"></a><a name="t3"></a>　2.1、设置上下文名称：&lt;contextName&gt;</h3>
+<ol>
+<li>默认方式：&lt;contextName&gt;<br/>每个logger都关联到logger上下文，默认上下文名称为“default”。但可以使用&lt;contextName&gt;设置成其他名字，用于区分不同应用程序的记录。一旦设置，不能修改。<br/>
+<div class="cnblogs_code">
+<pre> &lt;configuration scan="true" scanPeriod="60 seconds" debug="false"&gt;  
+      &lt;contextName&gt;myAppName&lt;/contextName&gt;  
+      &lt;!-- 其他配置省略--&gt;  
+&lt;/configuration&gt;</pre>
+</div>
+</li>
+<li>设置变量： <span class="tag"><span class="tag">&lt;property&gt;<br/>用来定义变量值的标签，&lt;property&gt; 有两个属性，name和value；其中name的值是变量的名称，value的值时变量定义的值。通过&lt;property&gt;定义的值会被插入到logger上下文中。定义变量后，可以使“${}”来使用变量。<br/>例如使用&lt;property&gt;定义上下文名称，然后在&lt;contentName&gt;设置logger上下文时使用。<br/></span></span>
+<div class="cnblogs_code">
+<pre> &lt;configuration scan="true" scanPeriod="60 seconds" debug="false"&gt;  
+      &lt;property name="APP_Name" value="myAppName" /&gt;   
+      &lt;contextName&gt;${APP_Name}&lt;/contextName&gt;  
+      &lt;!-- 其他配置省略--&gt;  
+&lt;/configuration&gt;</pre>
+</div>
+</li>
+<li>获取时间戳字符串：&lt;timestamp&gt;<br/>两个属性 key:标识此&lt;timestamp&gt; 的名字；<span class="atn"><span class="atn">datePattern：设置将当前时间（解析配置文件的时间）转换为字符串的模式，遵循java.txt.SimpleDateFormat的格式。<br/>例如将解析配置文件的时间作为上下文名称：<span class="tag"><br/></span></span></span>
+<div class="cnblogs_code">
+<pre> &lt;configuration scan="true" scanPeriod="60 seconds" debug="false"&gt;  
+      &lt;timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/&gt;   
+      &lt;contextName&gt;${bySecond}&lt;/contextName&gt;  
+      &lt;!-- 其他配置省略--&gt;  
+&lt;/configuration&gt;</pre>
+</div>
+</li>
+</ol>
+<h3><a name="t4"></a><a name="t4"></a>　2.2、设置loger、root</h3>
+<ol>
+<li>设置loger</li>
+<li>当配置了additivity 为 false 后，该logger处理的日志不会再交由父级处理。<br/>用来设置某一个包或者具体的某一个类的日志打印级别、以及指定&lt;appender&gt;。&lt;loger&gt;仅有一个name属性，一个可选的level和一个可选的addtivity属性。<br/>name:用来指定受此loger约束的某一个包或者具体的某一个类。<br/>level:用来设置打印级别（<a href="http://blog.csdn.net/wang_yunj/article/details/43793975">日志级别</a>），大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF，还有一个特俗值INHERITED或者同义词NULL，代表强制执行上级的级别。如果未设置此属性，那么当前loger将会继承上级的级别。<br/>addtivity:是否向上级loger传递打印信息。默认是true。<br/><br/>&lt;loger&gt;可以包含零个或多个&lt;appender-ref&gt;元素，标识这个appender将会添加到这个loger。</li>
+<li>设置root<br/>也是&lt;loger&gt;元素，但是它是根loger。只有一个level属性，应为已经被命名为"root".<br/>level:用来设置打印级别，大小写无关：TRACE, DEBUG, INFO, WARN, ERROR, ALL 和 OFF，不能设置为INHERITED或者同义词NULL。默认是DEBUG。<br/><br/>&lt;root&gt;可以包含零个或多个&lt;appender-ref&gt;元素，标识这个appender将会添加到这个loger。</li>
+<li>举例说明-demo<br/>例如：LogbackDemo.java类<br/>
+<div class="cnblogs_code">
+
+<pre> package logback;  
+  
+import org.slf4j.Logger;  
+import org.slf4j.LoggerFactory;  
+  
+public class LogbackDemo {  
+    private static Logger log = LoggerFactory.getLogger(LogbackDemo.class);  
+    public static void main(String[] args) {  
+        log.trace("======trace");  
+        log.debug("======debug");  
+        log.info("======info");  
+        log.warn("======warn");  
+        log.error("======error");  
+    }  
+}</pre>
+
+</div>
+<p>logback.xml配置文件<br/><br/>第1种：只配置root</p>
+<div class="cnblogs_code">
+
+<pre> &lt;configuration&gt;   
+   
+  &lt;appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender"&gt;   
+    &lt;!-- encoder 默认配置为PatternLayoutEncoder --&gt;   
+    &lt;encoder&gt;   
+      &lt;pattern&gt;%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n&lt;/pattern&gt;   
+    &lt;/encoder&gt;   
+  &lt;/appender&gt;   
+   
+  &lt;root level="INFO"&gt;             
+    &lt;appender-ref ref="STDOUT" /&gt;   
+  &lt;/root&gt;     
+     
+ &lt;/configuration&gt;</pre>
+
+</div>
+<p>其中appender的配置表示打印到控制台(稍后详细讲解appender )；<br/>&lt;root level="INFO"&gt;将root的打印级别设置为“INFO”，指定了名字为“STDOUT”的appender。<br/><br/>当执行logback.LogbackDemo类的main方法时，root将级别为“INFO”及大于“INFO”的日志信息交给已经配置好的名为“STDOUT”的appender处理，“STDOUT”appender将信息打印到控制台；<br/>打印结果如下：</p>
+<div class="cnblogs_code">
+<pre>13:30:38.484 [main] INFO  logback.LogbackDemo - ======info  
+13:30:38.500 [main] WARN  logback.LogbackDemo - ======warn  
+13:30:38.500 [main] ERROR logback.LogbackDemo - ======error</pre>
+</div>
+<p>第2种：带有loger的配置，不指定级别，不指定appender，</p>
+<div class="cnblogs_code">
+
+<pre> &lt;configuration&gt;   
+   
+  &lt;appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender"&gt;   
+    &lt;!-- encoder 默认配置为PatternLayoutEncoder --&gt;   
+    &lt;encoder&gt;   
+      &lt;pattern&gt;%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n&lt;/pattern&gt;   
+    &lt;/encoder&gt;   
+  &lt;/appender&gt;   
+   
+  &lt;!-- logback为java中的包 --&gt;   
+  &lt;logger name="logback"/&gt;   
+   
+  &lt;root level="DEBUG"&gt;             
+    &lt;appender-ref ref="STDOUT" /&gt;   
+  &lt;/root&gt;     
+     
+ &lt;/configuration&gt;</pre>
+
+</div>
+<p>其中appender的配置表示打印到控制台(稍后详细讲解appender )；<br/>&lt;logger name="logback" /&gt;将控制logback包下的所有类的日志的打印，但是并没用设置打印级别，所以继承他的上级&lt;root&gt;的日志级别“DEBUG”；<br/>没有设置addtivity，默认为true，将此loger的打印信息向上级传递；<br/>没有设置appender，此loger本身不打印任何信息。<br/>&lt;root level="DEBUG"&gt;将root的打印级别设置为“DEBUG”，指定了名字为“STDOUT”的appender。<br/><br/>当执行logback.LogbackDemo类的main方法时，因为LogbackDemo 在包logback中，所以首先执行&lt;logger name="logback" /&gt;，将级别为“DEBUG”及大于“DEBUG”的日志信息传递给root，本身并不打印；<br/>root接到下级传递的信息，交给已经配置好的名为“STDOUT”的appender处理，“STDOUT”appender将信息打印到控制台；<br/>打印结果如下：</p>
+<div class="cnblogs_code">
+<pre>13:19:15.406 [main] DEBUG logback.LogbackDemo - ======debug  
+13:19:15.406 [main] INFO  logback.LogbackDemo - ======info  
+13:19:15.406 [main] WARN  logback.LogbackDemo - ======warn  
+13:19:15.406 [main] ERROR logback.LogbackDemo - ======error</pre>
+</div>
+<p> 第3种：带有多个loger的配置，指定级别，指定appender </p>
+<div class="cnblogs_code">
+
+<pre> &lt;configuration&gt;   
+   &lt;appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender"&gt;   
+    &lt;!-- encoder 默认配置为PatternLayoutEncoder --&gt;   
+    &lt;encoder&gt;   
+      &lt;pattern&gt;%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n&lt;/pattern&gt;   
+    &lt;/encoder&gt;   
+  &lt;/appender&gt;   
+   
+  &lt;!-- logback为java中的包 --&gt;   
+  &lt;logger name="logback"/&gt;   
+  &lt;!--logback.LogbackDemo：类的全路径 --&gt;   
+  &lt;logger name="logback.LogbackDemo" level="INFO" additivity="false"&gt;  
+    &lt;appender-ref ref="STDOUT"/&gt;  
+  &lt;/logger&gt;   
+    
+  &lt;root level="DEBUG"&gt;             
+    &lt;appender-ref ref="STDOUT" /&gt;   
+  &lt;/root&gt;     
+&lt;/configuration&gt;</pre>
+
+</div>
+<p>其中appender的配置表示打印到控制台(稍后详细讲解appender )；<br/><br/>&lt;logger name="logback" /&gt;将控制logback包下的所有类的日志的打印，但是并没用设置打印级别，所以继承他的上级&lt;root&gt;的日志级别“DEBUG”；<br/>没有设置addtivity，默认为true，将此loger的打印信息向上级传递；<br/>没有设置appender，此loger本身不打印任何信息。<br/><br/>&lt;logger name="logback.LogbackDemo" level="INFO" additivity="false"&gt;控制logback.LogbackDemo类的日志打印，打印级别为“INFO”；<br/><br/>additivity属性为false，表示此loger的打印信息不再向上级传递，<br/><br/>指定了名字为“STDOUT”的appender。<br/><br/>&lt;root level="DEBUG"&gt;将root的打印级别设置为“DEBUG”，指定了名字为“STDOUT”的appender。<br/><br/>当执行logback.LogbackDemo类的main方法时，先执行&lt;logger name="logback.LogbackDemo" level="INFO" additivity="false"&gt;，将级别为“INFO”及大于“INFO”的日志信息交给此loger指定的名为“STDOUT”的appender处理，在控制台中打出日志，不再向次loger的上级 &lt;logger name="logback"/&gt; 传递打印信息；<br/><br/>&lt;logger name="logback"/&gt;未接到任何打印信息，当然也不会给它的上级root传递任何打印信息；<br/>打印结果如下:</p>
+<div class="cnblogs_code">
+<pre>14:05:35.937 [main] INFO  logback.LogbackDemo - ======info  
+14:05:35.937 [main] WARN  logback.LogbackDemo - ======warn  
+14:05:35.937 [main] ERROR logback.LogbackDemo - ======error</pre>
+</div>
+<p>如果将&lt;logger name="logback.LogbackDemo" level="INFO" additivity="false"&gt;修改为 &lt;logger name="logback.LogbackDemo" level="INFO" additivity="true"&gt;那打印结果将是什么呢？<br/>没错，日志打印了两次，想必大家都知道原因了，因为打印信息向上级传递，logger本身打印一次，root接到后又打印一次<br/>打印结果如下：</p>
+<div class="cnblogs_code">
+
+<pre>14:09:01.531 [main] INFO  logback.LogbackDemo - ======info  
+14:09:01.531 [main] INFO  logback.LogbackDemo - ======info  
+14:09:01.531 [main] WARN  logback.LogbackDemo - ======warn  
+14:09:01.531 [main] WARN  logback.LogbackDemo - ======warn  
+14:09:01.531 [main] ERROR logback.LogbackDemo - ======error  
+14:09:01.531 [main] ERROR logback.LogbackDemo - ======error</pre>
+</div>
+</li>
+</ol>
+{% endraw %}

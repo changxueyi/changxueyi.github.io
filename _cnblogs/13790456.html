@@ -1,0 +1,48 @@
+---
+title: "记录一次：TIME_WAIT状态连接过多的分析与解决"
+date: 2020-10-10 10:06:00 +0800
+tags: ["【计算机网络】-- 网络"]
+excerpt: "原理说明 一个连接的建立与断开，正常过程至少需要来回7个包才能完成。 Each socket in TIME_WAIT consumes some memory in the kernel, usually somewhat less than an ESTABLISHED socket yet s"
+read_minutes: 4
+cnblogs_id: 13790456
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13790456.html"
+---
+{% raw %}
+<h1 data-anchor-id="e1g8" id="原理说明">原理说明</h1>
+<p data-anchor-id="uhms">一个连接的建立与断开，正常过程至少需要来回7个包才能完成。</p>
+<p data-anchor-id="aq4p"><img alt="image_1d9n60ljq1757ho21032k0j1fbr9.png-59.4kB" loading="lazy" src="/images/cnblogs/86ae362c4bad250a.png"/></p>
+<p data-anchor-id="3mdi"><img alt="image_1d9olusia5vr1ss01rg5bchuu99.png-462.7kB" loading="lazy" src="/images/cnblogs/cf0eb6e7e06394f1.png"/></p>
+<p data-anchor-id="m7kd"><img alt="image_1d9n6th6n11m011up85uao4175q13.png-30.7kB" loading="lazy" src="/images/cnblogs/3b64a6de3b5123d6.png"/><br/>Each socket in TIME_WAIT consumes some memory in the kernel, usually somewhat less than an ESTABLISHED socket yet still significant. A sufficiently large number could exhaust kernel memory, or at least degrade performance because that memory could be used for other purposes. TIME_WAIT sockets do not hold open file descriptors (assuming they have been closed properly), so you should not need to worry about a "too many open files" error.</p>
+<p data-anchor-id="seo5">Time wait 中的每个套接字都会消耗内核中的一些内存，通常比 ESTABLISHED 套接字少一些，但仍然很重要。 一个足够大可能耗尽内核内存，或者至少降低性能，因为内存可以用于其他目的。 Time wait sockets 不保存打开的文件描述符(假设它们已经正确关闭) ，因此不需要担心"打开的文件太多"错误。</p>
+<p data-anchor-id="ulga">The socket also ties up that particular src/dst IP address and port so it cannot be reused for the duration of the TIME_WAIT interval. (This is the intended purpose of the TIME_WAIT state.) Tying up the port is not usually an issue unless you need to reconnect a with the same port pair. Most often one side will use an ephemeral port, with only one side anchored to a well known port. However, a very large number of TIME_WAIT sockets can exhaust the ephemeral port space if you are repeatedly and frequently connecting between the same two IP addresses. Note this only affects this particular IP address pair, and will not affect establishment of connections with other hosts.</p>
+<p data-anchor-id="dksy">套接字还绑定了特定的 src / dst IP 地址和端口，因此在 TIME wait 间隔期间不能重用它。 (这是 TIME wait 状态的预期用途。) 连接端口通常不是问题，除非您需要重新连接到相同的端口对。 大多数情况下，一方将使用临时港口，只有一方锚定在一个著名的港口。 但是，如果在相同的两个 IP 地址之间重复且频繁地连接，大量的 TIME wait 套接字可能会耗尽临时端口空间。 请注意，这只影响这个特定的 IP 地址对，并不会影响与其他主机建立连接。</p>
+<p data-anchor-id="8g98"><img alt="image_1d9n8pmdekv81jdn1j143ju1pid20.png-168.2kB" loading="lazy" src="/images/cnblogs/206b5f9d80f1c0ea.png"/></p>
+<p data-anchor-id="i7fg">TCP 连接必须经过时间 2MSL 后才真正释放掉(2MSL 的时间的用意 --- 为了保证 A 发送的最后一个 ACK 报文段能够到达 B.防止 “已失效的连接请求报文段”出现在本连接中.A 在发送完最后一个 ACK 报文段后,再经过时间 2MSL,就可以使本连接持续的时间内所产生的所有报文段,都从网络中消失.这样就可以使下一个新的连接中不会出现这种旧的连接请求报文段)</p>
+<div class="md-section-divider"> </div>
+<h1 data-anchor-id="3nhp" id="title"> </h1>
+<p data-anchor-id="zxzm">如果许多连接正在被快速打开和关闭，可能会引起大量的 TIME_WAIT 连接。<br/>这会引发端口资源或其他资源的消耗，如果达到上限，那么就会引发创建新连接的障碍。</p>
+<p data-anchor-id="nm6b">TIME_WAIT状态的连接过多导致系统端口资源耗尽</p>
+<p data-anchor-id="spcc">大量的TIME_WAIT进程。简单来说，每一个tcp连接关闭后，主动关闭方都会保留这个连接一段时间，这个时间内，这个连接的状态是TIME_WAIT，端口资源不会被释放。这个超时时间为2*MSL。RFC 793中规定MSL为2分钟，实际由系统决定，通常在30-120s。这个网上有很多详细解释，这里不过多阐述。因为连接的关闭释放有一定时间，并不是程序运行完就立刻释放端口资源，所以当申请的连接进程较多的时候，端口资源就不够用了。系统默认可用的端口资源：</p>
+<p data-anchor-id="jzbp">$ cat /proc/sys/net/ipv4/ip_local_port_range<br/>32768 61000</p>
+<div class="md-section-divider"> </div>
+<h1 data-anchor-id="onjq" id="解决办法">解决办法：</h1>
+<div class="md-section-divider"> </div>
+<h2 data-anchor-id="hg89" id="1-扩大资源可用">1 扩大资源可用</h2>
+<div class="md-section-divider"> </div>
+<ol class="linenums">
+<li class="L0"><code><span class="com"># 扩大端口范围，增加端口资源</span></code></li>
+<li class="L1"><code><span class="pln">net<span class="pun">.<span class="pln">ipv4<span class="pun">.<span class="pln">ip_local_port_range <span class="pun">=<span class="pln"> <span class="lit">1024<span class="pln"> <span class="lit">65535</span></span></span></span></span></span></span></span></span></span></code></li>
+<li class="L2"><code><span class="com">#开启重用。允许将TIME-WAIT sockets重新用于新的TCP连接，默认为0</span></code></li>
+<li class="L3"><code><span class="pln">net<span class="pun">.<span class="pln">ipv4<span class="pun">.<span class="pln">tcp_tw_reuse <span class="pun">=<span class="pln"> <span class="lit">1</span></span></span></span></span></span></span></span></code></li>
+</ol>
+<div class="md-section-divider"> </div>
+<h2 data-anchor-id="cqfu" id="2-优化自己的系统减少短连接次数">2. 优化自己的系统，减少短连接次数</h2>
+<p data-anchor-id="h104">因为tcp连接关闭后是有必要保留一段时间TIME_WAIT状态的，我们的目标不应该是简单的缩短TIME_WAIT时间，而是应该从根本上去优化我们的系统架构设计，减少不必要的短连接请求。</p>
+<div class="md-section-divider"> </div>
+<h1 data-anchor-id="dqu4" id="参考资料">参考资料</h1>
+<p data-anchor-id="ji8n">What is the cost of many TIME_WAIT on the server side? 在服务器端进行多次 TIME wait 的成本是多少？<br/><a href="https://stackoverflow.com/questions/1803566/what-is-the-cost-of-many-time-wait-on-the-server-side" target="_blank">https://stackoverflow.com/questions/1803566/what-is-the-cost-of-many-time-wait-on-the-server-side</a></p>
+<p data-anchor-id="knf8"><a href="http://www.serverframework.com/asynchronousevents/2011/01/time-wait-and-its-design-implications-for-protocols-and-scalable-servers.html" target="_blank">http://www.serverframework.com/asynchronousevents/2011/01/time-wait-and-its-design-implications-for-protocols-and-scalable-servers.html</a></p>
+<p data-anchor-id="7nf6">(传输层)TCP协议<br/><a href="http://www.cnblogs.com/kzloser/articles/2582957.html" target="_blank">http://www.cnblogs.com/kzloser/articles/2582957.html</a></p>
+<p data-anchor-id="qmc7">TIME_WAIT状态的连接过多导致系统端口资源耗尽问题(2)<br/><a href="https://www.cnblogs.com/wangsili/p/3958371.html" target="_blank">https://www.cnblogs.com/wangsili/p/3958371.html</a></p>
+<p data-anchor-id="qmc7">本文引用自：<a href="https://www.zybuluo.com/zhongdao/note/1466543">https://www.zybuluo.com/zhongdao/note/1466543</a></p>
+{% endraw %}

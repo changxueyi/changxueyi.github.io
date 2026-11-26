@@ -1,0 +1,47 @@
+---
+title: "Go语言的匿名函数"
+date: 2021-03-17 18:43:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "没什么好说的， 见一个，熟悉一个： package main import ( \"fmt\" ) func main() { func() { fmt.Printf(\"func 1\\n\") }() //输出:func 1 func(x int) { fmt.Printf(\"func 2, x is %"
+read_minutes: 1
+cnblogs_id: 14551123
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14551123.html"
+tags_inferred: true
+---
+{% raw %}
+<p>没什么好说的， 见一个，熟悉一个：</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">package main
+ 
+import (
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">fmt</span><span style="color: #800000;">"</span><span style="color: #000000;">
+)
+ 
+func main() {
+    func() {
+        fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">func 1\n</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    }() //输出:func 1
+ 
+    func(x </span><span style="color: #0000ff;">int</span><span style="color: #000000;">) {
+        fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">func 2, x is %d\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, x)
+    }(</span><span style="color: #800080;">2</span><span style="color: #000000;">) //输出:func 2, x is 2
+ 
+    a :</span>= func(x <span style="color: #0000ff;">int</span>) <span style="color: #0000ff;">int</span><span style="color: #000000;"> {
+            fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">func 3, x is %d\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, x)
+            </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">5</span><span style="color: #000000;">
+        } //输出func 3, x is 3<br/>　　　　　　　输出5
+    fmt.Println(a(</span><span style="color: #800080;">3</span><span style="color: #000000;">))
+ 
+    fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">%T\n</span><span style="color: #800000;">"</span><span style="color: #000000;">,     func() {
+        fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">func 1\n</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    }) //func()
+ 
+    fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">%T\n</span><span style="color: #800000;">"</span>,     func(x <span style="color: #0000ff;">int</span><span style="color: #000000;">) {
+        fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">func 2, x is %d\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, x)
+    }) //输出func(int)
+ 
+    fmt.Printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">%T\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, a) //输出 func(int) int
+}</span></pre>
+</div>
+<p> </p>
+{% endraw %}

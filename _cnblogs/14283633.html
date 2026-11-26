@@ -1,0 +1,1615 @@
+---
+title: "Golang 开发规范（JD ）"
+date: 2021-01-15 18:29:00 +0800
+tags: ["【Go】-- Go基础", "【开发规范】编码规范"]
+excerpt: "运维研发部Golang编码规范 1运维研发部Golang编码规范 2前言 2.1一般信息 2.2如何使用本规范 2.2.1本规范的层次结构 2.2.2条目的级别和编号 2.3说明 3语言规范 3.1true/false求值 3.2recever 3.2.1recever type 3.2.2rece"
+read_minutes: 12
+cnblogs_id: 14283633
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14283633.html"
+tags_inferred: true
+---
+{% raw %}
+<h1 id="Golang-运维研发部Golang编码规范">运维研发部Golang编码规范</h1>
+<p> </p>
+<div class="toc-macro client-side-toc-macro conf-macro output-block" data-csslistindent="15px" data-hasbody="false" data-headerelements="H1,H2,H3,H4,H5,H6,H7" data-macro-name="toc" data-numberedoutline="true">
+<ul>
+<li><span class="toc-item-body" data-outline="1"><span class="toc-outline">1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E8%BF%90%E7%BB%B4%E7%A0%94%E5%8F%91%E9%83%A8Golang%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83">运维研发部Golang编码规范</a></span></span></li>
+<li><span class="toc-item-body" data-outline="2"><span class="toc-item-body" data-outline="2"><span class="toc-outline">2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%89%8D%E8%A8%80">前言</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="2.1"><span class="toc-outline">2.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E4%B8%80%E8%88%AC%E4%BF%A1%E6%81%AF">一般信息</a></span></span></li>
+<li><span class="toc-item-body" data-outline="2.2"><span class="toc-item-body" data-outline="2.2"><span class="toc-outline">2.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E6%9C%AC%E8%A7%84%E8%8C%83">如何使用本规范</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="2.2.1"><span class="toc-outline">2.2.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E6%9C%AC%E8%A7%84%E8%8C%83%E7%9A%84%E5%B1%82%E6%AC%A1%E7%BB%93%E6%9E%84">本规范的层次结构</a></span></span></li>
+<li><span class="toc-item-body" data-outline="2.2.2"><span class="toc-outline">2.2.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E6%9D%A1%E7%9B%AE%E7%9A%84%E7%BA%A7%E5%88%AB%E5%92%8C%E7%BC%96%E5%8F%B7">条目的级别和编号</a></span></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="2.3"><span class="toc-outline">2.3<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E8%AF%B4%E6%98%8E">说明</a></span></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="3"><span class="toc-item-body" data-outline="3"><span class="toc-outline">3<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E8%AF%AD%E8%A8%80%E8%A7%84%E8%8C%83">语言规范</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="3.1"><span class="toc-outline">3.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-true/false%E6%B1%82%E5%80%BC">true/false求值</a></span></span></li>
+<li><span class="toc-item-body" data-outline="3.2"><span class="toc-item-body" data-outline="3.2"><span class="toc-outline">3.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-recever">recever</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="3.2.1"><span class="toc-outline">3.2.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-recevertype">recever type</a></span></span></li>
+<li><span class="toc-item-body" data-outline="3.2.2"><span class="toc-outline">3.2.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-recever%E6%98%8E%E6%98%8E%E6%96%B9%E5%BC%8F">recever 明明方式</a></span></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="3.3"><span class="toc-outline">3.3<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E7%94%B3%E8%AF%B7%E7%A9%BA%E7%9A%84slice">申请空的slice</a></span></span></li>
+<li><span class="toc-item-body" data-outline="3.4"><span class="toc-outline">3.4<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-ErrorHandler">Error Handler</a></span></span></li>
+<li><span class="toc-item-body" data-outline="3.5"><span class="toc-outline">3.5<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%22{%22%E7%9A%84%E4%BD%BF%E7%94%A8">"{"的使用</a></span></span></li>
+<li><span class="toc-item-body" data-outline="3.6"><span class="toc-outline">3.6<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-embeding%E7%9A%84%E4%BD%BF%E7%94%A8">embeding的使用</a></span></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="4"><span class="toc-item-body" data-outline="4"><span class="toc-outline">4<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E9%A3%8E%E6%A0%BC%E8%A7%84%E8%8C%83">风格规范</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="4.1"><span class="toc-outline">4.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-go%E6%96%87%E4%BB%B6layout">go文件layout</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.2"><span class="toc-outline">4.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-generaldocumentlayout">general document layout</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.3"><span class="toc-outline">4.3<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-import%E8%A7%84%E8%8C%83">import规范</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.4"><span class="toc-item-body" data-outline="4.4"><span class="toc-outline">4.4<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-Go%E5%87%BD%E6%95%B0layout">Go函数layout</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="4.4.1"><span class="toc-outline">4.4.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%87%BD%E6%95%B0%E6%B3%A8%E9%87%8A">函数注释</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.4.2"><span class="toc-outline">4.4.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%87%BD%E6%95%B0%E5%8F%82%E6%95%B0%E4%B8%8E%E8%BF%94%E5%9B%9E%E5%80%BC">函数参数与返回值</a></span></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="4.5"><span class="toc-outline">4.5<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E7%A8%8B%E5%BA%8F%E8%A7%84%E8%8C%83">程序规范</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.6"><span class="toc-item-body" data-outline="4.6"><span class="toc-outline">4.6<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%91%BD%E5%90%8D%E8%A7%84%E8%8C%83">命名规范</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="4.6.1"><span class="toc-outline">4.6.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E6%96%87%E4%BB%B6%E5%90%8D">文件名</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.6.2"><span class="toc-outline">4.6.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%87%BD%E6%95%B0%E5%90%8D/%E5%8F%98%E9%87%8F%E5%90%8D">函数名/变量名</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.6.3"><span class="toc-outline">4.6.3<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%B8%B8%E9%87%8F">常量</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.6.4"><span class="toc-outline">4.6.4<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E7%BC%A9%E5%86%99%E8%AF%8D">缩写词</a></span></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="4.7"><span class="toc-outline">4.7<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E7%BC%A9%E8%BF%9B">缩进</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.8"><span class="toc-outline">4.8<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E7%A9%BA%E6%A0%BC">空格</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.9"><span class="toc-outline">4.9<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E6%8B%AC%E5%8F%B7">括号</a></span></span></li>
+<li><span class="toc-item-body" data-outline="4.10"><span class="toc-outline">4.10<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E6%B3%A8%E9%87%8A">注释</a></span></span></li>
+</ul>
+</li>
+<li><span class="toc-item-body" data-outline="5"><span class="toc-item-body" data-outline="5"><span class="toc-outline">5<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E7%BC%96%E7%A8%8B%E5%AE%9E%E8%B7%B5">编程实践</a></span></span></span>
+<ul>
+<li><span class="toc-item-body" data-outline="5.1"><span class="toc-outline">5.1<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-errorstring">error string </a></span></span></li>
+<li><span class="toc-item-body" data-outline="5.2"><span class="toc-outline">5.2<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-don'tpanic">don't panic</a></span></span></li>
+<li><span class="toc-item-body" data-outline="5.3"><span class="toc-outline">5.3<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E5%85%B3%E4%BA%8Elock%E7%9A%84%E4%BF%9D%E6%8A%A4">关于lock的保护</a></span></span></li>
+<li><span class="toc-item-body" data-outline="5.4"><span class="toc-outline">5.4<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-%E6%97%A5%E5%BF%97%E7%9A%84%E5%A4%84%E7%90%86">日志的处理</a></span></span></li>
+<li><span class="toc-item-body" data-outline="5.5"><span class="toc-outline">5.5<a class="toc-link" href="https://cf.jd.com/display/jdidc/Golang#Golang-unsafepackage">unsafe package</a></span></span></li>
+</ul>
+</li>
+</ul>
+</div>
+<p> </p>
+<h1 id="Golang-前言">前言</h1>
+<h2 id="Golang-一般信息">一般信息</h2>
+<p>此编码风格指南根据go语言编程技术规范与CodeReviewComments制定而成。</p>
+<p>这份围挡的意义是是让大家写出风格统一的代码，让团队代码有更好的可读性与可维护性。</p>
+<p>文档内容可能与你的喜好有冲突， 请用尽量包容的心态接受它；不合理之处请反馈 运维组件中台部开发人员；</p>
+<h2 id="Golang-如何使用本规范">如何使用本规范</h2>
+<h3 id="Golang-本规范的层次结构">本规范的层次结构</h3>
+<p>本规规范可分为三个部分，分别对Go语法、风格、编程时间做出建议。</p>
+<p>每一部分有若干专题，每一专题下有若干条目。</p>
+<p>条目是规范的基本组成部分，每一条目由规定、定义、解释、示例、参考等项组成。</p>
+<h3 id="Golang-条目的级别和编号">条目的级别和编号</h3>
+<p>本规范的条目分两个级别</p>
+<ul>
+<li>RULE:要求所有程序必须遵守，不得违反</li>
+<li>ADVICE:建议遵守，除非确有特殊情况</li>
+</ul>
+<p>本规范所有条目都有编号，用来标识单条规范并用于自动化检查工具错误提示。</p>
+<p>标号由"RULE"或"ADVICE"和三位数字标识，例如RULE001, ADVICE001</p>
+<h2 id="Golang-说明">说明</h2>
+<p>本规范由运维组件中台部开发人员制定；</p>
+<h1 id="Golang-语言规范">语言规范</h1>
+<h2 id="Golang-true/false求值">true/false求值</h2>
+<p> </p>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE001} 当明确expr为bool类型时，禁止使用==或!=与true/false比较，应该使用expr或!expr</p>
+<p>{RULE002} 判断某个整数表达式expr是否为零时，禁止使用!expr，应该使用expr == 0</p>
+</div>
+</div>
+<p><br/>示例：</p>
+<p> </p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_310017">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">var isWhiteCat </code><code class="py functions">bool</code></div>
+<div class="line number2 index1 alt1"><code class="py plain">var num </code><code class="py functions">int</code></div>
+<div class="line number3 index2 alt2"> </div>
+<div class="line number4 index3 alt1"><code class="py keyword">if</code> <code class="py plain">isWhiteCat {</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+<div class="line number7 index6 alt2"> </div>
+<div class="line number8 index7 alt1"> </div>
+<div class="line number9 index8 alt2"><code class="py keyword">if</code> <code class="py plain">num </code><code class="py keyword">=</code><code class="py keyword">=</code> <code class="py value">0</code> <code class="py plain">{</code></div>
+<div class="line number10 index9 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number11 index10 alt2"> </div>
+<div class="line number12 index11 alt1"> </div>
+<div class="line number13 index12 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_963267">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">var isWhiteCat </code><code class="py functions">bool</code></div>
+<div class="line number2 index1 alt1"><code class="py plain">var num </code><code class="py functions">int</code></div>
+<div class="line number3 index2 alt2"> </div>
+<div class="line number4 index3 alt1"><code class="py keyword">if</code> <code class="py plain">isWhite </code><code class="py keyword">=</code><code class="py keyword">=</code> <code class="py plain">true {</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+<div class="line number7 index6 alt2"> </div>
+<div class="line number8 index7 alt1"><code class="py keyword">if</code> <code class="py plain">!num {</code></div>
+<div class="line number9 index8 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number10 index9 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2 id="Golang-recever"><br/>recever</h2>
+<h3 id="Golang-recevertype">recever type</h3>
+<p> </p>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p class="_mce_tagged_br">{RULE003} 如果receiver是map、函数或者chan类型，类型不可以是指针</p>
+<p>{RULE004} 如果receiver是slice，并且方法不会进行reslice或者重新分配slice，类型不可以是指针</p>
+<p>{RULE005} 如果receiver是struct，且包含sync.Mutex类型字段，则必须使用指针避免拷贝。</p>
+<p>{ADVICE001} 如果receiver是比较大的struct/array，建议使用指针，这样会更有效率</p>
+<p>{ADVICE002} 如果receiver是struct、array或slice，其中指针元素所指的内容可能在方法内被修改，建议使用指针类型</p>
+<p>{ADVICE003} 如果receiver是比较小的struct/array，建议使用value类型</p>
+</div>
+</div>
+<p> </p>
+<p>解释：</p>
+<p>关于receiver的定义详见Receiver定义:The receiver is specified via an extra parameter section preceeding the method name. That parameter section must declare a single parameter, the receiver. Its type must be of the form T or *T (possibly using parentheses) where T is a type name. The type denoted by T is called the receiver base type; it must not be a pointer or interface type and it must be declared in the same package as the method. The method is said to be bound to the base type and the method name is visible only within selectors for that type.</p>
+<p>struct或者array中的元素个数超过3个，则认为比较大，反之，则认为比较小</p>
+<h3 id="Golang-recever明明方式">recever 明明方式</h3>
+<p> </p>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE004} 尽量简短并有意义。</p>
+<p>{ADVICE005} receiver的命名要保持一致性</p>
+<p>{RULE006} 禁止使用“this"、”self“等面向对象语言中特定的叫法。</p>
+</div>
+</div>
+<p> </p>
+<p>示例：</p>
+<p> </p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_113828">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">call()done()</code><code class="py string">"c"</code><code class="py plain">receiver</code></div>
+<div class="line number2 index1 alt1"><code class="py plain">func (c Client) call() error {</code></div>
+<div class="line number3 index2 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">... }</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">func (c Client) done() error {</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<p> </p>
+<p> </p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_114586">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py value">1.</code> <code class="py string">"c"</code><code class="py string">"client"</code><code class="py plain">done()ccall()client</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py value">2.</code> <code class="py plain">client</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">func (c Client) done() error {</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">}</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">func (client Client) call() error {</code></div>
+<div class="line number7 index6 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number8 index7 alt1"><code class="py plain">}</code></div>
+<div class="line number9 index8 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py color1">self</code></div>
+<div class="line number10 index9 alt1"><code class="py plain">func (</code><code class="py color1">self</code> <code class="py plain">Server) rcv() error {</code></div>
+<div class="line number11 index10 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number12 index11 alt1"><code class="py plain">}</code></div>
+<div class="line number13 index12 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">this</code></div>
+<div class="line number14 index13 alt1"><code class="py plain">func (this Server) call() error {</code></div>
+<div class="line number15 index14 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number16 index15 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-申请空的slice">申请空的slice</h2>
+<p> </p>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE006} 申明slice时，建议使用var方式申明，不建议使用大括号的方式</p>
+</div>
+</div>
+<p> </p>
+<p>解释：</p>
+<p>var方式申明在slice不被append的情况下避免了内存分配</p>
+<p> </p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_811535">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">var t []string</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_102460">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">t :</code><code class="py keyword">=</code> <code class="py plain">[]string{}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2 id="Golang-ErrorHandler">Error Handler</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE007} 对于返回值中的error，一定要进行判断和处理，不可以使用 ”_“ 变量忽略error</p>
+</div>
+</div>
+<h2 id='Golang-"{"的使用'><br/>"{"的使用</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE008} struct、函数、条件判断中的“{”，不可以作为独立的一行</p>
+</div>
+</div>
+<p>示例</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_685196">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">if</code> <code class="py plain">condition {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">} </code><code class="py keyword">else</code> <code class="py plain">{</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_783484">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py string">"{"</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">if</code> <code class="py plain">condition</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">{</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">} </code><code class="py keyword">else</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">{</code></div>
+<div class="line number7 index6 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number8 index7 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2 id="Golang-embeding的使用"><br/>embeding的使用</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE007} embedding只用于"is a"的语义下，而不用于"has a"的语义下</p>
+<p>{ADVICE008} 一个定义内，多于一个的embedding尽量少用</p>
+</div>
+</div>
+<p>解释：</p>
+<p>语义上embedding是一种“继承关系“，而不是”成员关系“</p>
+<p>一个定义内有多个embedding，则很难判断某个成员变量或函数是从哪里继承得到的</p>
+<p>一个定义内有多个embedding，危害和在python中使用”from xxx import *"是类似的</p>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_515103">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py functions">type</code> <code class="py plain">Automobile struct {</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">... }</code></div>
+<div class="line number3 index2 alt2"><code class="py functions">type</code> <code class="py plain">Engine struct {</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">....</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">}</code></div>
+<div class="line number6 index5 alt1"><code class="py keyword">/</code><code class="py keyword">/</code></div>
+<div class="line number7 index6 alt2"><code class="py functions">type</code> <code class="py plain">Car struct {</code></div>
+<div class="line number8 index7 alt1"><code class="py spaces">    </code><code class="py plain">Automobile</code></div>
+<div class="line number9 index8 alt2"><code class="py spaces">    </code><code class="py plain">engine Engine</code></div>
+<div class="line number10 index9 alt1"><code class="py keyword">/</code><code class="py keyword">/</code>  <code class="py plain">Car </code><code class="py keyword">is</code> <code class="py plain">a Automobile</code></div>
+<div class="line number11 index10 alt2"><code class="py keyword">/</code><code class="py keyword">/</code>  <code class="py plain">Car has a Engine</code></div>
+<div class="line number12 index11 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_218951">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py functions">type</code> <code class="py plain">Car struct {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">Automobile      </code><code class="py keyword">/</code><code class="py keyword">/</code>  <code class="py plain">Car </code><code class="py keyword">is</code> <code class="py plain">a Automobile</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py plain">Engine          </code><code class="py keyword">/</code><code class="py keyword">/</code>  <code class="py plain">Car has a Engine, but Car </code><code class="py keyword">is</code> <code class="py plain">NOT a Engine</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h1 id="Golang-风格规范">风格规范</h1>
+<h2 id="Golang-go文件layout">go文件layout</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE009} 建议文件按以下顺序进行布局</p>
+<ul>
+<li>General Documentation: 对整个模块和功能的完整描述注释，写在文件头部。 package:当前package定义</li>
+<li>imports:包含的头文件</li>
+<li>Constants:常量</li>
+<li>Typedefs: 类型定义</li>
+<li>Globals:全局变量定义</li>
+<li>functions:函数实现</li>
+</ul>
+</div>
+</div>
+<p> </p>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_682493">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">*</code> <code class="py plain">Copyright </code><code class="py value">2019</code> <code class="py plain">JD Inc. </code><code class="py functions">All</code> <code class="py plain">Rights Reserved. </code><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">/</code><code class="py keyword">*</code> <code class="py plain">bfe_server.go </code><code class="py keyword">-</code> <code class="py plain">the main structure of bfe</code><code class="py keyword">-</code><code class="py plain">server  </code><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number3 index2 alt2"><code class="py keyword">/</code><code class="py keyword">*</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">modification history</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code></div>
+<div class="line number6 index5 alt1"><code class="py value">2014</code><code class="py keyword">/</code><code class="py value">6</code><code class="py keyword">/</code><code class="py value">5</code><code class="py plain">, by Zhang San, create</code></div>
+<div class="line number7 index6 alt2"><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number8 index7 alt1"><code class="py keyword">/</code><code class="py keyword">*</code></div>
+<div class="line number9 index8 alt2"><code class="py plain">DESCRIPTION</code></div>
+<div class="line number10 index9 alt1"><code class="py plain">This </code><code class="py functions">file</code> <code class="py plain">contains the most important struct </code><code class="py string">'BfeServer'</code> <code class="py plain">of go</code><code class="py keyword">-</code><code class="py plain">bfe </code><code class="py keyword">and</code> <code class="py plain">new</code><code class="py keyword">/</code><code class="py plain">init method of the</code></div>
+<div class="line number11 index10 alt2"><code class="py plain">struct.</code></div>
+<div class="line number12 index11 alt1"><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number13 index12 alt2"><code class="py plain">package bfe_server</code></div>
+<div class="line number14 index13 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">imports</code></div>
+<div class="line number15 index14 alt2"><code class="py keyword">import</code> <code class="py plain">(</code></div>
+<div class="line number16 index15 alt1"><code class="py string">"fmt"</code></div>
+<div class="line number17 index16 alt2"><code class="py string">"time"</code> <code class="py plain">)</code></div>
+<div class="line number18 index17 alt1"><code class="py keyword">import</code> <code class="py plain">(</code></div>
+<div class="line number19 index18 alt2"><code class="py spaces">    </code><code class="py string">"code.google.com/p/log4go"</code></div>
+<div class="line number20 index19 alt1"><code class="py spaces">    </code><code class="py string">"git.jd.com/middleware/searchbox/golib"</code></div>
+<div class="line number21 index20 alt2"><code class="py plain">)</code></div>
+<div class="line number22 index21 alt1"><code class="py keyword">import</code> <code class="py plain">(</code></div>
+<div class="line number23 index22 alt2"><code class="py spaces">    </code><code class="py string">"bfe_config/bfe_conf"</code></div>
+<div class="line number24 index23 alt1"><code class="py spaces">    </code><code class="py string">"bfe_module"</code></div>
+<div class="line number25 index24 alt2"><code class="py plain">)</code></div>
+<div class="line number26 index25 alt1"><code class="py plain">const (</code></div>
+<div class="line number27 index26 alt2"><code class="py spaces">    </code><code class="py plain">version </code><code class="py keyword">=</code> <code class="py string">"1.0.0.0"</code></div>
+<div class="line number28 index27 alt1"><code class="py plain">)</code></div>
+<div class="line number29 index28 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">typedefs</code></div>
+<div class="line number30 index29 alt1"><code class="py functions">type</code> <code class="py plain">BfeModule interface {</code></div>
+<div class="line number31 index30 alt2"><code class="py spaces">    </code><code class="py plain">Init(cfg bfe_conf.BfeConfig, cbs </code><code class="py keyword">*</code><code class="py plain">BfeCallbacks) error</code></div>
+<div class="line number32 index31 alt1"><code class="py plain">}</code></div>
+<div class="line number33 index32 alt2"><code class="py functions">type</code> <code class="py plain">BfeModules struct {</code></div>
+<div class="line number34 index33 alt1"><code class="py spaces">    </code><code class="py plain">modules </code><code class="py functions">map</code><code class="py plain">[string]BfeModule</code></div>
+<div class="line number35 index34 alt2"><code class="py plain">}</code></div>
+<div class="line number36 index35 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py functions">vars</code></div>
+<div class="line number37 index36 alt2"><code class="py plain">var errTooLarge </code><code class="py keyword">=</code> <code class="py plain">errors.New(</code><code class="py string">"http: request too large"</code><code class="py plain">)</code></div>
+<div class="line number38 index37 alt1"><code class="py keyword">/</code><code class="py keyword">/</code><code class="py plain">functions</code></div>
+<div class="line number39 index38 alt2"><code class="py plain">func foo() {</code></div>
+<div class="line number40 index39 alt1"><code class="py keyword">/</code><code class="py keyword">/</code><code class="py plain">... }</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE009} 对于以上的各个部分，采用单个空行分割，同时:</p>
+<ul>
+<li>多个类型定义采用单个空行分割</li>
+</ul>
+<ul>
+<li>多个函数采用单个空行分割</li>
+</ul>
+<p>{ADVICE010} 函数内不同的业务逻辑处理建议采用单个空行分割</p>
+<p>{ADVICE011} 常量或者变量如果较多，建议按照业务进行分组，组间用单个空行分割</p>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-generaldocumentlayout">general document layout</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE012} 建议每个文件开头部分包括文件copyright说明(copyright)</p>
+<p>{ADVICE013} 建议每个文件开头部分包括文件标题(Title)</p>
+<p>{ADVICE014} 建议每个文件开头部分包括修改记录(Modification History)</p>
+<p>{ADVICE015} 建议每个文件开头部分包括文件描述(Description)</p>
+</div>
+</div>
+<p>解释：</p>
+<ul>
+<li>Title中包括文件的名称和文件的简单说明
+<ul>
+<li>Title应该在一行内完成</li>
+</ul>
+</li>
+<li>Modification History记录文件的修改过程，并且只记录最主要的修改
+<ul>
+<li>当书写新的函数模块时，只需要使用形如"Add func1()"这样的说明</li>
+<li>如果后面有对函数中的算法进行了修改，需要指出修改的具体位置和修改方法</li>
+<li>Modification History的具体格式为:&lt;修改时间&gt;, &lt;修改人&gt;, &lt;修改动作 &gt;</li>
+</ul>
+</li>
+<li>Description 详细描述文件的功能和作用</li>
+</ul>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_650610">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">*</code> <code class="py plain">Copyright </code><code class="py value">2019</code> <code class="py plain">JD Inc. </code><code class="py functions">All</code> <code class="py plain">Rights Reserved. </code><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">/</code><code class="py keyword">*</code> <code class="py plain">bfe_server.go </code><code class="py keyword">-</code> <code class="py plain">the main structure of bfe</code><code class="py keyword">-</code><code class="py plain">server  </code><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number3 index2 alt2"><code class="py keyword">/</code><code class="py keyword">*</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">modification history</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code><code class="py keyword">-</code></div>
+<div class="line number6 index5 alt1"><code class="py value">2014</code><code class="py keyword">/</code><code class="py value">6</code><code class="py keyword">/</code><code class="py value">5</code><code class="py plain">, by Zhang San, create</code></div>
+<div class="line number7 index6 alt2"><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number8 index7 alt1"><code class="py keyword">/</code><code class="py keyword">*</code></div>
+<div class="line number9 index8 alt2"><code class="py plain">DESCRIPTION</code></div>
+<div class="line number10 index9 alt1"><code class="py plain">This </code><code class="py functions">file</code> <code class="py plain">contains the most important struct </code><code class="py string">'BfeServer'</code> <code class="py plain">of go</code><code class="py keyword">-</code><code class="py plain">bfe </code><code class="py keyword">and</code> <code class="py plain">new</code><code class="py keyword">/</code><code class="py plain">init method of the</code></div>
+<div class="line number11 index10 alt2"><code class="py plain">struct.</code></div>
+<div class="line number12 index11 alt1"><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number13 index12 alt2"><code class="py plain">package bfe_server</code></div>
+<div class="line number14 index13 alt1"><code class="py plain">func func1() {</code></div>
+<div class="line number15 index14 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number16 index15 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_836637">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">package bfe_server</code></div>
+<div class="line number2 index1 alt1"><code class="py plain">func func1() {</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-import规范">import规范</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE010} 需要按照如下顺序进行头文件import，并且每个import部分内的package需按照字母升序排列</p>
+<ul>
+<li>系统package</li>
+<li>第三方的package</li>
+<li>程序自己的package</li>
+</ul>
+<p>{RULE011} 每部分import间用单个空行进行分隔</p>
+</div>
+</div>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_478251">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">import</code> <code class="py plain">(</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py string">"fmt"</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py string">"time"</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">)</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">import</code> <code class="py plain">(</code></div>
+<div class="line number6 index5 alt1"><code class="py spaces">    </code><code class="py string">"code.google.com/p/log4go"</code></div>
+<div class="line number7 index6 alt2"><code class="py spaces">    </code><code class="py string">"git.jd.com/middleware/searchbox/golib"</code></div>
+<div class="line number8 index7 alt1"><code class="py plain">)</code></div>
+<div class="line number9 index8 alt2"><code class="py keyword">import</code> <code class="py plain">(</code></div>
+<div class="line number10 index9 alt1"><code class="py spaces">    </code><code class="py string">"bfe_config/bfe_conf"</code></div>
+<div class="line number11 index10 alt2"><code class="py spaces">    </code><code class="py string">"bfe_module"</code></div>
+<div class="line number12 index11 alt1"><code class="py plain">)</code></div>
+<div class="line number13 index12 alt2"> </div>
+<div class="line number14 index13 alt1"><code class="py keyword">import</code> <code class="py plain">(</code></div>
+<div class="line number15 index14 alt2"><code class="py spaces">    </code><code class="py string">"fmt"</code></div>
+<div class="line number16 index15 alt1"><code class="py spaces">    </code><code class="py string">"time"</code></div>
+<div class="line number17 index16 alt2"><code class="py spaces">    </code><code class="py string">"code.google.com/p/log4go"</code></div>
+<div class="line number18 index17 alt1"><code class="py spaces">    </code><code class="py string">"bfe_config/bfe_conf"</code></div>
+<div class="line number19 index18 alt2"><code class="py spaces">    </code><code class="py string">"bfe_module"</code></div>
+<div class="line number20 index19 alt1"><code class="py plain">)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-Go函数layout">Go函数layout</h2>
+<h3 id="Golang-函数注释">函数注释</h3>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE016} 函数的注释，建议包括以下内容</p>
+<ul>
+<li>Description:对函数的完整描述，主要包括函数功能和使用方法</li>
+<li>Params:对参数的说明</li>
+<li>Returns:对返回值的说明</li>
+</ul>
+</div>
+</div>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_398584">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">*</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">*</code> <code class="py plain">Init </code><code class="py keyword">-</code> <code class="py plain">initialize log lib</code></div>
+<div class="line number3 index2 alt2"><code class="py keyword">*</code></div>
+<div class="line number4 index3 alt1"><code class="py keyword">*</code> <code class="py plain">PARAMS:</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">*</code>   <code class="py keyword">-</code> <code class="py plain">levelStr: </code><code class="py string">"DEBUG"</code><code class="py plain">, </code><code class="py string">"TRACE"</code><code class="py plain">, </code><code class="py string">"INFO"</code><code class="py plain">, </code><code class="py string">"WARNING"</code><code class="py plain">, </code><code class="py string">"ERROR"</code><code class="py plain">, </code><code class="py string">"CRITICAL"</code></div>
+<div class="line number6 index5 alt1"><code class="py keyword">*</code>   <code class="py keyword">-</code> <code class="py plain">when:</code></div>
+<div class="line number7 index6 alt2"><code class="py keyword">*</code>       <code class="py string">"M"</code><code class="py plain">, minute</code></div>
+<div class="line number8 index7 alt1"><code class="py keyword">*</code>       <code class="py string">"H"</code><code class="py plain">, hour</code></div>
+<div class="line number9 index8 alt2"><code class="py keyword">*</code>       <code class="py string">"D"</code><code class="py plain">, day</code></div>
+<div class="line number10 index9 alt1"><code class="py keyword">*</code>       <code class="py string">"MIDNIGHT"</code><code class="py plain">, roll over at midnight</code></div>
+<div class="line number11 index10 alt2"><code class="py keyword">*</code>   <code class="py keyword">-</code> <code class="py plain">backupCount: If backupCount </code><code class="py keyword">is</code> <code class="py plain">&gt; </code><code class="py value">0</code><code class="py plain">, when rollover </code><code class="py keyword">is</code> <code class="py plain">done, no more than</code></div>
+<div class="line number12 index11 alt1"><code class="py keyword">*</code>       <code class="py plain">backupCount files are kept </code><code class="py keyword">-</code> <code class="py plain">the oldest ones are deleted.</code></div>
+<div class="line number13 index12 alt2"><code class="py keyword">*</code></div>
+<div class="line number14 index13 alt1"><code class="py keyword">*</code> <code class="py plain">RETURNS:</code></div>
+<div class="line number15 index14 alt2"><code class="py keyword">*</code>   <code class="py plain">nil, </code><code class="py keyword">if</code> <code class="py plain">succeed</code></div>
+<div class="line number16 index15 alt1"><code class="py keyword">*</code>   <code class="py plain">error, </code><code class="py keyword">if</code> <code class="py plain">fail</code></div>
+<div class="line number17 index16 alt2"><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number18 index17 alt1"><code class="py plain">func Init(levelStr string, when string, backupCount </code><code class="py functions">int</code><code class="py plain">) error {</code></div>
+<div class="line number19 index18 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number20 index19 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h3 id="Golang-函数参数与返回值">函数参数与返回值</h3>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE017} 对于“逻辑判断型”的函数，返回值的意义代表“真”或“假”，返回值类型定义为bool {ADVICE018} 对于“操作型”的函数，返回值的意义代表“成功”或“失败”，返回值类型定义为error</p>
+<ul>
+<li>如果成功，则返回nil</li>
+<li>如果失败，则返回对应的error值</li>
+</ul>
+<p>{ADVICE019} 对于“获取数据型”的函数，返回值的意义代表“有数据”或“无数据/获取数据失败”，返回值类型定义为(data, error)</p>
+<ul>
+<li>正常情况下，返回为:(data, nil)</li>
+<li>异常情况下，返回为:(data, error)</li>
+</ul>
+<p>{RULE012} 函数返回值小于等于3个，大于3个时必须通过struct进行包装 {ADVICE020} 函数参数不建议超过3个，大于3个时建议通过struct进行包装</p>
+</div>
+</div>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_895679">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py functions">type</code> <code class="py plain">student struct {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">name     string</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py plain">email    string</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py functions">id</code>       <code class="py functions">int</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">class</code>    <code class="py plain">string</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+<div class="line number7 index6 alt2"> </div>
+<div class="line number8 index7 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py functions">bool</code></div>
+<div class="line number9 index8 alt2"><code class="py plain">func isWhiteCat() </code><code class="py functions">bool</code> <code class="py plain">{</code></div>
+<div class="line number10 index9 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number11 index10 alt2"><code class="py plain">}</code></div>
+<div class="line number12 index11 alt1"> </div>
+<div class="line number13 index12 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">error</code></div>
+<div class="line number14 index13 alt1"><code class="py plain">func deleteData() error {</code></div>
+<div class="line number15 index14 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number16 index15 alt1"><code class="py plain">}</code></div>
+<div class="line number17 index16 alt2"> </div>
+<div class="line number18 index17 alt1"><code class="py keyword">/</code><code class="py keyword">/</code></div>
+<div class="line number19 index18 alt2"><code class="py plain">func getData() (student, error) {</code></div>
+<div class="line number20 index19 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number21 index20 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_449864">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py functions">type</code> <code class="py plain">student struct {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">name     string</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py plain">email    string</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py functions">id</code>       <code class="py functions">int</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">class</code>    <code class="py plain">string</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+<div class="line number7 index6 alt2"> </div>
+<div class="line number8 index7 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">intbool</code></div>
+<div class="line number9 index8 alt2"><code class="py plain">func isWhiteCat() </code><code class="py functions">int</code> <code class="py plain">{</code></div>
+<div class="line number10 index9 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">... </code></div>
+<div class="line number11 index10 alt2"><code class="py plain">}</code></div>
+<div class="line number12 index11 alt1"> </div>
+<div class="line number13 index12 alt2"><code class="py keyword">/</code><code class="py keyword">/</code></div>
+<div class="line number14 index13 alt1"><code class="py plain">func deleteData() {</code></div>
+<div class="line number15 index14 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number16 index15 alt1"><code class="py plain">}</code></div>
+<div class="line number17 index16 alt2"> </div>
+<div class="line number18 index17 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">go</code></div>
+<div class="line number19 index18 alt2"><code class="py plain">func getData() student {</code></div>
+<div class="line number20 index19 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number21 index20 alt2"><code class="py plain">}</code></div>
+<div class="line number22 index21 alt1"> </div>
+<div class="line number23 index22 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">&gt;</code><code class="py value">3</code></div>
+<div class="line number24 index23 alt1"><code class="py plain">func getData() (string, string, </code><code class="py functions">int</code><code class="py plain">, string, error) {</code></div>
+<div class="line number25 index24 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number26 index25 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-程序规范">程序规范</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE013} 每行代码不超过100个字符。</p>
+<p>{RULE014} 每行注释不超过100个字符。</p>
+<p>{ADVICE021} 函数不超过100行。</p>
+<p>{ADVICE022} 文件不超过2000行。</p>
+</div>
+</div>
+<p>解释：</p>
+<ul>
+<li>现在宽屏比较流行，所以从传统的80个字符限制扩展到100个字符</li>
+<li>函数/文件太长一般说明函数定义不明确/程序结构划分不合理，不利于维护</li>
+</ul>
+<h2 id="Golang-命名规范">命名规范</h2>
+<h3 id="Golang-文件名">文件名</h3>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE015} 文件名都使用小写字母，如果需要，可以使用下划线分割</p>
+<p>{RULE016} 文件名的后缀使用小写字母</p>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_686814">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">web_server.go</code></div>
+<div class="line number2 index1 alt1"> </div>
+<div class="line number3 index2 alt2"> </div>
+<div class="line number4 index3 alt1"><code class="java plain">http.go</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter java" id="highlighter_170966">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="java plain">webServer.go</code></div>
+<div class="line number2 index1 alt1"> </div>
+<div class="line number3 index2 alt2"> </div>
+<div class="line number4 index3 alt1"><code class="java plain">http.GO</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h3 id="Golang-函数名/变量名">函数名/变量名</h3>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE017} 采用驼峰方式命名，禁止使用下划线命名。首字母是否大写，根据是否需要外部访问来决定</p>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter ruby" id="highlighter_785204">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="ruby plain">// package</code></div>
+<div class="line number2 index1 alt1"><code class="ruby plain">func innerFunction () {</code></div>
+<div class="line number3 index2 alt2"><code class="ruby spaces">    </code><code class="ruby plain">// ...</code></div>
+<div class="line number4 index3 alt1"><code class="ruby plain">}</code></div>
+<div class="line number5 index4 alt2"> </div>
+<div class="line number6 index5 alt1"> </div>
+<div class="line number7 index6 alt2"><code class="ruby plain">// package</code></div>
+<div class="line number8 index7 alt1"><code class="ruby plain">func OuterFunction () {</code></div>
+<div class="line number9 index8 alt2"><code class="ruby spaces">    </code><code class="ruby plain">// ...</code></div>
+<div class="line number10 index9 alt1"><code class="ruby plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_868009">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func inner_Function () {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">}</code></div>
+<div class="line number4 index3 alt1"> </div>
+<div class="line number5 index4 alt2"> </div>
+<div class="line number6 index5 alt1"><code class="py plain">func Outer_Function () {</code></div>
+<div class="line number7 index6 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number8 index7 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h3 id="Golang-常量">常量</h3>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE023} 建议都使用大写字母，如果需要，可以使用下划线分割</p>
+<p>{ADVICE024} 尽量不要在程序中直接写数字，特殊字符串，全部用常量替代</p>
+</div>
+</div>
+<p>解释：</p>
+<p>go标准库中常量也有驼峰的命名方式，故这里不做强制限制。</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_114870">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">const METHOD </code><code class="py keyword">=</code> <code class="py string">"Get"</code></div>
+<div class="line number2 index1 alt1"> </div>
+<div class="line number3 index2 alt2"> </div>
+<div class="line number4 index3 alt1"> </div>
+<div class="line number5 index4 alt2"><code class="py plain">const HEADER_USER_AGENT </code><code class="py keyword">=</code> <code class="py string">"User-Agent"</code></div>
+<div class="line number6 index5 alt1"> </div>
+<div class="line number7 index6 alt2"> </div>
+<div class="line number8 index7 alt1"><code class="py plain">const defaultUserAgent </code><code class="py keyword">=</code> <code class="py string">"Go 1.1 package http"</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_101915">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">const header_user_agent </code><code class="py keyword">=</code> <code class="py string">"User-Agent"</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h3 id="Golang-缩写词">缩写词</h3>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE018} 缩写词要保持命名的一致性。</p>
+<ul>
+<li>同一变量字母大小写的一致性</li>
+<li>不同变量间的一致性</li>
+</ul>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_762391">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">var URL string</code></div>
+<div class="line number2 index1 alt1"><code class="py plain">var </code><code class="py functions">ID</code> <code class="py functions">int</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">var appID </code><code class="py functions">int</code></div>
+<div class="line number4 index3 alt1"><code class="py functions">type</code> <code class="py plain">ServeURL  struct {</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_447040">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">var Url string</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py keyword">not</code> <code class="py plain">consistent</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">var </code><code class="py functions">ID</code> <code class="py functions">int</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">var appid </code><code class="py functions">int</code></div>
+<div class="line number5 index4 alt2"><code class="py functions">type</code> <code class="py plain">ServUrl struct {</code></div>
+<div class="line number6 index5 alt1"><code class="py spaces">   </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number7 index6 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-缩进">缩进</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE019} 使用tab进行缩进。<br/>{RULE020} 跨行的缩进使用gofmt的缩进方式。<br/>{RULE021} 设置tabstop=4</p>
+</div>
+</div>
+<p>解释：</p>
+<p>要求设置tabstop=4是考虑到不同编辑器跨行字符串对齐显示的一致性，比如下面的例子:</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_856585">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func main() {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">rows, err :</code><code class="py keyword">=</code> <code class="py plain">e.db.Query(`SELECT </code><code class="py functions">id</code><code class="py plain">, name, state, create_ts, start_ts</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">                            </code><code class="py plain">FROM workflow</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">                            </code><code class="py plain">WHERE state</code><code class="py keyword">=</code><code class="py plain">? AND create_ts</code><code class="py keyword">=</code><code class="py plain">?</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">                            </code><code class="py plain">ORDER BY start_ts DESC`)</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_203459">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func longFunctionName(var_one, var_two,</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">var_three, var_four) {</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_738504">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func longFunctionName(var_one, var_two,</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">                    </code><code class="py plain">var_three, var_four) {</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">...</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE025} 错误处理时缩进错误处理代码，对正常代码保持最少的缩进。</p>
+</div>
+</div>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_791118">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">if</code> <code class="py plain">err !</code><code class="py keyword">=</code> <code class="py plain">nil {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">error handling</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py keyword">return</code> <code class="py keyword">/</code><code class="py keyword">/</code> <code class="py keyword">or</code> <code class="py keyword">continue</code><code class="py plain">, etc.</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">}</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">normal code</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_342272">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">if</code> <code class="py plain">err !</code><code class="py keyword">=</code> <code class="py plain">nil {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">error handling</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">} </code><code class="py keyword">else</code> <code class="py plain">{</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">normal code</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-空格">空格</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE022} 圆括号、方括号、花括号内侧都不加空格<br/>{RULE023} 逗号、冒号(slice中冒号除外)前不加空格，后边加一个空格<br/>{RULE024} 所有二元运算符前后各加一个空格(作为函数参数时除外)</p>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_533861">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">var (</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">s </code><code class="py keyword">=</code> <code class="py plain">make([]</code><code class="py functions">int</code><code class="py plain">, </code><code class="py value">10</code><code class="py plain">)</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">)</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">func foo() {</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py plain">m :</code><code class="py keyword">=</code> <code class="py functions">map</code><code class="py plain">[string]string{</code><code class="py string">"language"</code><code class="py plain">: </code><code class="py string">"golang"</code><code class="py plain">}</code></div>
+<div class="line number6 index5 alt1"><code class="py spaces">    </code><code class="py plain">r :</code><code class="py keyword">=</code> <code class="py value">1</code> <code class="py keyword">+</code> <code class="py value">2</code></div>
+<div class="line number7 index6 alt2"><code class="py spaces">    </code><code class="py plain">func1(</code><code class="py value">1</code><code class="py keyword">+</code><code class="py value">2</code><code class="py plain">)</code></div>
+<div class="line number8 index7 alt1"><code class="py spaces">    </code><code class="py plain">fmt.Println(m[</code><code class="py string">"language"</code><code class="py plain">])</code></div>
+<div class="line number9 index8 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_784851">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">var (</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">s </code><code class="py keyword">=</code> <code class="py plain">make( []</code><code class="py functions">int</code> <code class="py plain">, </code><code class="py value">10</code> <code class="py plain">)</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">)</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">func foo() {</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py plain">m :</code><code class="py keyword">=</code> <code class="py functions">map</code><code class="py plain">[string]string{ </code><code class="py string">"language"</code> <code class="py plain">: </code><code class="py string">"golang"</code> <code class="py plain">}</code></div>
+<div class="line number6 index5 alt1"><code class="py spaces">    </code><code class="py plain">r :</code><code class="py keyword">=</code> <code class="py value">1</code><code class="py keyword">+</code><code class="py value">2</code></div>
+<div class="line number7 index6 alt2"><code class="py spaces">    </code><code class="py plain">func1(</code><code class="py value">1</code> <code class="py keyword">+</code> <code class="py value">2</code><code class="py plain">)</code></div>
+<div class="line number8 index7 alt1"><code class="py spaces">    </code><code class="py plain">fmt.Println(m[ </code><code class="py string">"language"</code> <code class="py plain">])</code></div>
+<div class="line number9 index8 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-括号">括号</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE026} 除非用于明确算术表达式优先级，否则尽量避免冗余的括号</p>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_135760">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">if</code> <code class="py plain">x {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code> </div>
+<div class="line number3 index2 alt2"><code class="py plain">}</code></div>
+<div class="line number4 index3 alt1"><code class="py plain">func func1() </code><code class="py functions">int</code> <code class="py plain">{</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py plain">var num </code><code class="py functions">int</code></div>
+<div class="line number6 index5 alt1"><code class="py spaces">    </code><code class="py keyword">return</code> <code class="py plain">num</code></div>
+<div class="line number7 index6 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_370746">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">if</code> <code class="py plain">(x) { }</code></div>
+<div class="line number2 index1 alt1"><code class="py plain">func func1 </code><code class="py functions">int</code> <code class="py plain">{</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py plain">var num </code><code class="py functions">int</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">return</code> <code class="py plain">(num)</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<h2 id="Golang-注释"><br/>注释</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE027} 单行注释，采取"//"或者"/*...*/"的注释方式。<br/>{ADVICE028} 多行注释，采取每行开头“//"或者用"/* ... */"包括起来的注释("/*"和"*/"作为独立的行)<br/>{ADVICE029} 紧跟在代码之后的注释，使用"//"</p>
+</div>
+</div>
+<p>解释：</p>
+<p>大多数情况下，使用”//"更方便</p>
+<p>示例：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_742681">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">*</code> <code class="py plain">This </code><code class="py keyword">is</code> <code class="py plain">the correct </code><code class="py functions">format</code> <code class="py keyword">for</code> <code class="py plain">a single</code><code class="py keyword">-</code><code class="py plain">line comment </code><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">This </code><code class="py keyword">is</code> <code class="py plain">the correct </code><code class="py functions">format</code> <code class="py keyword">for</code> <code class="py plain">a single</code><code class="py keyword">-</code><code class="py plain">line comment</code></div>
+<div class="line number3 index2 alt2"><code class="py keyword">/</code><code class="py keyword">*</code></div>
+<div class="line number4 index3 alt1"><code class="py keyword">*</code> <code class="py plain">This </code><code class="py keyword">is</code> <code class="py plain">the correct </code><code class="py functions">format</code> <code class="py keyword">for</code> <code class="py plain">a multiline comment</code></div>
+<div class="line number5 index4 alt2"><code class="py keyword">*</code> <code class="py keyword">in</code> <code class="py plain">a section of code.</code></div>
+<div class="line number6 index5 alt1"><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number7 index6 alt2"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">This </code><code class="py keyword">is</code> <code class="py plain">the correct </code><code class="py functions">format</code> <code class="py keyword">for</code> <code class="py plain">a multiline comment</code></div>
+<div class="line number8 index7 alt1"><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py keyword">in</code> <code class="py plain">a section of code.</code></div>
+<div class="line number9 index8 alt2"><code class="py plain">var a </code><code class="py functions">int</code>   <code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">this </code><code class="py keyword">is</code> <code class="py plain">the correct </code><code class="py functions">format</code> <code class="py keyword">for</code> <code class="py plain">a</code></div>
+<div class="line number10 index9 alt1"><code class="py spaces">            </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">multiline comment </code><code class="py keyword">in</code> <code class="py plain">a declaration</code></div>
+<div class="line number11 index10 alt2"><code class="py functions">BOOL</code> <code class="py plain">b     </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">standard comment at the end of a line</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_765162">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py keyword">/</code><code class="py keyword">*</code> <code class="py plain">This </code><code class="py keyword">is</code> <code class="py plain">an incorrect </code><code class="py functions">format</code> <code class="py keyword">for</code> <code class="py plain">a multiline comment</code></div>
+<div class="line number2 index1 alt1"><code class="py keyword">*</code> <code class="py keyword">in</code> <code class="py plain">a section of code.</code><code class="py keyword">*</code><code class="py keyword">/</code></div>
+<div class="line number3 index2 alt2"><code class="py plain">var a </code><code class="py functions">int</code> <code class="py keyword">/</code><code class="py keyword">*</code> <code class="py plain">this </code><code class="py keyword">is</code> <code class="py plain">an incorrect comment </code><code class="py functions">format</code> <code class="py keyword">*</code><code class="py keyword">/</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h1 id="Golang-编程实践">编程实践</h1>
+<h2 id="Golang-errorstring">error string </h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE030} error string尽量使用小写字母，并且结尾不带标点符号</p>
+</div>
+</div>
+<p>解释：</p>
+<p>因为可能error string会用于其它上下文中</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_617618">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">fmt.Errorf(</code><code class="py string">"something bad"</code><code class="py plain">)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_257548">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">fmt.Errorf(</code><code class="py string">"Something bad"</code><code class="py plain">)</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-don'tpanic">don't panic</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{RULE025} 除非出现不可恢复的程序错误，不要使用panic，用多返回值和error。</p>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-关于lock的保护">关于lock的保护</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE031} 如果临界区内的逻辑较复杂、无法完全避免panic的发生，则要求适用defer来调用Unlock，即使在临界区过程中发生了panic， 也会在函数退出时调用Unlock释放锁</p>
+</div>
+</div>
+<p>解释：</p>
+<ul>
+<li>go提供了recover，可以对panic进行捕获，但如果panic发生在临界区内，则可能导致对锁的使用没有释放
+<ul>
+<li>这种情况下，即使panic不会导致整个程序的奔溃，也会由于”锁不释放“的问题而使临界区无法被后续的调用访问</li>
+</ul>
+</li>
+</ul>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>GOOD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_369271">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func doDemo() {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">lock.Lock()</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py plain">defer lock.Unlock()</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeHeader panelHeader pdl"><strong>BAD</strong></div>
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_89172">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func doDemo() {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">lock.Lock()</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py plain">lock.Unlock()</code></div>
+<div class="line number5 index4 alt2"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE032} 上述操作如果造成临界区扩大后，需要建立单独的一个函数访问临界区。</p>
+</div>
+</div>
+<p>解释：</p>
+<p>对应代码如下：</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_413479">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func doDemo() {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">lock.Lock()</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">step1:</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py plain">lock.Unlock()</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">step2:</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>如果改造为defer的方式，变为如下代码，实际上扩大了临界区的范围(step2的操作也被放置在临界区了)</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_767849">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func doDemo() {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">lock.Lock()</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">    </code><code class="py plain">defer lock.Unlock()</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">step1:</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">step2:</code></div>
+<div class="line number6 index5 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p>需要使用单独的匿名函数，专门用于访问临界区:</p>
+<div class="code panel pdl conf-macro output-block" data-hasbody="true" data-macro-name="code">
+<div class="codeContent panelContent pdl">
+<div>
+<div class="syntaxhighlighter sh-confluence nogutter py" id="highlighter_547624">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="code">
+<div class="container" title="Hint: double-click to select code">
+<div class="line number1 index0 alt2"><code class="py plain">func doDemo() {</code></div>
+<div class="line number2 index1 alt1"><code class="py spaces">    </code><code class="py plain">func() {</code></div>
+<div class="line number3 index2 alt2"><code class="py spaces">        </code><code class="py plain">lock.Lock()</code></div>
+<div class="line number4 index3 alt1"><code class="py spaces">        </code><code class="py plain">defer lock.Unlock()</code></div>
+<div class="line number5 index4 alt2"><code class="py spaces">        </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">step1:</code></div>
+<div class="line number6 index5 alt1"><code class="py spaces">    </code><code class="py plain">}()</code></div>
+<div class="line number7 index6 alt2"><code class="py spaces">    </code><code class="py keyword">/</code><code class="py keyword">/</code> <code class="py plain">step2:</code></div>
+<div class="line number8 index7 alt1"><code class="py plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<p> </p>
+<h2 id="Golang-日志的处理">日志的处理</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE033} 建议使用公司golang-lib中的log库，log库地址:待补充。</p>
+</div>
+</div>
+<h2 id="Golang-unsafepackage"><br/>unsafe package</h2>
+<div class="confluence-information-macro confluence-information-macro-information conf-macro output-block" data-hasbody="true" data-macro-name="info">
+<div class="confluence-information-macro-body">
+<p>{ADVICE034} 除非特殊原因，不建议使用unsafe package</p>
+<p>比如进行指针和数值uintptr之间转换就是一个特殊原因</p>
+</div>
+</div>
+<p> </p>
+{% endraw %}

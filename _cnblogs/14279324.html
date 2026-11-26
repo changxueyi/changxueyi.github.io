@@ -1,0 +1,59 @@
+---
+title: "thinkPHP6（TP6）的安装及使用"
+date: 2021-01-14 20:57:00 +0800
+tags: ["【PHP】-- PHP基础"]
+excerpt: "ThinkPHP6.0在5.1的基础上对底层架构做了进一步的精简和统一，引入了一些新特性。ThinkPHP6.0运行环境要求PHP7.1+，thinkPHP6（TP6）是一款简洁而优雅，光明磊落，清楚流畅比laravel有过之而无不及的新框架。 在www目录下执行： composer create-"
+read_minutes: 1
+cnblogs_id: 14279324
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14279324.html"
+---
+{% raw %}
+<p>ThinkPHP6.0在5.1的基础上对底层架构做了进一步的精简和统一，引入了一些新特性。ThinkPHP6.0运行环境要求PHP7.1+，thinkPHP6（TP6）是一款简洁而优雅，光明磊落，清楚流畅比laravel有过之而无不及的新框架。</p>
+<h2><a name="t0"></a><a name="t0"></a><a id="www_3"></a>在www目录下执行：</h2>
+<pre class="prettyprint"><code class="has-numbering">composer create-project topthink/think tp 6.0.*-dev
+</code></pre>
+<ul class="pre-numbering">
+<li>1</li>
+</ul>
+<p>根据网速可能需要10分钟左右才能下载完成。<br/>可以先去开个会或者干点其他的。<br/>【备注：可以改镜像为阿里云镜像，神一样的快，运行代码：</p>
+<pre class="prettyprint"><code class="prism language-bash has-numbering">composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/   
+</code></pre>
+<ul class="pre-numbering">
+<li>1</li>
+</ul>
+<p>千万不能改这个：https://packagist.phpcomposer.com，这个非常不稳定，可以尝试，但不建议】<br/>对以上的解释：将tp6 安装到名字为tp的目录里面。</p>
+<p>安装完成后在www目录下生成了一个tp文件。<br/><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/68baa045766a4f03.png"/></p>
+<h2><a name="t1"></a><a name="t1"></a><a id="tpcmdXshell_22"></a>进入tp文件夹内地址栏上执行cmd：（或者进入本地Xshell）</h2>
+<pre class="prettyprint"><code class="has-numbering">php  think  run 
+</code></pre>
+<ul class="pre-numbering">
+<li>1</li>
+</ul>
+<p>出现如下图：<br/><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/a421f6093ed3baf2.png"/><br/>将生成的127.0.0.1:8000 放到浏览器运行：（该cmd不能关闭）</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/242ca86da3a15eb5.png"/></p>
+<p>出现如上图所示页面即代表安装成功。</p>
+<h2><a name="t2"></a><a name="t2"></a><a id="_36"></a>修改配置：</h2>
+<p>在PHPstudy中设置伪静态，<br/><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/51c386f58cf41148.png"/><br/>代码：</p>
+<pre class="prettyprint"><code class="has-numbering"> if (!-e $request_filename) {
+   		rewrite  ^(.*)$  /index.php?s=/$1  last;
+ }
+</code></pre>
+<ul class="pre-numbering">
+<li>1</li>
+<li>2</li>
+<li>3</li>
+</ul>
+<p>或者在thinkPHP根目录下的public下添加一个文件：nginx.htaccess</p>
+<p><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/27e55ad0e81efde8.png"/><br/>添加代码：</p>
+<pre class="prettyprint"><code class="has-numbering"> if (!-e $request_filename) {
+   		rewrite  ^(.*)$  /index.php?s=/$1  last;
+ }
+</code></pre>
+<ul class="pre-numbering">
+<li>1</li>
+<li>2</li>
+<li>3</li>
+</ul>
+<p>或者直接进入phpstudy中配置文件vhosts.conf中添加以上代码：<br/><img alt="在这里插入图片描述" loading="lazy" src="/images/cnblogs/fdd17e7085f2f90b.png"/></p>
+<p>TP6项目的访问方式有两种，一种是运行命令行的方式，此种方式是tp的内置服务器方式，另一种是在 phpstudy中配置本地域名访问。两种效果都是一样，大家自选一种启动方式即可。<br/>关于tp6的玩法，请参考本人其他博文，think you!</p>
+{% endraw %}

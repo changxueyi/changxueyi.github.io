@@ -1,0 +1,24 @@
+---
+title: "PHP 中零碎的小知识点"
+date: 2021-01-10 16:00:00 +0800
+tags: ["【PHP】-- PHP基础"]
+excerpt: "1. PHP中的=>,->是什么意思? ->是对象执行方法或取得属性用的。 =>是数组里键和值bai对应用的。 2.PHP 单引号与双引号的区别(总结) 双引号中的变量可以解析，单引号就是绝对的字符串 3、::的用法 双冒号操作符即作用域限定操作符Scope Resolution Operator可"
+read_minutes: 1
+cnblogs_id: 14258575
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14258575.html"
+---
+{% raw %}
+<h2><span class="ask-title">1. PHP中的=&gt;,-&gt;是什么意思?</span></h2>
+<h4>-&gt;是对象执行方法或取得属性用的。</h4>
+<h4>=&gt;是数组里键和值bai对应用的。</h4>
+<p> </p>
+<h1 class="title-article" id="articleContentId">2.PHP 单引号与双引号的区别(总结)</h1>
+<p>双引号中的变量可以解析，单引号就是绝对的字符串</p>
+<h2>3、::的用法</h2>
+<p>双冒号操作符即作用域限定操作符Scope Resolution Operator可以访问静态、const和类中重写的属性与方法。</p>
+<h2>4.$this 属性不要加上$了</h2>
+<p>1. return $this-&gt;objDaoSample-&gt;addSample($arrFields);</p>
+<p>2 .$arrErrorCodes = Saf_Api_Server::getLastError();</p>
+<p>　　$arrErrNo = array_keys($arrErrorCodes);          //数组里同样要加入$符号        </p>
+<p> </p>
+{% endraw %}

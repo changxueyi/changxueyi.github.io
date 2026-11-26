@@ -1,0 +1,62 @@
+---
+title: "【服务网格】Istio"
+date: 2024-01-20 16:08:00 +0800
+tags: ["【微服务框架】"]
+excerpt: "Istio是一个完全开源的服务网格，作为透明的一层接入到现有的分布式应用程序里。它也是一个平台，拥有可以集成任何日志、遥测和策略系统的 API 接口。Istio 多样化的特性使您能够成功且高效地运行分布式微服务架构，并提供保护、连接和监控微服务的统一方法。 服务网格是什么？# 服务网格用来描述组成这"
+read_minutes: 6
+cnblogs_id: 17976614
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/17976614.html"
+---
+{% raw %}
+<p>Istio是一个完全开源的服务网格，作为透明的一层接入到现有的分布式应用程序里。它也是一个平台，拥有可以集成任何日志、遥测和策略系统的 API 接口。Istio 多样化的特性使您能够成功且高效地运行分布式微服务架构，并提供保护、连接和监控微服务的统一方法。</p>
+<h2 id="2094277128">服务网格是什么？<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#2094277128">#</a></h2>
+<p>服务网格用来描述组成这些应用程序的微服务网络以及它们之间的交互。随着服务网格的规模和复杂性不断的增长，它将会变得越来越难以理解和管理。它的需求包括服务发现、负载均衡、故障恢复、度量和监控等。服务网格通常还有更复杂的运维需求，比如 A/B 测试、金丝雀发布、速率限制、访问控制和端到端认证。</p>
+<h2 id="3080714229">理解 Service Mesh<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#3080714229">#</a></h2>
+<p>如果用一句话来解释什么是 Service Mesh，可以将它比作是应用程序或者说微服务间的 TCP/IP，负责服务之间的网络调用、限流、熔断和监控。对于编写应用程序来说一般无须关心 TCP/IP 这一层（比如通过 HTTP 协议的 RESTful 应用），同样使用 Service Mesh 也就无须关心服务之间的那些原本通过服务框架实现的事情，比如 Spring Cloud、Netflix OSS 和其他中间件，现在只要交给 Service Mesh 就可以了。</p>
+<h2 id="3462681035">Service Mesh的特点<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#3462681035">#</a></h2>
+<ul>
+<li>应用程序间通信的中间层</li>
+<li>轻量级网络代理</li>
+<li>应用程序无感知</li>
+<li>解耦应用程序的重试/超时、监控、追踪和服务发现</li>
+</ul>
+<p>目前两款流行的 Service Mesh 开源软件 <a href="https://istio.io/" rel="noopener" target="_blank">Istio</a> 和 <a href="https://linkerd.io/" rel="noopener" target="_blank">Linkerd</a> 都可以直接在 Kubernetes 中集成，其中 Linkerd 已经成为 CNCF 中的项目</p>
+<h2 id="1398567651">为什么使用 Istio？<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#1398567651">#</a></h2>
+<p>通过负载均衡、服务间的身份验证、监控等方法，Istio 可以轻松地创建一个已经部署了服务的网络，而服务的代码只需<a href="https://istio.io/latest/zh/docs/tasks/observability/distributed-tracing/overview/#trace-context-propagation" rel="noopener" target="_blank">很少</a>更改甚至无需更改。通过在整个环境中部署一个特殊的 sidecar 代理为服务添加 Istio 的支持，而代理会拦截微服务之间的所有网络通信，然后使用其控制平面的功能来配置和管理 Istio，这包括：</p>
+<ul>
+<li>为 HTTP、gRPC、WebSocket 和 TCP 流量自动负载均衡。</li>
+<li>通过丰富的路由规则、重试、故障转移和故障注入对流量行为进行细粒度控制。</li>
+<li>可插拔的策略层和配置 API，支持访问控制、速率限制和配额。</li>
+<li>集群内（包括集群的入口和出口）所有流量的自动化度量、日志记录和追踪。</li>
+<li>在具有强大的基于身份验证和授权的集群中实现安全的服务间通信。</li>
+</ul>
+<p>Istio 为可扩展性而设计，可以满足不同的部署需求。</p>
+<h2 id="221285265">Istio架构及其组件概述<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#221285265">#</a></h2>
+<p><a data-alt="" data-lightbox="roadtrip" data-title="" href="https://img2020.cnblogs.com/blog/724738/202104/724738-20210413072233428-926586457.png"><img alt="" class="medium-zoom-image" loading="lazy" src="/images/cnblogs/8782483c67853af6.png"/></a></p>
+<p>Istio 架构总体来说分为控制面和数据面两部分。<br/>控制面是 Istio 的核心，管理 Istio 的所有功能，主要包括Pilot、Mixer、Citadel等服务组件;<br/>数据面由伴随每个应用程序部署的代理程序Envoy组成，执行针对应用程序的治理逻辑。常被称为“Sidecar”。Sidecar 一般和业务容器绑定在一起（在Kubernets中自动注入方式到业务pod中），来劫持业务应用容器的流量，并接受控制面组件的控制，同时会向控制面输出日志、跟踪及监控数据。</p>
+<h2 id="2469007385">Istio各组件详解<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#2469007385">#</a></h2>
+<h3 id="4122280091">Pilot<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#4122280091">#</a></h3>
+<p>Pilot 是 Istio 的主要控制组件，下发指令控制客户端。在整个系统中，Pilot 完成以下任务：<br/>• 从 Kubernetes 或者其他平台的注册中心获取服务信息，完成服务发现过程。<br/>• 读取 Istio 的各项控制配置，在进行转换之后，将其发给数据面进行实施。</p>
+<p>Pilot 将配置内容下发给数据面的 Envoy，Envoy 根据 Pilot 指令，将路由、服务、监听、集群等定义信息转换为本地配置，完成控制行为的落地。</p>
+<h3 id="2907025025">Mixer混合器<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#2907025025">#</a></h3>
+<p>顾名思义，Mixer混合了各种策略以及后端数据采集或遥测系统的适配器，从而实现了前端Proxy与后端系统的隔离与汇合。Mixer是一个灵活的插件模型（有没有发现无论是k8s还是Istio，实现上都很青睐于插件模型，这是一个很灵活的实现方式），它一端连着Envoy，同时我们可以将日志、监控、遥测等各种系统“插入”到Mixer的另一端中，从而得到我们想要的数据或结果。</p>
+<h4 id="2284297057">Telemetry<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#2284297057">#</a></h4>
+<p>Telemetry是专门用于收集监测数据的Mixer服务组件。Istio控制面部署了两个Mixer组件：istio- telemetry和istio-policy，分别处理监测数据的收集和策略的执行，两个组件的 Pod 镜像都是 mixer。<br/>从调用时机上来说，Pilot管理的是配置数据，在配置改变时和数据面交互即可，对于Mixer来说，在服务间交互时Envoy都会对Mixer进行一次调用，因此这是一种实时管理。<br/>当网格中的两个服务间有调用发生时，服务的代理 Envoy就会上报监测数据给 istio-telemetry 服务组件，istio-telemetry 则根据配置将生成访问的 Metric等数据分发给后端的监测服务，如Prometheus等。</p>
+<h4 id="1086940095">Policy<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#1086940095">#</a></h4>
+<p>Policy是另外一个Mixer服务，和Telemetry基本上是完全相同的机制和流程。数据面在转发服务的请求前调用 istio-policy的Check接口检查是否允许访问，把结果返回给Envoy。可以对接如配额、授权、黑白名单等不同的控制后端，对服务间的访问进行可扩展的控制。</p>
+<h3 id="831379653">Citadel<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#831379653">#</a></h3>
+<p>Citadel是 Istio的核心安全组件，提供了自动生 成、分发、轮换与撤销密钥和证书功能。Citadel一直监听 Kube- apiserver，以 Secret的形式为每个服务都生成证书密钥，并在Pod创建时挂载到Pod上，代理容器使用这些文件来做服务身份认证，进而代 理两端服务实现双向TLS认证、通道加密、访问授权等安全功能。如图 所示，frontend 服 务对 forecast 服务的访问用到了HTTP方式，通过配置即可对服务增加认证功能，双方的Envoy会建立双向认证的TLS通道，从而在服务间启用双向认证的HTTPS。</p>
+<h3 id="1950066051">Sidecar-injector<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#1950066051">#</a></h3>
+<p>Sidecar-injector是负责自动注入的组件，只要开启了自动注 入，在Pod创建时就会自动调用istio-sidecar-injector向Pod中注入Sidecar 容器。<br/>在 Kubernetes环境下，根据自动注入配置，Kube-apiserver在拦截到 Pod创建的请求时，会调用自动注入服务 istio-sidecar-injector 生成 Sidecar 容器的描述并将其插入原 Pod的定义中，这样，在创建的 Pod 内除了包括业务容器，还包括 Sidecar容器，这个注入过程对用户透明</p>
+<h3 id="3360833519">Proxy<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#3360833519">#</a></h3>
+<p>Proxy的运行容器时istio-proxy，容器中除了有Envoy，还有一个pilot-agent的守护进程。</p>
+<h3 id="1733436651">Envoy<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#1733436651">#</a></h3>
+<p>Envoy是用C++开发的非常有影响力的轻量级高性能开源服务代理。作为服务网格的数据面，Envoy提供了动态服务发现、负载均 衡、TLS、HTTP/2 及 gRPC代理、熔断器、健康检查、流量拆分、灰度发布、故障注入等功能，本篇描述的大部分治理能力最终都落实到 Envoy的实现上。</p>
+<p>Envoy之所以有能力拦截下所有的流量，是因为它被设计为部署在每一个需要管理的Pod里，作为一个独立容器存在，支持通过配置iptables或cni网桥两种方式来拦截流量（这里也不展开说了，还不明白的同学可以翻看我之前发的k8s底层网络的说明，看看Flannel的实现原理），请看上图，Business-manager容器的请求发出时，会经过本Pod的Enovy代理，Enovy完成规则校验、数据采集、日志等操作后，再转发出去；值得注意的是，请求方Enovy转发出去的流量会发送给接收方的Enovy，之后才有可能到达真正的接收方data-product容器。当然这些操作是Istio的活，我们要做的仅仅是通过配置的形式告诉Istio我们要对哪些流量做什么动作。</p>
+<h3 id="2914511860">Ingressgateway<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#2914511860">#</a></h3>
+<p>Ingressgateway 就是入口处的 Gateway，从网格外访问网格内的服务就是通过这个Gateway进行的。istio-ingressgateway是一个Loadbalancer类型的Service，不同于其他服务组件只有一两个端 口，istio-ingressgateway 开放了一组端口，这些就是网格内服务的外部访问端口。如下图所示，网格入口网关istio-ingressgateway的负载和网格内的Sidecar是同样的执行流程，也和网格内的其他 Sidecar一样从 Pilot处接收流量规则并执行。</p>
+<h3 id="28881235">其他组件<a class="esa-anchor" href="https://www.cnblogs.com/KQNLL/p/14509300.html#28881235">#</a></h3>
+<p>除了以“istio”为前缀的Istio自有组件，在集群中一般还安装Jaeger-agent、Jaeger-collector、Jaeger-query、Kiali、Prometheus、Grafana、 Tracing、Zipkin等组件，这些组件提供了Istio的调用链、监控等功能，可以选择安装来完成完整的服务监控管理功能。</p>
+<iframe style="display: none !important;"></iframe>
+<div id="gtx-trans" style="position: absolute; left: 11px; top: -15.5px;"> </div>
+{% endraw %}

@@ -1,0 +1,26 @@
+---
+title: "解决安装了Phpstudy和本地数据库冲突的问题"
+date: 2021-01-10 21:58:00 +0800
+tags: ["【PHP】-- PHP基础"]
+excerpt: "1. 自己上周安装了一个phpstudy ，可以正常访问数据库，数据库端口号为3306 2. 但是自己关闭了phpstudy后，本地的数据库就打不开了，通过使用navicat连接本地数据库爆 解决方法 1. cmd进入到自己的本地数据库的bin目录 2.输入mysqld --install 3. 再"
+read_minutes: 1
+cnblogs_id: 14259756
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14259756.html"
+---
+{% raw %}
+<p>1. 自己上周安装了一个phpstudy ，可以正常访问数据库，数据库端口号为3306</p>
+<p>2. 但是自己关闭了phpstudy后，本地的数据库就打不开了，通过使用navicat连接本地数据库爆</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/82db56ae9cbabe42.png"/></p>
+<p> </p>
+<h2> 解决方法</h2>
+<p>1. cmd进入到自己的本地数据库的bin目录</p>
+<p>2.输入mysqld --install</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/a472b1cf8d37cfb1.png"/></p>
+<p> </p>
+<p> </p>
+<p>3. 再次打开一个cmd窗口，记得一定是管理员权限进行打开</p>
+<p>4.输入net start mysql</p>
+<p>5. 再次进入自己的bin目录, 输入 mysql -u root -p</p>
+<p>6.输入自己的数据库密码</p>
+<p>7.成功</p>
+{% endraw %}

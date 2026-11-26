@@ -1,0 +1,36 @@
+---
+title: "开发遇到的问题：springboot问题:Unable to find main class"
+date: 2020-12-07 17:07:00 +0800
+tags: ["【框架】-- SpringBoot"]
+excerpt: "问题一： springboot 多个maven模块打包异常：Unable to find main class原因：在父工程中加入了springboot的maven插件，即： <build> <plugins> <plugin> <groupId>org.springframework.boot</"
+read_minutes: 1
+cnblogs_id: 14098107
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14098107.html"
+---
+{% raw %}
+<h3>问题一：</h3>
+<p>springboot 多个maven模块打包异常：Unable to find main class<br/>原因：在父工程中加入了springboot的maven插件，即：</p>
+<pre class="prettyprint" name="code"><code class="hljs xml has-numbering"><span class="hljs-tag">&lt;<span class="hljs-title">build&gt;
+    <span class="hljs-tag">&lt;<span class="hljs-title">plugins&gt;
+        <span class="hljs-tag">&lt;<span class="hljs-title">plugin&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-title">groupId&gt;org.springframework.boot<span class="hljs-tag">&lt;/<span class="hljs-title">groupId&gt;
+            <span class="hljs-tag">&lt;<span class="hljs-title">artifactId&gt;spring-boot-maven-plugin<span class="hljs-tag">&lt;/<span class="hljs-title">artifactId&gt;
+        <span class="hljs-tag">&lt;/<span class="hljs-title">plugin&gt;
+    <span class="hljs-tag">&lt;/<span class="hljs-title">plugins&gt;
+<span class="hljs-tag">&lt;/<span class="hljs-title">build&gt;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>此插件会进行repackage:<br/><img alt="这里写图片描述" loading="lazy" src="/images/cnblogs/49974ea64699e7eb.png" title=""/><br/>util这个模块只是一个普通的maven模块，但是由于父工程引用了springboot的maven插件，所以进行了repackage。</p>
+<p> </p>
+<p> </p>
+<h3>问题二：</h3>
+<p>子模块如何引入父模块</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/8a5e5ff0c322e6db.png"/></p>
+<p> </p>
+<p> 出现不去本地进行找包，直接去私服中找包。</p>
+<h1 id="maven-parentrelativepath">Maven parent.relativePath</h1>
+<p>默认值为../pom.xml</p>
+<p>查找顺序：relativePath元素中的地址–本地仓库–远程仓库</p>
+<p>设定一个空值将始终从仓库中获取，不从本地路径获取。</p>
+<p>如</p>
+<pre class="has" name="code"><code class="language-bash hljs">&lt;relativePath/&gt;</code></pre>
+<p> </p>
+{% endraw %}

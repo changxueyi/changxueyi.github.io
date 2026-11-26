@@ -1,0 +1,39 @@
+---
+title: "记一次tomcat升级遇到的问题"
+date: 2020-10-14 17:13:00 +0800
+tags: ["【茶话心得】"]
+excerpt: "服务器上一直用的tomcat7，因为被扫描到诸多漏洞，特将版本升到最新的apache-tomcat-9.0.21.tar.gz。简单记录一下整个升级过程。下载地址：https://tomcat.apache.org/download-90.cgi使用的版本：Core:tar.gz (pgp, sha"
+read_minutes: 2
+cnblogs_id: 13815984
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13815984.html"
+---
+{% raw %}
+<p>服务器上一直用的tomcat7，因为被扫描到诸多漏洞，特将版本升到最新的apache-tomcat-9.0.21.tar.gz。简单记录一下整个升级过程。<br/>下载地址：<a href="https://tomcat.apache.org/download-90.cgi">https://tomcat.apache.org/download-90.cgi</a><br/>使用的版本：Core:tar.gz (pgp, sha512)</p>
+<p>关闭原来tomcat7进程<br/>下载完成后，上传到指定服务器目录。</p>
+<p><em>1.解压‘apache-tomcat-9.0.21.tar.gz’ <code>tar -xvf apache-tomcat-9.0.21.tar.gz</code><br/>2.删除‘apache-tomcat-9.0.21’文件夹下‘webapps’目录下的所有初始项目<br/>3.‘tomcat7’文件夹下‘webapps’目录中的所有项目移动到‘apache-tomcat-9.0.21’文件夹下‘webapps’目录中<br/>4.进入‘webapps’目录下<br/>①切换至‘BMS/WEB-INF/lib/’ ②备份‘ aopalliance-alpha1.jar’ 为‘ aopalliance-alpha1.jar.back.20190626’<br/>5.进入‘webapps’目录下<br/>①切换至‘portal/WEB-INF/lib/’ ②备份‘ aopalliance-alpha1.jar’ 为‘ aopalliance-alpha1.jar.back.20190626’<br/>6.修改tomcat9的配置文件 conf/server.xml，修改里面的端口跟老版本一致，修改应用文件的路径（如果应用文件位置跟我使用一样的默认位置webapps，则不用修改）。<br/>7…进入‘bin’目录下<br/><code>sh startup.sh</code> 尝试启动<br/><code>tail -fn200 ../logs/catalina.out</code> 查看日期启动情况</em></p>
+<p>注意：<br/>第4、5项可以不执行，那是我们项目中本身JAR包冲突导致的具体错误可以看下文中升级过程中遇到的问题<br/>最后启动tomcat，通过netstat -nlpt命令和catalina.out文件检查是否正常启动。<br/>若服务器上多个tomcat时，config/server.xml文件中的端口都不能冲突。只有一个文件中可以使用默认，其他都需要修改。</p>
+<p>第一次启动可以暂时不用以下备注</p>
+<p>备注：<br/>进入‘bin’目录下<br/><code>vi catalina.sh</code> 修改该文件<br/>文件头部定义全局变量<br/>文件头部插入：</p>
+<pre class="prettyprint"><code class="has-numbering">JAVA_HOME=/usr/java/jdk1.8.0_162/  ---变更为自己目录
+JAVA_OPTS=' -Dclient.encoding.override=GBK -Dfile.encoding=GBK -Duser.language=zh -Duser.region=CN'
+JRE_HOME=$JAVA_HOME/jre
+#CATALINA_PID=/usr/tomcat9/catalina_pid
+CATALINA_BASE=/data/javaprogram/apache-tomcat-9.0.21			---变更为自己目录
+CATALINA_HOME=/data/javaprogram/apache-tomcat-9.0.21			---变更为自己目录
+CATALINA_TMPDIR=/data/javaprogram/apache-tomcat-9.0.21/temp		---变更为自己目录
+#CLASSPATH=/data/javaprogram/apache-tomcat-9.0.21/bin/bootstrap.jar:/data/javaprogram/apache-tomcat-9.0.21/bin/tomcat-juli.jar
+</code></pre>
+<ul class="pre-numbering">
+<li>1</li>
+<li>2</li>
+<li>3</li>
+<li>4</li>
+<li>5</li>
+<li>6</li>
+<li>7</li>
+<li>8</li>
+</ul>
+<p>升级过程中遇到的问题：</p>
+<p><a href="https://blog.csdn.net/yueaini10000/article/details/93739062">数据库连接地址导致的错误</a><br/><a href="https://blog.csdn.net/yueaini10000/article/details/93740928">BeanNotOfRequiredTypeException: Bean named ‘txAdvice’ must be of type [org.aopalliance.aop.Advice],</a><br/><a href="https://blog.csdn.net/yueaini10000/article/details/93743796">查看Linux中自带的jdk ,设置JAVA_HOME</a></p>
+<p>参考：<a href="https://blog.51cto.com/jonathan/1947365">Tomcat6升级到Tomcat9</a></p>
+{% endraw %}

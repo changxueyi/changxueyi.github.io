@@ -1,0 +1,412 @@
+---
+title: "Java Stream 源码分析"
+date: 2020-12-07 20:33:00 +0800
+tags: ["【Java高级】-- java高级"]
+excerpt: "Yano_nankai 公众号：Coding Insight，专注 Java 技术 Java Stream 源码分析 前言 Java 8 的 Stream 使得代码更加简洁易懂，本篇文章深入分析 Java Stream 的工作原理，并探讨 Steam 的性能问题。 Java 8 集合中的 Strea"
+read_minutes: 11
+cnblogs_id: 14099468
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14099468.html"
+---
+{% raw %}
+<div id="header">
+<div id="HeaderTitle">
+<div id="Title"><a class="headermaintitle HeaderMainTitle" href="https://www.cnblogs.com/510602159-Yano/" id="Header1_HeaderTitle">Yano_nankai</a></div>
+<div id="subTitle">公众号：Coding Insight，专注 Java 技术</div>
+</div>
+</div>
+<div id="main">
+<div id="post_detail">
+<div class="post">
+<h2><a class="postTitle2 vertical-middle" href="https://www.cnblogs.com/510602159-Yano/p/14080807.html" id="cb_post_title_url">Java Stream 源码分析</a></h2>
+<div class="blogpost-body cnblogs-markdown" id="cnblogs_post_body">
+<h1 id="前言">前言</h1>
+<p>Java 8 的 Stream 使得代码更加简洁易懂，本篇文章深入分析 Java Stream 的工作原理，并探讨 Steam 的性能问题。</p>
+<hr/>
+<p>Java 8 集合中的 Stream 相当于高级版的 Iterator，它可以通过 Lambda 表达式对集合进行各种非常便利、高效的聚合操作（Aggregate Operation），或者大批量数据操作 (Bulk Data Operation)。</p>
+<p>Stream的聚合操作与数据库SQL的聚合操作sorted、filter、map等类似。我们在应用层就可以高效地实现类似数据库SQL的聚合操作了，而在数据操作方面，Stream不仅可以通过串行的方式实现数据操作，还可以通过并行的方式处理大批量数据，提高数据的处理效率。</p>
+<h1 id="操作分类">操作分类</h1>
+<p>官方将 Stream 中的操作分为两大类：</p>
+<ul>
+<li><code>中间操作（Intermediate operations）</code>，只对操作进行了记录，即只会返回一个流，不会进行计算操作。</li>
+<li><code>终结操作（Terminal operations）</code>，实现了计算操作。</li>
+</ul>
+<p>中间操作又可以分为：</p>
+<ul>
+<li><code>无状态（Stateless）操作</code>，元素的处理不受之前元素的影响。</li>
+<li><code>有状态（Stateful）操作</code>，指该操作只有拿到所有元素之后才能继续下去。</li>
+</ul>
+<p>终结操作又可以分为：</p>
+<ul>
+<li><code>短路（Short-circuiting）</code>操作，指遇到某些符合条件的元素就可以得到最终结果</li>
+<li><code>非短路（Unshort-circuiting）</code>操作，指必须处理完所有元素才能得到最终结果。</li>
+</ul>
+<p>操作分类详情如下图所示：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/90f1536c83690ce8.jpg"/></p>
+<h1 id="源码结构">源码结构</h1>
+<p>Stream 相关类和接口的继承关系如下图所示：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/9356d273542e451f.jpg"/></p>
+<h2 id="basestream">BaseStream</h2>
+<p>最顶端的接口类，定义了流的基本接口方法，最主要的方法为 spliterator、isParallel。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/1cf63a1b301048e4.png"/></p>
+<h2 id="stream">Stream</h2>
+<p>最顶端的接口类。定义了流的常用方法，例如 map、filter、sorted、limit、skip、collect 等。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4f352007be4bd672.png"/></p>
+<h2 id="referencepipeline">ReferencePipeline</h2>
+<p>ReferencePipeline 是一个结构类，定义内部类组装了各种操作流，定义了<code>Head</code>、<code>StatelessOp</code>、<code>StatefulOp</code>三个内部类，实现了 BaseStream 与 Stream 的接口方法。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/bba2db60ddaa6758.png"/></p>
+<h2 id="sink">Sink</h2>
+<p>Sink 接口定义了 Stream 之间的操作行为，包含 <code>begin()</code>、<code>end()</code>、<code>cancellationRequested()</code>、<code>accpt()</code>四个方法。ReferencePipeline最终会将整个 Stream 流操作组装成一个调用链，而这条调用链上的各个 Stream 操作的上下关系就是通过 Sink 接口协议来定义实现的。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/93d12199a84b0f15.png"/></p>
+<h1 id="操作叠加">操作叠加</h1>
+<p>Stream 的基础用法就不再叙述了，这里从一段代码开始，分析 Stream 的工作原理。</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Test
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">testStream<span class="hljs-params">() {
+    List&lt;String&gt; names = Arrays.asList(<span class="hljs-string">"kotlin", <span class="hljs-string">"java", <span class="hljs-string">"go");
+    <span class="hljs-keyword">int maxLength = names.stream().filter(name -&gt; name.length() &lt;= <span class="hljs-number">4).map(String::length)
+            .max(Comparator.naturalOrder()).orElse(-<span class="hljs-number">1);
+    System.out.println(maxLength);
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>当使用 Stream 时，主要有 3 部分组成，下面一一讲解。</p>
+<h2 id="加载数据源">加载数据源</h2>
+<p>调用 <code>names.stream()</code> 方法，会初次加载 ReferencePipeline 的 Head 对象，此时为加载数据源操作。</p>
+<p>java.util.Collection#stream</p>
+<pre><code class="language-java hljs"><span class="hljs-function"><span class="hljs-keyword">default Stream&lt;E&gt; <span class="hljs-title">stream<span class="hljs-params">() {
+    <span class="hljs-keyword">return StreamSupport.stream(spliterator(), <span class="hljs-keyword">false);
+}
+</span></span></span></span></span></span></code></pre>
+<p>StreamSupport 类中的 stream 方法，初始化了一个 ReferencePipeline的 Head 内部类对象。</p>
+<p>java.util.stream.StreamSupport#stream(java.util.Spliterator, boolean)</p>
+<pre><code class="language-java hljs"><span class="hljs-keyword">public <span class="hljs-keyword">static &lt;T&gt; <span class="hljs-function">Stream&lt;T&gt; <span class="hljs-title">stream<span class="hljs-params">(Spliterator&lt;T&gt; spliterator, <span class="hljs-keyword">boolean parallel) {
+    Objects.requireNonNull(spliterator);
+    <span class="hljs-keyword">return <span class="hljs-keyword">new ReferencePipeline.Head&lt;&gt;(spliterator,
+                                        StreamOpFlag.fromCharacteristics(spliterator),
+                                        parallel);
+}
+</span></span></span></span></span></span></span></span></code></pre>
+<h2 id="中间操作">中间操作</h2>
+<p>接着为 <code>filter(name -&gt; name.length() &lt;= 4).mapToInt(String::length)</code>，是中间操作，分为无状态中间操作 StatelessOp 对象和有状态操作 StatefulOp 对象，此时的 Stage 并没有执行，而是通过AbstractPipeline 生成了一个中间操作 Stage 链表。</p>
+<p>java.util.stream.ReferencePipeline#filter</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Override
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">final Stream&lt;P_OUT&gt; <span class="hljs-title">filter<span class="hljs-params">(Predicate&lt;? <span class="hljs-keyword">super P_OUT&gt; predicate) {
+    Objects.requireNonNull(predicate);
+    <span class="hljs-keyword">return <span class="hljs-keyword">new StatelessOp&lt;P_OUT, P_OUT&gt;(<span class="hljs-keyword">this, StreamShape.REFERENCE,
+                                    StreamOpFlag.NOT_SIZED) {
+        <span class="hljs-meta">@Override
+        <span class="hljs-function">Sink&lt;P_OUT&gt; <span class="hljs-title">opWrapSink<span class="hljs-params">(<span class="hljs-keyword">int flags, Sink&lt;P_OUT&gt; sink) {
+            <span class="hljs-keyword">return <span class="hljs-keyword">new Sink.ChainedReference&lt;P_OUT, P_OUT&gt;(sink) {
+                <span class="hljs-meta">@Override
+                <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">begin<span class="hljs-params">(<span class="hljs-keyword">long size) {
+                    downstream.begin(-<span class="hljs-number">1);
+                }
+
+                <span class="hljs-meta">@Override
+                <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">accept<span class="hljs-params">(P_OUT u) {
+                    <span class="hljs-keyword">if (predicate.test(u))
+                        downstream.accept(u);
+                }
+            };
+        }
+    };
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>java.util.stream.ReferencePipeline#map</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Override
+<span class="hljs-meta">@SuppressWarnings("unchecked")
+<span class="hljs-keyword">public <span class="hljs-keyword">final &lt;R&gt; <span class="hljs-function">Stream&lt;R&gt; <span class="hljs-title">map<span class="hljs-params">(Function&lt;? <span class="hljs-keyword">super P_OUT, ? extends R&gt; mapper) {
+    Objects.requireNonNull(mapper);
+    <span class="hljs-keyword">return <span class="hljs-keyword">new StatelessOp&lt;P_OUT, R&gt;(<span class="hljs-keyword">this, StreamShape.REFERENCE,
+                                    StreamOpFlag.NOT_SORTED | StreamOpFlag.NOT_DISTINCT) {
+        <span class="hljs-meta">@Override
+        <span class="hljs-function">Sink&lt;P_OUT&gt; <span class="hljs-title">opWrapSink<span class="hljs-params">(<span class="hljs-keyword">int flags, Sink&lt;R&gt; sink) {
+            <span class="hljs-keyword">return <span class="hljs-keyword">new Sink.ChainedReference&lt;P_OUT, R&gt;(sink) {
+                <span class="hljs-meta">@Override
+                <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">accept<span class="hljs-params">(P_OUT u) {
+                    downstream.accept(mapper.apply(u));
+                }
+            };
+        }
+    };
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>可以看到 filter 和 map 方法都返回了一个新的 <code>StatelessOp</code> 对象。new StatelessOp 将会调用父类 AbstractPipeline 的构造函数，这个构造函数将前后的 Stage 联系起来，生成一个 Stage 链表：</p>
+<pre><code class="language-java hljs">AbstractPipeline(AbstractPipeline&lt;?, E_IN, ?&gt; previousStage, <span class="hljs-keyword">int opFlags) {
+    <span class="hljs-keyword">if (previousStage.linkedOrConsumed)
+        <span class="hljs-keyword">throw <span class="hljs-keyword">new IllegalStateException(MSG_STREAM_LINKED);
+    previousStage.linkedOrConsumed = <span class="hljs-keyword">true;
+    previousStage.nextStage = <span class="hljs-keyword">this;
+
+    <span class="hljs-keyword">this.previousStage = previousStage;
+    <span class="hljs-keyword">this.sourceOrOpFlags = opFlags &amp; StreamOpFlag.OP_MASK;
+    <span class="hljs-keyword">this.combinedFlags = StreamOpFlag.combineOpFlags(opFlags, previousStage.combinedFlags);
+    <span class="hljs-keyword">this.sourceStage = previousStage.sourceStage;
+    <span class="hljs-keyword">if (opIsStateful())
+        sourceStage.sourceAnyStateful = <span class="hljs-keyword">true;
+    <span class="hljs-keyword">this.depth = previousStage.depth + <span class="hljs-number">1;
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h2 id="终结操作">终结操作</h2>
+<p>最后为 <code>max(Comparator.naturalOrder())</code>，是终结操作，会生成一个最终的 Stage，通过这个 Stage 触发之前的中间操作，从最后一个Stage开始，递归产生一个Sink链。</p>
+<p>java.util.stream.ReferencePipeline#max</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Override
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">final Optional&lt;P_OUT&gt; <span class="hljs-title">max<span class="hljs-params">(Comparator&lt;? <span class="hljs-keyword">super P_OUT&gt; comparator) {
+    <span class="hljs-keyword">return reduce(BinaryOperator.maxBy(comparator));
+}
+</span></span></span></span></span></span></span></span></code></pre>
+<p>最终调用到 java.util.stream.AbstractPipeline#wrapSink，这个方法会调用 opWrapSink 生成一个 Sink 链表，对应到本文的例子，就是 filter 和 map 操作。</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Override
+<span class="hljs-meta">@SuppressWarnings("unchecked")
+<span class="hljs-keyword">final &lt;P_IN&gt; <span class="hljs-function">Sink&lt;P_IN&gt; <span class="hljs-title">wrapSink<span class="hljs-params">(Sink&lt;E_OUT&gt; sink) {
+    Objects.requireNonNull(sink);
+
+    <span class="hljs-keyword">for ( <span class="hljs-meta">@SuppressWarnings("rawtypes") AbstractPipeline p=AbstractPipeline.<span class="hljs-keyword">this; p.depth &gt; <span class="hljs-number">0; p=p.previousStage) {
+        sink = p.opWrapSink(p.previousStage.combinedFlags, sink);
+    }
+    <span class="hljs-keyword">return (Sink&lt;P_IN&gt;) sink;
+}
+</span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>在上面 opWrapSink 上断点调试，发现最终会调用到本例中的 filter 和 map 操作。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/675bc323cb01c7b8.png"/></p>
+<p>wrapAndCopyInto 生成 Sink 链表后，会通过 copyInfo 方法执行 Sink 链表的具体操作。</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Override
+<span class="hljs-keyword">final &lt;P_IN&gt; <span class="hljs-function"><span class="hljs-keyword">void <span class="hljs-title">copyInto<span class="hljs-params">(Sink&lt;P_IN&gt; wrappedSink, Spliterator&lt;P_IN&gt; spliterator) {
+    Objects.requireNonNull(wrappedSink);
+
+    <span class="hljs-keyword">if (!StreamOpFlag.SHORT_CIRCUIT.isKnown(getStreamAndOpFlags())) {
+        wrappedSink.begin(spliterator.getExactSizeIfKnown());
+        spliterator.forEachRemaining(wrappedSink);
+        wrappedSink.end();
+    }
+    <span class="hljs-keyword">else {
+        copyIntoWithCancel(wrappedSink, spliterator);
+    }
+}
+</span></span></span></span></span></span></span></span></code></pre>
+<p>上面的核心代码是：</p>
+<pre><code class="hljs css"><span class="hljs-selector-tag">spliterator<span class="hljs-selector-class">.forEachRemaining(<span class="hljs-selector-tag">wrappedSink);
+</span></span></span></code></pre>
+<p>java.util.Spliterators.ArraySpliterator#forEachRemaining</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Override
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">forEachRemaining<span class="hljs-params">(Consumer&lt;? <span class="hljs-keyword">super T&gt; action) {
+    Object[] a; <span class="hljs-keyword">int i, hi; <span class="hljs-comment">// hoist accesses and checks from loop
+    <span class="hljs-keyword">if (action == <span class="hljs-keyword">null)
+        <span class="hljs-keyword">throw <span class="hljs-keyword">new NullPointerException();
+    <span class="hljs-keyword">if ((a = array).length &gt;= (hi = fence) &amp;&amp;
+        (i = index) &gt;= <span class="hljs-number">0 &amp;&amp; i &lt; (index = hi)) {
+        <span class="hljs-keyword">do { action.accept((T)a[i]); } <span class="hljs-keyword">while (++i &lt; hi);
+    }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>断点调试，可以发现首先进入了 filter 的 Sink，其中 accept 方法的入参是 list 中的第一个元素“kotlin”（代码中的 3 个元素是："kotlin", "java", "go"）。filter 的传入是一个 Lambda 表达式：</p>
+<pre><code class="language-java hljs">filter(name -&gt; name.length() &lt;= <span class="hljs-number">4)
+</span></code></pre>
+<p>显然这个第一个元素“kotlin”的 predicate 是不会进入的。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/58591c59737cb865.png"/></p>
+<p>对于第二个元素“java”，predicate.test 会返回 true（字符串“java”的长度&lt;=4），则会进入 map 的 accept 方法。</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/d3af284be66099e2.png"/></p>
+<p>本次调用 accept 方法时，empty 为 false，会将 map 后的结果（int 类型的 4）赋值给 t。</p>
+<pre><code class="language-java hljs"><span class="hljs-keyword">public <span class="hljs-keyword">static &lt;T&gt; TerminalOp&lt;T, Optional&lt;T&gt;&gt;
+makeRef(BinaryOperator&lt;T&gt; operator) {
+    Objects.requireNonNull(operator);
+    <span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">ReducingSink
+            <span class="hljs-keyword">implements <span class="hljs-title">AccumulatingSink&lt;<span class="hljs-title">T, <span class="hljs-title">Optional&lt;<span class="hljs-title">T&gt;, <span class="hljs-title">ReducingSink&gt; {
+        <span class="hljs-keyword">private <span class="hljs-keyword">boolean empty;
+        <span class="hljs-keyword">private T state;
+
+        <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">begin<span class="hljs-params">(<span class="hljs-keyword">long size) {
+            empty = <span class="hljs-keyword">true;
+            state = <span class="hljs-keyword">null;
+        }
+
+        <span class="hljs-meta">@Override
+        <span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">accept<span class="hljs-params">(T t) {
+            <span class="hljs-keyword">if (empty) {
+                empty = <span class="hljs-keyword">false;
+                state = t;
+            } <span class="hljs-keyword">else {
+                state = operator.apply(state, t);
+            }
+        }
+
+        ……
+        }
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>对于第三个元素“go”，也会进入 accept 方法，此时 empty 为 true, map 后的结果（int 类型的 2）会与上次的结果 4 通过自定义的比较器相比较，存入符合结果的值。</p>
+<pre><code class="language-java hljs"><span class="hljs-keyword">public <span class="hljs-keyword">static &lt;T&gt; <span class="hljs-function">BinaryOperator&lt;T&gt; <span class="hljs-title">maxBy<span class="hljs-params">(Comparator&lt;? <span class="hljs-keyword">super T&gt; comparator) {
+    Objects.requireNonNull(comparator);
+    <span class="hljs-keyword">return (a, b) -&gt; comparator.compare(a, b) &gt;= <span class="hljs-number">0 ? a : b;
+}
+</span></span></span></span></span></span></span></span></code></pre>
+<p>本文代码中的 max 传入的比较器为：</p>
+<pre><code class="language-java hljs">max(Comparator.naturalOrder())
+</code></pre>
+<p>至此会返回 int 类型的 4。</p>
+<h1 id="并行处理">并行处理</h1>
+<p>上面的例子是串行处理的，如果要改成并行也很简单，只需要在 stream() 方法后加上 <code>parallel()</code> 就可以了，并行代码可以写成：</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Test
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">testStream<span class="hljs-params">() {
+    List&lt;String&gt; names = Arrays.asList(<span class="hljs-string">"kotlin", <span class="hljs-string">"java", <span class="hljs-string">"go");
+    <span class="hljs-keyword">int maxLength = names.stream().parallel().filter(name -&gt; name.length() &lt;= <span class="hljs-number">4)
+            .map(String::length).max(Comparator.naturalOrder()).orElse(-<span class="hljs-number">1);
+    System.out.println(maxLength);
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>Stream 的并行处理在执行终结操作之前，跟串行处理的实现是一样的。而在调用终结方法之后，实现的方式就有点不太一样，会调用 TerminalOp 的 evaluateParallel 方法进行并行处理。</p>
+<pre><code class="language-java hljs"><span class="hljs-keyword">final &lt;R&gt; <span class="hljs-function">R <span class="hljs-title">evaluate<span class="hljs-params">(TerminalOp&lt;E_OUT, R&gt; terminalOp) {
+    <span class="hljs-function"><span class="hljs-keyword">assert <span class="hljs-title">getOutputShape<span class="hljs-params">() == terminalOp.inputShape();
+    <span class="hljs-keyword">if (linkedOrConsumed)
+        <span class="hljs-keyword">throw <span class="hljs-keyword">new IllegalStateException(MSG_STREAM_LINKED);
+    linkedOrConsumed = <span class="hljs-keyword">true;
+
+    <span class="hljs-keyword">return isParallel()
+            ? terminalOp.evaluateParallel(<span class="hljs-keyword">this, sourceSpliterator(terminalOp.getOpFlags()))
+            : terminalOp.evaluateSequential(<span class="hljs-keyword">this, sourceSpliterator(terminalOp.getOpFlags()));
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>核心是使用了 ForkJoin 框架，对 Stream 处理进行分片，最终会调用下面的代码，这里就不展开分析了。</p>
+<p>java.util.stream.AbstractTask#compute</p>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Override
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">compute<span class="hljs-params">() {
+    Spliterator&lt;P_IN&gt; rs = spliterator, ls; <span class="hljs-comment">// right, left spliterators
+    <span class="hljs-keyword">long sizeEstimate = rs.estimateSize();
+    <span class="hljs-keyword">long sizeThreshold = getTargetSize(sizeEstimate);
+    <span class="hljs-keyword">boolean forkRight = <span class="hljs-keyword">false;
+    <span class="hljs-meta">@SuppressWarnings("unchecked") K task = (K) <span class="hljs-keyword">this;
+    <span class="hljs-keyword">while (sizeEstimate &gt; sizeThreshold &amp;&amp; (ls = rs.trySplit()) != <span class="hljs-keyword">null) {
+        K leftChild, rightChild, taskToFork;
+        task.leftChild  = leftChild = task.makeChild(ls);
+        task.rightChild = rightChild = task.makeChild(rs);
+        task.setPendingCount(<span class="hljs-number">1);
+        <span class="hljs-keyword">if (forkRight) {
+            forkRight = <span class="hljs-keyword">false;
+            rs = ls;
+            task = leftChild;
+            taskToFork = rightChild;
+        }
+        <span class="hljs-keyword">else {
+            forkRight = <span class="hljs-keyword">true;
+            task = rightChild;
+            taskToFork = leftChild;
+        }
+        taskToFork.fork();
+        sizeEstimate = rs.estimateSize();
+    }
+    task.setLocalResult(task.doLeaf());
+    task.tryComplete();
+}
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<h2 id="并行错误的使用方法">并行错误的使用方法</h2>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Test
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">testParallelWrong<span class="hljs-params">() {
+    List&lt;Integer&gt; parallelList = <span class="hljs-keyword">new ArrayList&lt;&gt;();
+    IntStream.range(<span class="hljs-number">0, <span class="hljs-number">1000).boxed().parallel().filter(i -&gt; i % <span class="hljs-number">2 == <span class="hljs-number">1)
+            .forEach(parallelList::add);
+    System.out.println(parallelList.size());
+}
+</span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>上面的输出结果会经常小于500，这是因为 parallelList 的类型是 ArrayList，并不是线程安全的，在执行 add 操作时，可能正好赶上扩容或者线程被占用，会覆盖其他线程的赋好的值。</p>
+<h2 id="并行正确的使用方法">并行正确的使用方法</h2>
+<pre><code class="language-java hljs"><span class="hljs-meta">@Test
+<span class="hljs-function"><span class="hljs-keyword">public <span class="hljs-keyword">void <span class="hljs-title">testParallelRight<span class="hljs-params">() {
+    List&lt;Integer&gt; parallelList = IntStream.range(<span class="hljs-number">0, <span class="hljs-number">1000).boxed().parallel()
+            .filter(i -&gt; i % <span class="hljs-number">2 == <span class="hljs-number">1).collect(Collectors.toList());
+    System.out.println(parallelList.size());
+}
+</span></span></span></span></span></span></span></span></span></span></code></pre>
+<h1 id="性能">性能</h1>
+<p>下面的文章参考自：<a href="https://github.com/CarpenterLee/JavaLambdaInternals/blob/master/8-Stream%20Performance.md">JavaLambdaInternals/8-Stream Performance.md</a>，侵删。</p>
+<p>为保证测试结果真实可信，我们将JVM运行在<code>-server</code>模式下，测试数据在GB量级，测试机器采用常见的商用服务器，配置如下：</p>
+<table style="width: 300px;">
+<tbody>
+<tr>
+<td>OS</td>
+<td>CentOS 6.7 x86_64</td>
+</tr>
+<tr>
+<td>CPU</td>
+<td>Intel Xeon X5675, 12M Cache 3.06 GHz, 6 Cores 12 Threads</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>96GB</td>
+</tr>
+<tr>
+<td>JDK</td>
+<td>java version 1.8.0_91, Java HotSpot(TM) 64-Bit Server VM</td>
+</tr>
+</tbody>
+</table>
+<p>测试<a href="https://www.cnblogs.com/510602159-Yano/p/perf/StreamBenchmark/src/lee">所用代码在这里</a>，测试<a href="https://www.cnblogs.com/510602159-Yano/p/perf/Stream_performance.xlsx">结果汇总</a>.</p>
+<h2 id="测试方法和测试数据">测试方法和测试数据</h2>
+<p>性能测试并不是容易的事，Java性能测试更费劲，因为虚拟机对性能的影响很大，JVM对性能的影响有两方面：</p>
+<ol>
+<li>GC的影响。GC的行为是Java中很不好控制的一块，为增加确定性，我们手动指定使用CMS收集器，并使用10GB固定大小的堆内存。具体到JVM参数就是<code>-XX:+UseConcMarkSweepGC -Xms10G -Xmx10G</code></li>
+<li>JIT(Just-In-Time)即时编译技术。即时编译技术会将热点代码在JVM运行的过程中编译成本地代码，测试时我们会先对程序预热，触发对测试函数的即时编译。相关的JVM参数是<code>-XX:CompileThreshold=10000</code>。</li>
+</ol>
+<p>Stream并行执行时用到<code>ForkJoinPool.commonPool()</code>得到的线程池，为控制并行度我们使用Linux的<code>taskset</code>命令指定JVM可用的核数。</p>
+<p>测试数据由程序随机生成。为防止一次测试带来的抖动，测试4次求出平均时间作为运行时间。</p>
+<h2 id="实验一-基本类型迭代">实验一 基本类型迭代</h2>
+<p>测试内容：找出整型数组中的最小值。对比for循环外部迭代和Stream API内部迭代性能。</p>
+<p>测试程序<a href="https://www.cnblogs.com/510602159-Yano/p/perf/StreamBenchmark/src/lee/IntTest.java">IntTest</a>，测试结果如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/cad7ab0dd1a73a8e.jpg"/></p>
+<p>图中展示的是for循环外部迭代耗时为基准的时间比值。分析如下：</p>
+<ol>
+<li>对于基本类型Stream串行迭代的性能开销明显高于外部迭代开销（两倍）；</li>
+<li>Stream并行迭代的性能比串行迭代和外部迭代都好。</li>
+</ol>
+<p>并行迭代性能跟可利用的核数有关，上图中的并行迭代使用了全部12个核，为考察使用核数对性能的影响，我们专门测试了不同核数下的Stream并行迭代效果：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/7152fd9c09712acc.jpg"/></p>
+<p>分析，对于基本类型：</p>
+<ol>
+<li>使用Stream并行API在单核情况下性能很差，比Stream串行API的性能还差；</li>
+<li>随着使用核数的增加，Stream并行效果逐渐变好，比使用for循环外部迭代的性能还好。</li>
+</ol>
+<p>以上两个测试说明，对于基本类型的简单迭代，Stream串行迭代性能更差，但多核情况下Stream迭代时性能较好。</p>
+<h2 id="实验二-对象迭代">实验二 对象迭代</h2>
+<p>再来看对象的迭代效果。</p>
+<p>测试内容：找出字符串列表中最小的元素（自然顺序），对比for循环外部迭代和Stream API内部迭代性能。</p>
+<p>测试程序<a href="https://www.cnblogs.com/510602159-Yano/p/perf/StreamBenchmark/src/lee/StringTest.java">StringTest</a>，测试结果如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/fcc026606090a944.jpg"/></p>
+<p>结果分析如下：</p>
+<ol>
+<li>对于对象类型Stream串行迭代的性能开销仍然高于外部迭代开销（1.5倍），但差距没有基本类型那么大。</li>
+<li>Stream并行迭代的性能比串行迭代和外部迭代都好。</li>
+</ol>
+<p>再来单独考察Stream并行迭代效果：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/1047fcb272ea6106.jpg"/></p>
+<p>分析，对于对象类型：</p>
+<ol>
+<li>使用Stream并行API在单核情况下性能比for循环外部迭代差；</li>
+<li>随着使用核数的增加，Stream并行效果逐渐变好，多核带来的效果明显。</li>
+</ol>
+<p>以上两个测试说明，对于对象类型的简单迭代，Stream串行迭代性能更差，但多核情况下Stream迭代时性能较好。</p>
+<h2 id="实验三-复杂对象归约">实验三 复杂对象归约</h2>
+<p>从实验一、二的结果来看，Stream串行执行的效果都比外部迭代差（很多），是不是说明Stream真的不行了？先别下结论，我们再来考察一下更复杂的操作。</p>
+<p>测试内容：给定订单列表，统计每个用户的总交易额。对比使用外部迭代手动实现和Stream API之间的性能。</p>
+<p>我们将订单简化为<code>&lt;userName, price, timeStamp&gt;</code>构成的元组，并用<code>Order</code>对象来表示。测试程序<a href="https://www.cnblogs.com/510602159-Yano/p/perf/StreamBenchmark/src/lee/ReductionTest.java">ReductionTest</a>，测试结果如下图：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/a853256425950317.jpg"/></p>
+<p>分析，对于复杂的归约操作：</p>
+<ol>
+<li>Stream API的性能普遍好于外部手动迭代，并行Stream效果更佳；</li>
+</ol>
+<p>再来考察并行度对并行效果的影响，测试结果如下：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/2671b3fa0940643e.jpg"/></p>
+<p>分析，对于复杂的归约操作：</p>
+<ol>
+<li>使用Stream并行归约在单核情况下性能比串行归约以及手动归约都要差，简单说就是最差的；</li>
+<li>随着使用核数的增加，Stream并行效果逐渐变好，多核带来的效果明显。</li>
+</ol>
+<p>以上两个实验说明，对于复杂的归约操作，Stream串行归约效果好于手动归约，在多核情况下，并行归约效果更佳。我们有理由相信，对于其他复杂的操作，Stream API也能表现出相似的性能表现。</p>
+<h2 id="结论">结论</h2>
+<p>上述三个实验的结果可以总结如下：</p>
+<ol>
+<li>对于简单操作，比如最简单的遍历，Stream串行API性能明显差于显示迭代，但并行的Stream API能够发挥多核特性。</li>
+<li>对于复杂操作，Stream串行API性能可以和手动实现的效果匹敌，在并行执行时Stream API效果远超手动实现。</li>
+</ol>
+<p>所以，如果出于性能考虑，1. 对于简单操作推荐使用外部迭代手动实现，2. 对于复杂操作，推荐使用Stream API， 3. 在多核情况下，推荐使用并行Stream API来发挥多核优势，4.单核情况下不建议使用并行Stream API。</p>
+</div>
+</div>
+</div>
+</div>
+{% endraw %}

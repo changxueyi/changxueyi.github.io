@@ -1,0 +1,13 @@
+---
+title: "在Spring中用select last_insert_id()时遇到问题"
+date: 2020-06-14 17:17:00 +0800
+tags: ["【数据库】-- Mysql", "【框架】-- Spring"]
+excerpt: "今天在使用MySQL时却不知如何处理，插入记录后不知怎样获得刚刚插入的id，查过文档后发现了select last_insert_id()，在插入之后执行此查询，即可获得自增id，喜出望外。可用到自己的程序中之后却得不到想要的结果，于是就怀疑到了Spring头上，因为通过基本JDBC测试是没有任何问"
+read_minutes: 1
+cnblogs_id: 13125682
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13125682.html"
+tags_inferred: true
+---
+{% raw %}
+<p>今天在使用MySQL时却不知如何处理，插入记录后不知怎样获得刚刚插入的id，查过文档后发现了select last_insert_id()，在插入之后执行此查询，即可获得自增id，喜出望外。<br/>可用到自己的程序中之后却得不到想要的结果，于是就怀疑到了Spring头上，因为通过基本JDBC测试是没有任何问题的，所以就去跟踪Spring JDBC, 看过源码之后才豁然开朗，原来Spring中如此获得数据库Connection的：Connection con = DataSourceUtils.getConnection(getDataSource());, 哎，只能怪自己Spring掌握不够好，所以就不能在执行insert之后去执行select last_insert_id()了，因为select last_insert_id()是真对当前Connection插入和更新操作的，那在Spring中如何获得新增记录的键值呢，没有办法只能去Google了。</p>
+{% endraw %}

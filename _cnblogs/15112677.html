@@ -1,0 +1,104 @@
+---
+title: "get请求可以传body吗_详解用 Go 语言解析各种 HTTP 请求的方法"
+date: 2021-08-07 18:11:00 +0800
+tags: ["【Go】-- Go基础"]
+excerpt: "之前这个系列的文章一直在讲用 Go 语言怎么编写HTTP服务器来提供服务，如何给服务器配置路由来匹配请求到对应的处理程序，如何添加中间件把一些通用的处理任务从具体的Handler中解耦出来，以及如何更规范地在项目中应用数据库。不过一直漏掉了一个环节是服务器接收到请求后如何解析请求拿到想要的数据， G"
+read_minutes: 8
+cnblogs_id: 15112677
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/15112677.html"
+---
+{% raw %}
+<p>之前这个系列的文章一直在讲用 Go 语言怎么编写HTTP服务器来提供服务，如何给服务器配置路由来匹配请求到对应的处理程序，如何添加中间件把一些通用的处理任务从具体的Handler中解耦出来，以及如何更规范地在项目中应用数据库。不过一直漏掉了一个环节是服务器接收到请求后如何解析请求拿到想要的数据， Go 语言使用 net/http 包中的 Request 结构体对象来表示 HTTP 请求，通过 Request 结构对象上定义的方法和数据字段，应用程序能够便捷地访问和设置 HTTP 请求中的数据。</p>
+<div class="pgc-img"><img alt="95ec6c67091b842953418f143856b977.png" loading="lazy" src="/images/cnblogs/dc15fc5ebc4acd68.jpg"/></div>
+<p>一般服务端解析请求的需求有如下几种</p>
+<ul>
+<li>HTTP请求头中的字段值</li>
+<li>URL 查询字符串中的字段值</li>
+<li>请求体中的 Form 表单数据</li>
+<li>请求体中的 JSON 格式数据</li>
+<li>读取客户端的上传的文件</li>
+</ul>
+<p>今天这篇文章我们就按照这几种常见的服务端对 HTTP 请求的操作来说一下服务器应用程序如何通过 Request 对象解析请求头和请求体。</p>
+<h3 class="pgc-h-arrow-right"><a name="t0"></a><a name="t0"></a>Request 结构定义</h3>
+<p>在说具体操作的使用方法之前我们先来看看 net/http 包中 Request 结构体的定义，了解一下 Request 拥有什么样的数据结构。 Request 结构在源码中的定义如下。</p>
+<p>我们快速地了解一下每个字段大致的含义，了解了每个字段的含义在不同的应用场景下需要读取访问 HTTP 请求的不同部分时就能够有的放矢了。</p>
+<h4 class="pgc-h-arrow-right">Method</h4>
+<p>指定HTTP方法(GET，POST，PUT等)。</p>
+<h4 class="pgc-h-arrow-right">URL</h4>
+<p>URL指定要请求的URI(对于服务器请求)或要访问的URL(用于客户请求)。它是一个表示 URL 的类型 url.URL 的指针， url.URL 的结构定义如下：</p>
+<h4 class="pgc-h-arrow-right">Proto</h4>
+<p>Proto ， ProtoMajor ， ProtoMinor 三个字段表示传入服务器请求的协议版本。对于客户请求，这些字段将被忽略。 HTTP 客户端代码始终使用 HTTP/1.1 或 HTTP/2 。</p>
+<h4 class="pgc-h-arrow-right">Header</h4>
+<p>Header 包含服务端收到或者由客户端发送的 HTTP 请求头，该字段是一个 http.Header 类型的指针， http.Header 类型的声明如下：</p>
+<p>是 map[string][]string 类型的别名， http.Header 类型实现了 GET ， SET ， Add 等方法用于存取请求头。如果服务端收到带有如下请求头的请求：</p>
+<p>那么 Header 的值为：</p>
+<p>对于传入的请求， Host 标头被提升为 Request.Host 字段，并将其从 Header 对象中删除。 HTTP 定义头部的名称是不区分大小写的。 Go 使用 CanonicalHeaderKey 实现的请求解析器使得请求头名称第一个字母以及跟随在短横线后的第一个字母大写其他都为小写形式，比如： Content-Length 。对于客户端请求，某些标头，例如 Content-Length 和 Connection 会在需要时自动写入，并且标头中的值可能会被忽略。</p>
+<h4 class="pgc-h-arrow-right">Body</h4>
+<p>这个字段的类型是 io.ReadCloser ， Body 是请求的主体。对于客户端发出的请求， nil 主体表示该请求没有 Body ，例如 GET 请求。 HTTP 客户端的传输会负责调用 Close 方法。对于服务器接收的请求，请求主体始终为非 nil ，但如果请求没有主体，则将立即返回 EOF 。服务器将自动关闭请求主体。服务器端的处理程序不需要关心此操作。</p>
+<h4 class="pgc-h-arrow-right">GetBody</h4>
+<p>客户端使用的方法的类型，其声明为：</p>
+<h4 class="pgc-h-arrow-right">ContentLength</h4>
+<p>ContentLength 记录请求关联内容的长度。值-1表示长度未知。值&gt;=0表示从 Body 中读取到的字节数。对于客户请求，值为0且非 nil 的 Body 也会被视为长度未知。</p>
+<h4 class="pgc-h-arrow-right">TransferEncoding</h4>
+<p>TransferEncoding 为字符串切片，其中会列出从最外层到最内层的传输编码， TransferEncoding 通常可以忽略；在发送和接收请求时，分块编码会在需要时自动被添加或者删除。</p>
+<h4 class="pgc-h-arrow-right">Close</h4>
+<p>Close 表示在服务端回复请求或者客户端读取到响应后是否要关闭连接。对于服务器请求，HTTP服务器会自动处理 并且处理程序不需要此字段。对于客户请求，设置此字段为 true 可防止重复使用到相同主机的请求之间的TCP连接，就像已设置 Transport.DisableKeepAlives 一样。</p>
+<h4 class="pgc-h-arrow-right">Host</h4>
+<p>对于服务器请求， Host 指定URL所在的主机，为防止DNS重新绑定攻击，服务器处理程序应验证 Host 标头具有的值。 http 库中的 ServeMux (复用器)支持注册到特定 Host 的模式，从而保护其注册的处理程序。对于客户端请求， Host 可以用来选择性地覆盖请求头中的 Host ，如果不设置， Request.Write 使用 URL.Host 来设置请求头中的 Host 。</p>
+<h4 class="pgc-h-arrow-right">Form</h4>
+<p>Form 包含已解析的表单数据，包括 URL 字段的查询参数以及 PATCH ， POST 或 PUT 表单数据。此字段仅在调用 Request.ParseForm 之后可用。 HTTP 客户端会忽略 Form 并改用 Body 。 Form 字段的类型是 url.Values 类型的指针。 url.Values 类型的声明如下：</p>
+<p>也是 map[string][]string 类型的别名。 url.Values 类型实现了 GET ， SET ， Add ， Del 等方法用于存取表单数据。</p>
+<h4 class="pgc-h-arrow-right">PostForm</h4>
+<p>PostForm 类型与 Form 字段一样，包含来自 PATCH ， POST 的已解析表单数据或PUT主体参数。此字段仅在调用 ParseForm 之后可用。 HTTP 客户端会忽略 PostForm 并改用 Body 。</p>
+<h4 class="pgc-h-arrow-right">MultipartForm</h4>
+<p>MultipartForm 是已解析的多部分表单数据，包括文件上传。仅在调用 Request.ParseMultipartForm 之后，此字段才可用。 HTTP 客户端会忽略 MultipartForm 并改用 Body 。该字段的类型是 *multipart.Form 。</p>
+<h4 class="pgc-h-arrow-right">RemoteAddr</h4>
+<p>RemoteAddr 允许 HTTP 服务器和其他软件记录发送请求的网络地址，通常用于记录。 net/http 包中的HTTP服务器在调用处理程序之前将 RemoteAddr 设置为“ IP：端口”， HTTP客户端会忽略此字段。</p>
+<h4 class="pgc-h-arrow-right">RequestURI</h4>
+<p>RequestURI 是未修改的 request-target 客户端发送的请求行(RFC 7230，第3.1.1节)。在服务器端，通常应改用URL字段。在HTTP客户端请求中设置此字段是错误的。</p>
+<h4 class="pgc-h-arrow-right">Response</h4>
+<p>Response 字段类型为 *Response ，它指定了导致此请求被创建的重定向响应，此字段仅在客户端发生重定向时被填充。</p>
+<h4 class="pgc-h-arrow-right">ctx</h4>
+<p>ctx 是客户端上下文或服务器上下文。它应该只通过使用 WithContext 复制整个 Request 进行修改。这个字段未导出以防止人们错误使用 Context 并更改同一请求的调用方所拥有的上下文。</p>
+<h3 class="pgc-h-arrow-right"><a name="t1"></a><a name="t1"></a>读取请求头</h3>
+<p>上面分析了 Go 将 HTTP 请求头存储在 Request 结构体对象的 Header 字段里， Header 字段实质上是一个 Map ，请求头的名称为Map key ， MapValue 的类型为字符串切片，有的请求头像 Accept 会有多个值，在切片中就对应多个元素。</p>
+<p>Header 类型的 Get 方法可以获取请求头的第一个值，</p>
+<p>或者是获取值时直接通过 key 获取对应的切片值就好，比如将上面的改为：</p>
+<p>下面我们写个遍历请求头信息的示例程序，同时也会通上面介绍的 Request 结构中定义的 Method ， URL ， Host ， RemoteAddr 等字段把请求的通用信息打印出来。在我们一直使用的 http_demo 项目中增加一个 DisplayHeadersHandler ，其源码如下：</p>
+<p>将其处理程序绑定到 /index/display_headers 路由上：</p>
+<p>然后启动项目，打开浏览器访问:</p>
+<p>可以看到如下输出：</p>
+<div class="pgc-img"><img alt="34b6895fdd9180535e713132edf5cb0c.png" loading="lazy" src="/images/cnblogs/68d269432570b102.jpg"/></div>
+<p>http_demo 项目中已经添加了本文中所有示例的源码，公众号内回复 gohttp06 可以获取源码的下载链接。</p>
+<h3 class="pgc-h-arrow-right"><a name="t2"></a><a name="t2"></a>获取URL参数值</h3>
+<p>GET 请求中的 URL 查询字符串中的参数可以通过 url.Query() ，我们来看一下啊 url.Query() 函数的源码：</p>
+<p>它通过 ParseQuery 函数解析 URL 参数然后返回一个 url.Values 类型的值。 url.Values 类型上面我们已经介绍过了是 map[string][]string 类型的别名，实现了 GET ， SET ， Add ， Del 等方法用于存取数据。</p>
+<p>所以我们可以使用 r.URL.Query().Get("ParamName") 获取参数值，也可以使用 r.URL.Query()["ParamName"] 。两者的区别是 Get 只返回切片中的第一个值，如果参数对应多个值时(比如复选框表单那种请求就是一个 name 对应多个值)，记住要使用第二种方式。</p>
+<p>我们通过运行一个示例程序 display_url_params.go 来看一下两种获取 URL 参数的区别</p>
+<p>将其处理程序绑定到 /index/display_url_params 路由上：</p>
+<p>打开浏览器访问</p>
+<p>浏览器会输出：</p>
+<p>我们为参数 a 传递了两个参数值，可以看到通过 url.Query.Get() 只能读取到第一个参数值。</p>
+<h3 class="pgc-h-arrow-right"><a name="t3"></a><a name="t3"></a>获取表单中的参数值</h3>
+<p>Request 结构的 Form 字段包含已解析的表单数据，包括 URL 字段的查询参数以及 PATCH ， POST 或 PUT 表单数据。此字段仅在调用 Request.ParseForm 之后可用。不过 Request 对象提供一个 FormValue 方法来获取指定名称的表单数据， FormValue 方法会根据 Form 字段是否有设置来自动执行 ParseForm 方法。</p>
+<p>可以看到 FormValue 方法也是只返回切片中的第一个值。如果需要获取字段对应的所有值，那么需要通过字段名访问 Form 字段。如下：</p>
+<p>获取表单字段的单个值</p>
+<p>获取表单字段的多个值</p>
+<p>下面是我们的示例程序，以及对应的路由：</p>
+<p>我们在命令行中使用 cURL 命令发送表单数据到处理程序，看看效果。</p>
+<p>返回的响应如下：</p>
+<h3 class="pgc-h-arrow-right"><a name="t4"></a><a name="t4"></a>获取Cookie</h3>
+<p>Request 对象专门提供了一个 Cookie 方法用来访问请求中携带的 Cookie 数据，方法会返回一个 *Cookie 类型的值以及 error 。 Cookie 类型的定义如下：</p>
+<p>所以要读取请求中指定名称的 Cookie 值，只需要</p>
+<p>Request.Cookies() 方法会返回 []*Cookie 切片，其中会包含请求中所有的 Cookie</p>
+<p>下面的示例程序，会打印请求中所有的 Cookie</p>
+<p>我们通过 cURL 在命令行请求 http://localhost:8000/index/read_cookie</p>
+<p>执行命令后会返回：</p>
+<h3 class="pgc-h-arrow-right"><a name="t5"></a><a name="t5"></a>解析请求体中的JSON数据</h3>
+<p>现在前端都倾向于把请求数据以 JSON 格式放到请求主体中传给服务器，针对这个使用场景，我们需要把请求体作为 json.NewDecoder() 的输入流，然后将请求体中携带的 JSON 格式的数据解析到声明的结构体变量中</p>
+<p>在命令行里用 cURL 命令测试我们的程序：</p>
+<p>返回响应如下：</p>
+<h3 class="pgc-h-arrow-right"><a name="t6"></a><a name="t6"></a>读取上传文件</h3>
+<p>服务器接收客户端上传的文件，使用 Request 定义的 FormFile() 方法。该方法会自动调用 r.ParseMultipartForm(32&lt;&lt;20) 方法解析请求多部表单中的上传文件，并把文件可读入内存的大小设置为 32M (32向左位移20位)，如果内存大小需要单独设置，就要在程序里单独调用 ParseMultipartForm() 方法才行。</p>
+<p>Go语言解析 HTTP 请求比较常用的方法我们都介绍的差不多了。因为想总结全一点，篇幅还是有点长，不过整体不难懂，而且也可以下载程序中的源码自己运行调试，动手实践一下更有助于理解吸收。 HTTP 客户端发送请求要设置的内容也只今天讲的 Request 结构体的字段， Request 对象也提供了一些设置相关的方法供开发人员使用，今天就先说这么多了。</p>
+{% endraw %}

@@ -1,0 +1,377 @@
+---
+title: "Java关键字(一)——instanceof"
+date: 2020-08-19 17:03:00 +0800
+tags: ["【Java】-- Java基础"]
+excerpt: "目录 1、obj 必须为引用类型，不能是基本类型 2、obj 为 null 3、obj 为 class 类的实例对象 4、obj 为 class 接口的实现类 5、obj 为 class 类的直接或间接子类 6、问题 7、深究原理 8、instanceof 的实现策略 instanceof 严格来说"
+read_minutes: 5
+cnblogs_id: 13530397
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/13530397.html"
+tags_inferred: true
+---
+{% raw %}
+<div id="navCategory">
+<p><strong>目录</strong></p>
+<ul>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label0">1、obj 必须为引用类型，不能是基本类型</a></li>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label1">2、obj 为 null</a></li>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label2">3、obj 为 class 类的实例对象</a></li>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label3">4、obj 为 class 接口的实现类</a></li>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label4">5、obj 为 class 类的直接或间接子类</a></li>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label5">6、问题</a></li>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label6">7、深究原理</a></li>
+<li><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_label7">8、instanceof 的实现策略</a></li>
+</ul>
+</div>
+<p> </p>
+<hr/>
+<p>　　instanceof 严格来说是Java中的一个双目运算符，用来测试一个对象是否为一个类的实例，用法为：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_706507">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java keyword">boolean</code> <code class="java plain">result = obj </code><code class="java keyword">instanceof</code> <code class="java plain">Class</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　其中 obj 为一个对象，Class 表示一个类或者一个接口，当 obj 为 Class 的对象，或者是其直接或间接子类，或者是其接口的实现类，结果result 都返回 true，否则返回false。</p>
+<p>　　注意：编译器会检查 obj 是否能转换成右边的class类型，如果不能转换则直接报错，如果不能确定类型，则通过编译，具体看运行时定。</p>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label0"></a></div>
+<h3>1、obj 必须为引用类型，不能是基本类型</h3>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_593896">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java keyword">int</code> <code class="java plain">i = </code><code class="java value">0</code><code class="java plain">;</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">System.out.println(i </code><code class="java keyword">instanceof</code> <code class="java plain">Integer);</code><code class="java comments">//编译不通过</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">System.out.println(i </code><code class="java keyword">instanceof</code> <code class="java plain">Object);</code><code class="java comments">//编译不通过</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　instanceof 运算符只能用作对象的判断。</p>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label1"></a></div>
+<h3>2、obj 为 null</h3>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_863385">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">System.out.println(</code><code class="java keyword">null</code> <code class="java keyword">instanceof</code> <code class="java plain">Object);</code><code class="java comments">//false</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　关于 null 类型的描述在官方文档：<a href="https://docs.oracle.com/javase/specs/jls/se7/html/jls-4.html#jls-4.1" target="_blank">https://docs.oracle.com/javase/specs/jls/se7/html/jls-4.html#jls-4.1</a> 有一些介绍。一般我们知道Java分为两种数据类型，一种是基本数据类型，有八个分别是 byte  short  int  long  float  double  char boolean,一种是引用类型，包括类，接口，数组等等。而Java中还有一种特殊的 null 类型，该类型没有名字，所以不可能声明为 null 类型的变量或者转换为 null 类型，null 引用是 null 类型表达式唯一可能的值，null 引用也可以转换为任意引用类型。我们不需要对 null 类型有多深刻的了解，我们只需要知道 null 是可以成为任意引用类型的<strong>特殊符号</strong>。</p>
+<p>　　在 <a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-15.html#jls-15.20.2" target="_blank">JavaSE规范</a> 中对 instanceof 运算符的规定就是：如果 obj 为 null，那么将返回 false。</p>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label2"></a></div>
+<h3>3、obj 为 class 类的实例对象</h3>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_952576">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">Integer integer = </code><code class="java keyword">new</code> <code class="java plain">Integer(</code><code class="java value">1</code><code class="java plain">);</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">System.out.println(integer </code><code class="java keyword">instanceof</code>  <code class="java plain">Integer);</code><code class="java comments">//true</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　这没什么好说的，最普遍的一种用法。</p>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label3"></a></div>
+<h3>4、obj 为 class 接口的实现类</h3>
+<p>　　了解Java 集合的，我们知道集合中有个上层接口 List，其有个典型实现类 ArrayList</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_58315">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">class</code> <code class="java plain">ArrayList&lt;E&gt; </code><code class="java keyword">extends</code> <code class="java plain">AbstractList&lt;E&gt;</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">        </code><code class="java keyword">implements</code> <code class="java plain">List&lt;E&gt;, RandomAccess, Cloneable, java.io.Serializable</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　所以我们可以用 instanceof 运算符判断 某个对象是否是 List 接口的实现类，如果是返回 true，否则返回 false</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_545732">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">ArrayList arrayList = </code><code class="java keyword">new</code> <code class="java plain">ArrayList();</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">System.out.println(arrayList </code><code class="java keyword">instanceof</code> <code class="java plain">List);</code><code class="java comments">//true</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　或者反过来也是返回 true</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_277454">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">List list = </code><code class="java keyword">new</code> <code class="java plain">ArrayList();</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">System.out.println(list </code><code class="java keyword">instanceof</code> <code class="java plain">ArrayList);</code><code class="java comments">//true</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label4"></a></div>
+<h3>5、obj 为 class 类的直接或间接子类</h3>
+<p>　　我们新建一个父类 Person.class，然后在创建它的一个子类 Man.class</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_64330">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">class</code> <code class="java plain">Person {</code></div>
+<div class="line number2 index1 alt1"> </div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　Man.class</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_600431">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java keyword">public</code> <code class="java keyword">class</code> <code class="java plain">Man </code><code class="java keyword">extends</code> <code class="java plain">Person{</code></div>
+<div class="line number2 index1 alt1"><code class="java spaces">    </code> </div>
+<div class="line number3 index2 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　测试：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_35446">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">Person p1 = </code><code class="java keyword">new</code> <code class="java plain">Person();</code></div>
+<div class="line number2 index1 alt1"><code class="java plain">Person p2 = </code><code class="java keyword">new</code> <code class="java plain">Man();</code></div>
+<div class="line number3 index2 alt2"><code class="java plain">Man m1 = </code><code class="java keyword">new</code> <code class="java plain">Man();</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">System.out.println(p1 </code><code class="java keyword">instanceof</code> <code class="java plain">Man);</code><code class="java comments">//false</code></div>
+<div class="line number5 index4 alt2"><code class="java plain">System.out.println(p2 </code><code class="java keyword">instanceof</code> <code class="java plain">Man);</code><code class="java comments">//true</code></div>
+<div class="line number6 index5 alt1"><code class="java plain">System.out.println(m1 </code><code class="java keyword">instanceof</code> <code class="java plain">Man);</code><code class="java comments">//true</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　注意第一种情况， p1 instanceof Man ，Man 是 Person 的子类，Person 不是 Man 的子类，所以返回结果为 false。</p>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label5"></a></div>
+<h3>6、问题</h3>
+<p>　　前面我们说过<strong>编译器会检查 obj 是否能转换成右边的class类型，如果不能转换则直接报错，如果不能确定类型，则通过编译，具体看运行时定。</strong></p>
+<p><strong>　　</strong>看如下几个例子：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_383616">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java plain">Person p1 = </code><code class="java keyword">new</code> <code class="java plain">Person();</code></div>
+<div class="line number2 index1 alt1"> </div>
+<div class="line number3 index2 alt2"><code class="java plain">System.out.println(p1 </code><code class="java keyword">instanceof</code> <code class="java plain">String);</code><code class="java comments">//编译报错</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">System.out.println(p1 </code><code class="java keyword">instanceof</code> <code class="java plain">List);</code><code class="java comments">//false</code></div>
+<div class="line number5 index4 alt2"><code class="java plain">System.out.println(p1 </code><code class="java keyword">instanceof</code> <code class="java plain">List&lt;?&gt;);</code><code class="java comments">//false</code></div>
+<div class="line number6 index5 alt1"><code class="java plain">System.out.println(p1 </code><code class="java keyword">instanceof</code> <code class="java plain">List&lt;Person&gt;);</code><code class="java comments">//编译报错</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　按照我们上面的说法，这里就存在问题了，Person 的对象 p1 很明显不能转换为 String 对象，那么自然 Person 的对象 p1 instanceof String 不能通过编译，但为什么 p1 instanceof List 却能通过编译呢？而 instanceof List&lt;Person&gt; 又不能通过编译了？</p>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label6"></a></div>
+<h3>7、深究原理</h3>
+<p>　　我们可以看Java语言规范Java SE 8 版：<a href="https://docs.oracle.com/javase/specs/jls/se8/html/jls-15.html#jls-15.20.2" target="_blank">https://docs.oracle.com/javase/specs/jls/se8/html/jls-15.html#jls-15.20.2</a></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/7352102f5b5147f9.png"/></p>
+<p> 　　如果用伪代码描述：</p>
+<div class="cnblogs_Highlighter sh-gutter">
+<div>
+<div class="syntaxhighlighter java" id="highlighter_126677">
+<table border="0" cellpadding="0" cellspacing="0">
+<tbody>
+<tr>
+<td class="gutter">
+<div class="line number1 index0 alt2">1</div>
+<div class="line number2 index1 alt1">2</div>
+<div class="line number3 index2 alt2">3</div>
+<div class="line number4 index3 alt1">4</div>
+<div class="line number5 index4 alt2">5</div>
+<div class="line number6 index5 alt1">6</div>
+<div class="line number7 index6 alt2">7</div>
+<div class="line number8 index7 alt1">8</div>
+<div class="line number9 index8 alt2">9</div>
+<div class="line number10 index9 alt1">10</div>
+<div class="line number11 index10 alt2">11</div>
+</td>
+<td class="code">
+<div class="container">
+<div class="line number1 index0 alt2"><code class="java keyword">boolean</code> <code class="java plain">result;</code></div>
+<div class="line number2 index1 alt1"><code class="java keyword">if</code> <code class="java plain">(obj == </code><code class="java keyword">null</code><code class="java plain">) {</code></div>
+<div class="line number3 index2 alt2"><code class="java spaces">  </code><code class="java plain">result = </code><code class="java keyword">false</code><code class="java plain">;</code></div>
+<div class="line number4 index3 alt1"><code class="java plain">} </code><code class="java keyword">else</code> <code class="java plain">{</code></div>
+<div class="line number5 index4 alt2"><code class="java spaces">  </code><code class="java keyword">try</code> <code class="java plain">{</code></div>
+<div class="line number6 index5 alt1"><code class="java spaces">      </code><code class="java plain">T temp = (T) obj; </code><code class="java comments">// checkcast</code></div>
+<div class="line number7 index6 alt2"><code class="java spaces">      </code><code class="java plain">result = </code><code class="java keyword">true</code><code class="java plain">;</code></div>
+<div class="line number8 index7 alt1"><code class="java spaces">  </code><code class="java plain">} </code><code class="java keyword">catch</code> <code class="java plain">(ClassCastException e) {</code></div>
+<div class="line number9 index8 alt2"><code class="java spaces">      </code><code class="java plain">result = </code><code class="java keyword">false</code><code class="java plain">;</code></div>
+<div class="line number10 index9 alt1"><code class="java spaces">  </code><code class="java plain">}</code></div>
+<div class="line number11 index10 alt2"><code class="java plain">}</code></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<p>　　也就是说有表达式 obj instanceof T，instanceof 运算符的 obj 操作数的类型必须是引用类型或空类型; 否则，会发生编译时错误。 </p>
+<p>　　如果 obj 强制转换为 T 时发生编译错误，则关系表达式的 instanceof 同样会产生编译时错误。 在这种情况下，表达式实例的结果永远为false。</p>
+<p>　　在运行时，如果 T 的值不为null，并且 obj 可以转换为 T 而不引发ClassCastException，则instanceof运算符的结果为true。 否则结果是错误的</p>
+<p>　　简单来说就是：<strong>如果 obj 不为 null 并且 (T) obj 不抛 ClassCastException 异常则该表达式值为 true ，否则值为 false 。</strong></p>
+<p><strong>　　</strong>所以对于上面提出的问题就很好理解了，为什么 p1 instanceof String 编译报错，因为(String)p1 是不能通过编译的，而 (List)p1 可以通过编译。</p>
+<div><a href="https://www.cnblogs.com/ysocean/p/8486500.html#_labelTop">回到顶部</a><a name="_label7"></a></div>
+<h3>8、instanceof 的实现策略</h3>
+<p>　　JavaSE 8 instanceof 的实现算法：<a href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.instanceof" target="_blank">https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-6.html#jvms-6.5.instanceof</a></p>
+<p>　　<img alt="" loading="lazy" src="/images/cnblogs/aad4b2177c11570c.png"/></p>
+<p> </p>
+<p>　　1、obj如果为null，则返回false；否则设S为obj的类型对象，剩下的问题就是检查S是否为T的子类型；</p>
+<p>　　2、如果S == T，则返回true；</p>
+<p>　　3、接下来分为3种情况，之所以要分情况是因为instanceof要做的是“子类型检查”，而Java语言的类型系统里数组类型、接口类型与普通类类型三者的子类型规定都不一样，必须分开来讨论。</p>
+<p>　　①、S是数组类型：如果 T 是一个类类型，那么T必须是Object；如果 T 是接口类型，那么 T 必须是由数组实现的接口之一；</p>
+<p>　　②、接口类型：对接口类型的 instanceof 就直接遍历S里记录的它所实现的接口，看有没有跟T一致的；</p>
+<p>　　③、类类型：对类类型的 instanceof 则是遍历S的super链（继承链）一直到Object，看有没有跟T一致的。遍历类的super链意味着这个算法的性能会受类的继承深度的影响。</p>
+{% endraw %}

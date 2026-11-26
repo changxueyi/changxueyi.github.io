@@ -1,0 +1,501 @@
+---
+title: "ThinkPhp知识大全（手把手带你走进ThinkPhp）"
+date: 2021-01-14 09:58:00 +0800
+tags: ["【PHP框架】-- TP6"]
+excerpt: "学习ThinkPhp 总结一下 php框架 发瑞 一、真实项目开发步骤： 多人同时开发项目，协作开发项目、分工合理、效率有提高（代码风格不一样、分工不好） 测试阶段 上线运行 对项目进行维护、修改、升级（单个人维护项目，十分困难，代码风格不一样） 项目稳定的运行阶段 项目停止运行（旧项目的人员已经全"
+read_minutes: 14
+cnblogs_id: 14275683
+cnblogs_url: "https://www.cnblogs.com/cxy2020/p/14275683.html"
+---
+{% raw %}
+<h3><span style="font-size: 14pt; background-color: #ffffff; color: #ff0000;"><strong>学习ThinkPhp 总结一下</strong></span></h3>
+<p><strong>php框架    发瑞</strong></p>
+<p><strong>一、真实项目开发步骤：</strong></p>
+<ol>
+<li><strong>多人同时开发项目，协作开发项目、分工合理、效率有提高（代码风格不一样、分工不好）</strong></li>
+<li><strong>测试阶段</strong></li>
+<li><strong>上线运行</strong></li>
+<li><strong>对项目进行维护、修改、升级（单个人维护项目，十分困难，代码风格不一样）</strong></li>
+<li><strong>项目稳定的运行阶段</strong></li>
+<li><strong>项目停止运行（旧项目的人员已经全部离职，新人开发新项目）</strong></li>
+</ol>
+<p><strong> </strong></p>
+<p><strong>二、问题：</strong></p>
+<p><strong>1. 多人开发项目，分工不合理，（html   php   mysql）</strong></p>
+<p><strong>2. 代码风格不一样，后期维护十分困难</strong></p>
+<p><strong>3. 项目生命周期十分短，项目生命没有延续性，造成资源浪费、人员浪费</strong></p>
+<p><strong>4. 项目不能很好适应客户需求，牵一发而动全身。</strong></p>
+<p><strong> </strong></p>
+<p><strong>三、其他相关框架</strong></p>
+<p><strong>1. zendframework   zend php语言公司发布的官方框架，重量级(功能多)</strong></p>
+<p><strong>2. yii   美国华人开发的框架，xue qiang, qiang,  重量级框架，纯OOP框架</strong></p>
+<p><strong>3. CI  CodeIgniter轻量级框架，开发速度快，部署灵活</strong></p>
+<ol>
+<li><strong>cakephp外国框架，重量级，速度慢</strong></li>
+<li><strong>symfony外国重量级框架</strong></li>
+<li><strong>ThinkPHP轻量级框架，国人框架，入门容易</strong></li>
+</ol>
+<p><strong> </strong></p>
+<p><strong>四、什么框架：</strong></p>
+<p><strong>       一堆代码的集合，里边有变量、函数、类、常量，里边也有许多设计模式MVC、AR数据库、单例等等。</strong></p>
+<p><strong>       框架可以节省我们50-60%的工作量，我们全部精力都集中在业务层次。</strong></p>
+<p><strong> </strong></p>
+<p><strong>五、为什么使用框架</strong></p>
+<p><strong>（1）框架可以帮组我们快速、稳定、高效搭建程序系统</strong></p>
+<p><strong>（2）该系统由于框架的使用使得本身的维护性、灵活性、适应客户需求方面得到最大化的增强。</strong></p>
+<p><strong>（3）使用框架的过程中可以使得我们的注意力全部集中业务层面，而无需关心程序的底层架构。</strong></p>
+<p> </p>
+<p>【使用框架】</p>
+<p>thinkphp.cn</p>
+<p> <img alt="" height="120" loading="lazy" src="/images/cnblogs/f6dac7e1fb4e5e55.png" width="195"/></p>
+<p>thinkphp 3.2版本</p>
+<p><img alt="" height="202" loading="lazy" src="/images/cnblogs/ef5087d44d132854.png" width="473"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4c53a91cd0b4b4e6.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/3138f9c7f301b43d.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/2f83564ec492102f.png"/></p>
+<p> </p>
+<p>【框架项目部署】</p>
+<p>部署一个Shop项目，使用tp框架</p>
+<p>步骤：</p>
+<p>创建入口文件：</p>
+<p>　　1.在ThinkPHP目录下创建一个入口文件index.php</p>
+<p>       <img alt="" loading="lazy" src="/images/cnblogs/c2ce7919c5687f0e.png"/></p>
+<p>　　2.访问入口文件的同时系统会自动把对应的应用目录文件Shop创建出来</p>
+<p> 　　<img alt="" loading="lazy" src="/images/cnblogs/b7aff40b86595980.png"/></p>
+<p>　　3.打开Home文件夹</p>
+<p> 　　<img alt="" loading="lazy" src="/images/cnblogs/bade4401f77f8b25.png"/></p>
+<p>【MVC模式】</p>
+<p>M：Model 数据模型层，负责数据操作</p>
+<p>V：View 视图层，负责显示视图</p>
+<p>C：Controller 控制器，实现业务逻辑</p>
+<p> <img alt="" height="267" loading="lazy" src="/images/cnblogs/156762a1d430f5d1.png" width="346"/></p>
+<p> </p>
+<p>【控制器访问及路由解析】</p>
+<p>通过url地址get参数找到指定的控制器，并进行对应方法调用请求</p>
+<p>http://网址/index.php?m=模块名称&amp;c=控制器&amp;a=方法</p>
+<p>以上url地址信息代码不够优雅、不安全。</p>
+<p> </p>
+<p>tp框架url地址可以由以下四种</p>
+<ol>
+<li>http://网址/index.php?m=XX&amp;c=XX&amp;a=XX   基本get模式</li>
+<li><a href="http://xn--ses554g/index.php/%E6%A8%A1%E5%9D%97/%E6%8E%A7%E5%88%B6%E5%99%A8/%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95">http://网址/index.php/模块/控制器/操作方法</a>路径模式pathinfo</li>
+<li><a href="http://xn--ses554g/%E6%A8%A1%E5%9D%97/%E6%8E%A7%E5%88%B6%E5%99%A8/%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95">http://网址/模块/控制器/操作方法</a>           rewrite重写模式</li>
+<li><a href="http://xn--ses554g/index.php?s=/%E6%A8%A1%E5%9D%97/%E6%8E%A7%E5%88%B6%E5%99%A8/%E6%96%B9%E6%B3%95">http://网址/index.php?s=/模块/控制器/方法</a>兼容模式</li>
+</ol>
+<p> </p>
+<p>具体url地址模式设置(配置文件ThinkPHP/Conf/convertion.php)</p>
+<p>URL_MODEL  =  0/1/2/3  分别代表四种url地址模式</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/2b52a287bee41979.png"/></p>
+<p>config.php是我们当前自己项目的配置文件，我们可以通过修改该文件达到配置变量的目录</p>
+<p>这个文件在系统运行过程中会覆盖convertion.php的配置变量</p>
+<p>include “convertion.php”;</p>
+<p>include “config.php”;  后引入的文件要把先引入的文件配置变量给覆盖掉</p>
+<p> </p>
+<p>我们系统有兼容4中url地址模式的使用</p>
+<p>系统有的时候会自动创建url地址，它会根据当前模式进行url地址创建使用</p>
+<p>快捷函数U();  创建url地址</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/d6b0d2d8f6638887.png"/> </p>
+<p>通过url地址模式我们学习到了以下内容：</p>
+<ol>
+<li>我们学习到了配置变量（核心配置变量conversion.php、当前应用配置变量config.php）</li>
+<li>快捷函数U(“模块/控制器/方法”)  根据参数和url模式创建对应的url地址</li>
+<li>把框架的模式调整为开发调试模式</li>
+</ol>
+<p> </p>
+<p>【开发、生产模式】</p>
+<p>开发调试模式：系统需要加载大概24个文件  index.php  define(“APP_DEBUG”,true);</p>
+<p>生产模式：系统只需要加载很少的大概7个文件在入口文件</p>
+<p>index.php中定义： define(“APP_DEBUG”,false);</p>
+<p>节省了许多文件的开发、关闭的系统开销，节省资源</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/d320c40302820931.png"/></p>
+<p> </p>
+<p>要在页面显示trace信息，需要在自己的配置文件中：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/f542d3c0d54dabeb.png"/></p>
+<p>【控制器和对应方法创建】</p>
+<p>控制器是MVC模式中的核心，tp默认有一个Index控制器：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/fdf10a1e38a4ab51.png"/></p>
+<p>Index控制器里面有一个操作方法：Index</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/d1f4ce1acff07f01.png"/></p>
+<p>我们在访问<a href="http://localhost:8080/Thinkphp/index.php">http://localhost:8080/Thinkphp/index.php</a>入口文件的时候，会默认访问Index控制器下面的Index方法</p>
+<p> </p>
+<p>如果要自己创建一个控制器Login：</p>
+<p>　　1.在\Shop\Home\Controller文件夹下新建一个控制器文件LoginController.class.php</p>
+<p>注意：文件命名规则，按照驼峰法命名</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/332f28932ea8c99b.png"/></p>
+<p>　　2.打开该文件，在里面造控制器Login类</p>
+<p> <img alt="" height="138" loading="lazy" src="/images/cnblogs/8f1d16e8cabb84ee.png" width="397"/></p>
+<p>　　3.如果要自定义操作方法，在控制器Login类里面加一个函数Login()：</p>
+<p> <img alt="" height="205" loading="lazy" src="/images/cnblogs/b8f5dba20476126d.png" width="409"/></p>
+<p>这样我们就完成了控制器和操作方法的建立，如果要访问我们刚才的Login控制器下的Login方法：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/09f6ceadd7a83ab4.png"/></p>
+<p>　　4.控制器中如果要调用视图层中的模板：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/d9cb91a6be1124ad.png"/></p>
+<p> </p>
+<p>这样再次访问，会发现报错：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/d9ca87c68f5ff0a2.png"/></p>
+<p> </p>
+<p>原因：模板文件没有创建，这时候我们就要去创建模板文件</p>
+<p> </p>
+<p>【视图模板文件创建】</p>
+<p>视图模板文件存放发位置在：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/6cf39bd98da5cda9.png"/></p>
+<p> </p>
+<p>里面没有模板文件</p>
+<p>如果我们想要访问Login控制器中的Login方法，首先我们要创建一个Login控制器对应的模板文件夹，该文件夹就对应着Login控制器：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/578547c3015a282e.png"/></p>
+<p> </p>
+<p>然后在Login文件夹下再创建一个login.html的模板文件来对应Login控制器下的Login方法：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/6c96bf8b39c99bc8.png"/></p>
+<p> </p>
+<p>在login.html里面写入要显示的代码：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/7651f3bb497fa033.png"/></p>
+<p> </p>
+<p>然后再次请求：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/1b0226aecd8ae29c.png"/></p>
+<p>【url地址大小写设置】</p>
+<p>默认是不敏感的：</p>
+<p>在config.php里边对url大小写敏感进行设置</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/e3c99a52caf3794f.png"/></p>
+<p> </p>
+<p>【空操作和空控制器处理】</p>
+<p>空操作：就没有指定的操作方法</p>
+<p>空控制器：没有指定控制器</p>
+<p>http://网址/index.php/Home/User/login</p>
+<p>http://网址/index.php/Home/User/hello空操作</p>
+<p>http://网址/index.php/Home/beijing/login   空控制器</p>
+<h3>空操作：</h3>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/2891cb9814cd910b.png"/></p>
+<p> </p>
+<p>一般网站处于安全考虑不给用户提示任何错误信息</p>
+<p>       “空操作”本质意思：一个对象(控制器)调用本身不存在的方法</p>
+<p>       在OOP里边，对象调用本身不存在方法，处于用户体验比较好的角度考虑，我们可以在类里边制作一个魔术方法：function __call();</p>
+<p> </p>
+<p>在tp里面控制器的父类：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/6ac7e42803bbb2cd.png"/></p>
+<p> </p>
+<p>父类中有个方法：</p>
+<p> <img alt="" height="219" loading="lazy" src="/images/cnblogs/f5875c42164a7d19.png" width="453"/></p>
+<p> </p>
+<p>所以空操作有两种解决方案：</p>
+<p>①     在对应的控制器里边制作一个方法，名称为”_empty”,这个控制器的空操作都会自动执行该方法。（推荐使用）</p>
+<p>②     给空操作的名称制作一个同名的模板出来，系统会自动调用</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/64f6b2a076ffaa3c.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/23daaac11f4b7eb2.png"/></p>
+<p>空控制器：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/8a9e0bf65a636633.png"/></p>
+<p> </p>
+<p>空控制器：在实例化控制器对象的时候，没有找到指定的类</p>
+<p>什么时候实例化控制器对象：ThinkPHP/Library/Think/App.class.php</p>
+<p>熟记文件：</p>
+<p>              index.php  入口文件</p>
+<p>              ThinkPHP/ThinkPHP.php  框架核心文件</p>
+<p>              ThinkPHP/Library/Think/Think.class.php  框架核心文件</p>
+<p>              ThinkPHP/Library/Think/App.class.php  框架应用文件</p>
+<p>在App.class.php内部包括控制器对象创建，以及对象调用指定的方法呈现内容：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/fb7914551bb3c887.png"/></p>
+<p> </p>
+<p>空控制器处理方案：可以再制作一个控制器，名称EmptyController.class.php</p>
+<p>在该控制器内部其实只需要制作一个_empty()方法即可。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/c16b6575c6980979.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/91358eeec94de5a3.png"/></p>
+<p>这样再次请求：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/0bafbe1acbf6604b.png"/></p>
+<p>【项目分组】</p>
+<p>系统有前台用户操作界面</p>
+<p>系统还有后台供公司内部人员使用维护平台</p>
+<p>两者在使用的过程中就是对“控制器”、“视图模板”、“model模型”的操作。</p>
+<p>为了系统开发方便，及代码部署更加合理，我们的控制器、view视图等前后台文件不要混在起，要在物理结构上给分开</p>
+<p> <img alt="" height="162" loading="lazy" src="/images/cnblogs/96d0bd366078399a.png" width="357"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/e3d430a78c94c5ef.png"/></p>
+<p><a href="http://xn--ses554g/index.php/Home/%E6%8E%A7%E5%88%B6%E5%99%A8/%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95">http://网址/index.php/Home/控制器/操作方法</a>访问Home控制器及制定操作</p>
+<p><a href="http://xn--ses554g/index.php/Admin/%E6%8E%A7%E5%88%B6%E5%99%A8/%E6%93%8D%E4%BD%9C%E6%96%B9%E6%B3%95">http://网址/index.php/Admin/控制器/操作方法</a>访问Admin分组的控制器和操作方法</p>
+<p> </p>
+<p>【系统常量信息】</p>
+<p>获取系统常量信息：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/2315a8f05600cf08.png"/></p>
+<p>如果加参数true，会分组显示：</p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/c7ec0bd1f1c6802e.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/77b9a64182e520aa.png"/></p>
+<p> </p>
+<p>【跨控制器调用】</p>
+<p>一个控制器在执行的时候，可以实例化另外一个控制，并通过对象访问其指定方法。</p>
+<p>跨控制器调用可以节省我们代码的工作量</p>
+<p>在Main控制器中有一个Info操作方法</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/e3e0312193da405f.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/63dd093f568e707f.png"/></p>
+<p> </p>
+<p> </p>
+<p>想要在其它控制器，比如Login中调用，我们可以实例化控制器对象，调用里面的方法即可：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/9c060b96ab097c77.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4537a5fea46274de.png"/></p>
+<p> </p>
+<p> </p>
+<p>造对象有快捷函数供我们使用：</p>
+<p>A(“[模块/]控制器标志”) 实例化控制器对象</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/b5e997fd2f5f3f15.png"/></p>
+<p> </p>
+<p>R([模块/]控制器标志/操作方法)  实例化对象同时调用指定方法</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/ef152a5dfad31213.png"/></p>
+<p>【连接数据库配置及Model数据模型层】</p>
+<p>convertion.php</p>
+<p>config.php</p>
+<p>　　1.在config.php做数据库连接配置</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/1391ada2540e32c7.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/ddddaf87cf3a0cdf.png"/></p>
+<p>　　2.制作model模型</p>
+<p>a)         model本身就是一个类文件</p>
+<p>b)        数据库中的每个数据表都对应一个model模型文件</p>
+<p>c)         最简单的数据model模型类</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/646382e42deb21ee.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/5162feb75921bbbd.png"/></p>
+<p>　　3.字段缓存设置</p>
+<p>tp框架执行过程中会使用到数据表中的字段信息，通过sql语句可以查询”show colums from table”，处于性能考虑，可以把字段缓存，避免每次重复执行sql语句。</p>
+<p>　　4.可以根据情况对当前的model模型进行个性化设置</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/f1870ca533e92a6d.png"/></p>
+<p> </p>
+<p><strong>实例化</strong><strong>Model</strong><strong>的三种方式：</strong></p>
+<ol>
+<li>$goods =  new  命名空间GoodsModel(); </li>
+<li>$goods = D(‘模型标志’);   </li>
+</ol>
+<p>a)         $goods = D(“Goods”);</p>
+<p>b)        该$goods是父类Model的对象，但是操作的数据表还是sw_goods</p>
+<p>c)         $obj = D();  实例化Model对象，没有具体操作数据表，与M()方法效果一致</p>
+<ol>
+<li>$obj = M();</li>
+</ol>
+<p>a)         实例化父类Model</p>
+<p>b)        可以直接调用父类Model里边的属性，获得数据库相关操作</p>
+<p>c)         自定义model就是一个空壳，没有必要实例化自定义model</p>
+<p>d)        $obj = M(‘数据表标志’);  实例化Model对象，实际操作具体的数据表</p>
+<p>$obj = D(标志);</p>
+<p>$obj = D();</p>
+<p>$obj = M(标志);</p>
+<p>$obj = M();</p>
+<p>D()和M()方法的区别：</p>
+<p>前者是tp3.1.3里边对new操作的简化方法;</p>
+<p>后者在使用就是实例化Model父类</p>
+<p>       两者都在函数库文件定义ThinkPHP/Common/functions.php</p>
+<p> </p>
+<p>注意：如果没有对应的model模型文件类，也可以直接实例化model对象进行操作</p>
+<p>D()和M()方法都可以实例化操作一个没有具体model模型类文件的数据表。</p>
+<p>【数据查询】</p>
+<p>select()是数据模型的一个指定方法，可以获得数据表的数据信息</p>
+<p>       返回一个二维数组信息，当前数据表的全部数据信息</p>
+<p>$obj = D();  创建对象</p>
+<p>$obj -&gt; select();  查询数据</p>
+<p>select  字段，字段  from  表名  where 条件  group 字段 having  条件   order 排序  limit 限制条数;</p>
+<p>SELECT%DISTINCT%%FIELD%FROM %TABLE%%JOIN%%WHERE%%GROUP%%HAVING%%ORDER%%LIMIT% %UNION%%COMMENT%</p>
+<p> </p>
+<p>$obj -&gt;field(字段，字段);  查询指定字段</p>
+<p>$obj -&gt;table(数据表);   设置具体操作数据表</p>
+<p>$obj -&gt;where(参数);   参数就是正常sql语句where后边的条件信息</p>
+<p>例如：( “goods_price &gt;100 and  goods_name like ‘三%’”)</p>
+<p>$obj -&gt;group(字段);  根据字段进行分组查询</p>
+<p>$obj -&gt;having(参数条件);  having 条件设置</p>
+<p>$obj -&gt;order(‘price  desc/asc’)  排序查询</p>
+<p>$obj -&gt;limit([偏移量，]条数)  限制查询的条数</p>
+<p> </p>
+<p>sql语句里边具体的条件设置在tp框架model模型里边体现为具体的方法操作</p>
+<p> </p>
+<p>以上方法理论上是父类Model的对应方法</p>
+<p>父类model具体存在方法：field()  where()   limit()</p>
+<p>还有一些方法在__call()自动调用函数里边： table()  group()  order()  having()</p>
+<p>       在__call()魔术方法里边会判断当前的执行方法是否是一个method属性的元素信息，如果存在就会执行执行。</p>
+<p> </p>
+<p>以上多个方法是同时使用多个进行条件显示（并且没有顺序要求）</p>
+<p>$obj -&gt; limit(5)-&gt;field(‘id,name’)-&gt;order(‘price asc’) -&gt; table(‘sw_goods’)-&gt;select();</p>
+<p>以上许多方法执行没有顺序要求，许多方法执行后都是把具体的参数赋予到model属性options里边,最后根据options拼装sql语句。</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/54c3d2b330551caf.png"/></p>
+<p> </p>
+<p>$info = $goods -&gt; where()-&gt;field(字段)-&gt;select();</p>
+<p>select()方法</p>
+<p>1．    返回一个二维数组信息</p>
+<p>2．    返回全部数据表信息</p>
+<p>3．    给该方法传递参数</p>
+<p>a)         select(30)  查询主键值等于30的记录信息</p>
+<p>b)        select(“10,12,14”)  查询主键值在10、12、14范围的记录信息</p>
+<p>4.find()如果我们查询的结果只有一个信息，使用select()会返回一个二维数组</p>
+<p>为了使用方便我们会希望返回一个一维数组，这时候可使用find()方法</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/0165a2fa85326591.png"/></p>
+<p>5.having()方法设置查询条件，where()设置查询条件</p>
+<p>6. 相关聚合函数 count()  sum()   avg()   max()   min()</p>
+<p>       以上聚合函数是最后被调用的方法</p>
+<p>       以上方法可以结合具体条件方法使用</p>
+<p>       例如：$goods -&gt; where(‘goods_price &gt;1000’)-&gt;count(); 大于1000元的商品的总数目</p>
+<p> </p>
+<p>【数据添加】</p>
+<p>add()该方法返回被添加的新记录的主键id值</p>
+<p>两种方式实现数据添加</p>
+<p>1.数组方式数据添加</p>
+<p>$goods = D(“Goods”);</p>
+<p>$arr = array(‘goods_name’=&gt;’iphone5s’,’goods_weight’=&gt;’109’);</p>
+<p>//注意:goods_name和goods_weight是数据表中字段名称</p>
+<p>$goods -&gt; add($arr);</p>
+<p> </p>
+<p>2.AR方式实现数据添加</p>
+<p>a)         ActiveRecord  活跃记录</p>
+<p>b)        AR规定了程序与数据库之间的关系</p>
+<p>c)         什么是AR：</p>
+<p>d)        ①一个数据表对应一个类model</p>
+<p>e)         ②一条数据记录对应类的一个对象</p>
+<p>f)         ③每个字段对应该对象的具体属性</p>
+<p>g)        tp框架的AR是假的</p>
+<p>$goods = D(“Goods”);</p>
+<p>$goods -&gt; goods_name = “htc_one”;</p>
+<p>$goods -&gt; goods_price = 3000;</p>
+<p>$goods -&gt; add();</p>
+<p>以上两种方式：数组、AR，最后add都要把新记录的主键id值返回</p>
+<p> </p>
+<p>【收集表单数据入库操作】</p>
+<ol>
+<li>制作一个表单</li>
+<li>通过$_POST收集信息</li>
+<li>通过create()方法实现数据收集，该方法对于非法的字段会自动进行过滤</li>
+</ol>
+<p>注意：一个add控制器实现两个逻辑，一个是打出添加页面，一个是向数据库添加内容<strong><br/></strong></p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/17b3ac495c39e8f0.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4048b46a219481cf.png"/></p>
+<p> </p>
+<p>注意：如果是主键值重复，这种错误会导致error()方法不跳转页面直接抛出错误信息，这是新版本问题，如果想要跳转，找到</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/f63c0af464eeba30.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/4f1faaf199383265.png"/></p>
+<p> </p>
+<p>【数据修改操作】</p>
+<p>save()  实现数据修改，返回受影响的记录条数</p>
+<p>具体有两种方式实现数据修改，与添加类似(数组、AR方式)</p>
+<p>　　1.数组方式</p>
+<p>a)         $goods = D(“Goods”);</p>
+<p>b)        $ar = array(‘goods_id’=&gt;100,‘goods_name’=&gt;’lenovo手机’,’goods_price’=&gt;1200);</p>
+<p>c)         $goods -&gt;where(‘goods_id&gt;50’)-&gt; save($ar);</p>
+<p>　　2.AR方式</p>
+<p>a)         $goods = D(“Goods”);</p>
+<p>b)        $goods -&gt; goods_id = 53;</p>
+<p>c)         $goods -&gt; goods_name = “三星手机”;</p>
+<p>d)        $goods -&gt; goods_price = 2000;</p>
+<p>e)         $goods -&gt;where(‘goods_price&gt;10000’)-&gt;save();</p>
+<p>以上两种方式如果可行，即要修改全部数据</p>
+<p>以上sql语句从技术上可行，从业务上不可行(事故)</p>
+<p>tp框架有智能考虑，以上情况的sql语句不被允许执行。</p>
+<p>如何执行：</p>
+<p>①     明确告诉系统那条sql语句被update更新</p>
+<p>②     可以设置where进行sql语句更新操作</p>
+<p> </p>
+<p>save()  方法返回值</p>
+<p>0：之前没有问题，执行前后数据没有变化</p>
+<p>自然数：受影响的记录条数</p>
+<p>false：执行失败</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/7ae323477731924d.png"/></p>
+<p>数据修改具体实现：</p>
+<p>通过路由给一个操作方法传递参数</p>
+<p><a href="http://xn--ses554g/index.php/%E6%A8%A1%E5%9D%97/%E6%8E%A7%E5%88%B6%E5%99%A8/%E6%96%B9%E6%B3%95upd/%E5%8F%98%E9%87%8F%E5%90%8D1/%E5%80%BC/%E5%8F%98%E9%87%8F%E5%90%8D2/%E5%80%BC/%E5%8F%98%E9%87%8F%E5%90%8D3/%E5%80%BC">http://网址/index.php/模块/控制器/方法upd/变量名1/值/变量名2/值/变量名3/值</a></p>
+<p>以上路由是通过get形式给指定的操作传递了三个参数信息</p>
+<p>$_POST方式也可以</p>
+<p>原则三个参数信息接收的时候通过$_GET接收即可</p>
+<p>例如：$_GET[‘变量名1’];</p>
+<p> </p>
+<p>以上参数信息接收太直白，不安全，需要按照框架规则使用下边的方式接收get参数信息</p>
+<p>http://网址/index.php/Admin/Goods/upd/name/tom/age/25/addr/beijing</p>
+<p>function upd($name,$age,$addr){</p>
+<p>       $name;</p>
+<p>       $age;</p>
+<p>       $addr;</p>
+<p>}</p>
+<p>以上参数表述，如果在请求的时候没有按照规则传递参数，那么当前方法禁止访问。</p>
+<p>（除非参数有默认值）</p>
+<p> </p>
+<p>修改商品信息步骤：</p>
+<ol>
+<li>在“修改”按钮处把被修改商品id信息通过get形式传递给upd操作</li>
+<li>在upd方法里边制作形式参数$goods_id,接收服务器给传递的get变量goods_id</li>
+<li>在修改表单里边制作隐藏域goods_id，避免tp框架禁止修改语句执行</li>
+<li>在upd操作方法内部有两个逻辑：展现表单、收集表单</li>
+</ol>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/acdffc69ad27332f.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/dbf8ba7f66e05e6f.png"/></p>
+<p> </p>
+<p>【数据删除及执行原生sql语句】</p>
+<p>delete()返回受影响的记录条数</p>
+<p>$goods -&gt; delete(30);   删除主键值等于30的记录信息</p>
+<p>$goods -&gt; delete(“10,12,13”);   删除主键值等于10 12 13的三条记录</p>
+<p>$goods -&gt; where(“goods_id&gt;60”)-&gt;delete()   把符合条件的记录都给删除</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/fe9455fad16479a0.png"/></p>
+<p> </p>
+<h3>执行原生sql语句</h3>
+<ol>
+<li>查询语句query()  返回一个二维数组信息</li>
+<li>添加、修改、删除 execute()  返回受影响的记录条数</li>
+</ol>
+<p>$goods = D(“Goods”);</p>
+<p>$sql = “select * from sw_goods”;</p>
+<p>$rst = $goods -&gt;query($sql);</p>
+<p> </p>
+<p>$sql = “select goods_category_id,avg(goods_price) from sw_goods group by goods_category_id having  avg(goods_price)&gt;1000”;</p>
+<p>$goods -&gt;query($sql);</p>
+<p> </p>
+<p>$sql = “update sw_goods set goods_name = ‘htc_two’ where goods_id=100”;</p>
+<p>$goods -&gt;execute($sql);</p>
+<p> </p>
+<p>【表单验证】</p>
+<p>javascript</p>
+<p>jquery </p>
+<p>在服务器端通过tp框架实现表单验证</p>
+<p>用户名、密码、重复密码、邮箱、qq、手机号码、爱好、学历</p>
+<p>具体步骤：</p>
+<ol>
+<li>制作表单</li>
+<li>表单form数据通过create()方法收集(验证功能要求我们必须通过create()方法收集数据)</li>
+<li>自定义数据model模型类实现具体验证规则</li>
+</ol>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/cdd5de8182935e32.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/8c2d17a2cbb300dd.png"/></p>
+<p> </p>
+<p> </p>
+<p>【tp框架验证码支持使用】</p>
+<p>ThinkPHP/Library/Think/Verify.class.php</p>
+<p>$verify = new 命名空间Verify();</p>
+<p>$verify -&gt; entry();  生成一个验证码</p>
+<p> </p>
+<p>一个单独的方法生成验证码</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/547f020a1c559084.png"/></p>
+<p> </p>
+<p>在模板使用：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/06e7a12ea293aed6.png"/></p>
+<p> </p>
+<p>验证是否成功：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/c3873c9e21151e6a.png"/></p>
+<p> </p>
+<p>【Session和Cookie】</p>
+<p>tp框架关于session操作（cookie）</p>
+<p>//session(name,value, 有效时间)  设置session</p>
+<p>//session(name)  获取session</p>
+<p>//session(name,null)  删除指定session</p>
+<p>//session(null)  清空全部session</p>
+<p> </p>
+<p>【tp框架实现数据分页】</p>
+<p>　　1.我们第三方类库放的位置：</p>
+<p>当前模块（Home）目录下，模块中的类库命名空间的根都是以模块名命名</p>
+<p>ThinkPHP/Library/目录下，根命名空间为<code>ThinkPHP/Library</code></p>
+<p><code>　　2.</code>在<code>ThinkPHP/Library/Think/</code><code>下面有很多类库供我们使用</code></p>
+<p>　　3.类的命名规则：要有命名空间，类文件名 Page.class.php</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/652994efb3a3d2fc.png"/></p>
+<p><img alt="" loading="lazy" src="/images/cnblogs/803c7ab8c8da2e78.png"/></p>
+<p>　　4.在控制器中实例化分页类使用：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/05ce11b055fbbafe.png"/></p>
+<p>模板页面：</p>
+<p> <img alt="" loading="lazy" src="/images/cnblogs/c217cbd8fed2eb4f.png"/></p>
+<p> </p>
+<p>【tp框架扩展函数库】</p>
+<p>三个位置：</p>
+<ol>
+<li>ThinkPHP/Common/functions.php</li>
+<li>应用/Common/Common/function.php</li>
+<li>模块/Common/function.php</li>
+</ol>
+<p>在该文件里面写自定义方法即可</p>
+<p> </p>
+<p>【tp框架文件上传中文乱码问题】</p>
+<p>在windows操作系统下：</p>
+<p>在ThinkPHP/Library/Think/Upload/Driver/Local.class.php</p>
+<p>第83行将$filename 改为iconv('utf-8','gb2312',$filename)</p>
+{% endraw %}
