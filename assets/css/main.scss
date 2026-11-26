@@ -99,8 +99,8 @@
 .cnblog-crumb { display: flex; gap: .45rem; margin-bottom: .6rem; color: #8a93a3; font-size: .72rem; }
 .cnblog-crumb a { color: #3451b2 !important; text-decoration: none !important; }
 .cnblog-meta { display: flex; flex-wrap: wrap; gap: .3rem 1.1rem; }
-.cnblog-header .page__meta { float: none; }
-.cnblog-header .post-tags, .blog-post .post-tags { clear: both; }
+.page .page__inner-wrap .cnblog-header .page__meta { float: none; width: auto; }
+.page .page__inner-wrap .cnblog-header .post-tags, .blog-post .post-tags { clear: both; }
 .cnblog-content img { max-width: 100%; height: auto; border-radius: 6px; }
 .cnblog-content table { display: block; max-width: 100%; overflow-x: auto; }
 .cnblog-content iframe { max-width: 100%; }
